@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {Vec2} from '../../core/vec2';
-import {HubState,HUB_STATIONS,HUB_OBSTACLES,HUB_MAP,hubBlocked} from './hub-state';
+import {HubState,HUB_STATIONS,HUB_OBSTACLES,HUB_MAP,HUB_TORCHES,HUB_CATHEDRAL,HUB_HOUSES,HUB_ROOF_OVERHANG,hubBlocked} from './hub-state';
 describe('piazza e collisioni del rifugio',()=>{
  it('blocca il centro di ogni NPC, struttura, casa e cassa',()=>{
   for(const o of HUB_OBSTACLES)expect(hubBlocked(new Vec2(o.x+o.width/2,o.y+o.height/2))).toBe(true);
@@ -19,6 +19,22 @@ describe('piazza e collisioni del rifugio',()=>{
    for(const d of [new Vec2(8,0),new Vec2(-8,0),new Vec2(0,8),new Vec2(0,-8)]){const q=p.add(d);if(!visited.has(q.x+','+q.y))queue.push(q);}
   }
   expect([...reached].sort()).toEqual(HUB_STATIONS.map(s=>s.id).sort());
+ });
+ it('le torce sono solide: il personaggio si ferma contro il palo invece di attraversarlo',()=>{
+  // Sotto le torce ci sono casse: ci si arriva di lato, verso il centro della piazza.
+  for(const t of HUB_TORCHES){
+   expect(hubBlocked(new Vec2(t.x,t.y-1))).toBe(true);
+   const side=t.x<HUB_MAP.width/2?1:-1,state=new HubState();state.position=new Vec2(t.x+side*40,t.y);
+   expect(hubBlocked(state.position)).toBe(false);state.step(1,new Vec2(-side,0));
+   expect(Math.abs(state.position.x-t.x)).toBeGreaterThan(5);expect(hubBlocked(state.position)).toBe(false);
+  }
+ });
+ it('niente vicolo fra cattedrale e tetto della casa sotto: si resta fuori da gradini e tetti',()=>{
+  const lowLeft=HUB_HOUSES.find(h=>h.x===0&&h.y+h.height===HUB_MAP.height)!;
+  expect(HUB_CATHEDRAL.y+HUB_CATHEDRAL.height).toBeGreaterThanOrEqual(lowLeft.y-HUB_ROOF_OVERHANG);
+  for(let x=10;x<HUB_CATHEDRAL.width;x+=10)expect(hubBlocked(new Vec2(x,HUB_CATHEDRAL.y+HUB_CATHEDRAL.height+4))).toBe(true);
+  // Dietro le case in basso ci si ferma prima della sporgenza del tetto.
+  expect(hubBlocked(new Vec2(100,lowLeft.y-HUB_ROOF_OVERHANG+2))).toBe(true);
  });
  it('il moto a 60 Hz scorre lungo le case senza penetrare e aggiorna la direzione dello sprite',()=>{
   const state=new HubState();state.position=new Vec2(170,260);

@@ -1,5 +1,16 @@
 # Bug e problemi rilevati
 
+## Hub: personaggi sopra muri e cattedrale, torce attraversabili
+
+Segnalazione dell'utente (2 novembre 2026). Case, cattedrale, muri e casse erano disegnati sul pavimento: chi passava dietro il muro di cinta sembrava camminare sui merli e veniva disegnato sopra guglie e tetti. Il tetto della cattedrale copriva la facciata della casa sopra e i gradini finivano sul tetto della casa sotto, con un vicolo largo esattamente quanto il personaggio. Le torce non erano solide e venivano disegnate sopra chiunque.
+
+- Edifici, muri e casse sono ora `HUB_STRUCTURES`: ciascuno rasterizzato nel proprio riquadro e ordinato con personaggi e postazioni secondo la base dell'impronta. Le ombre restano sul pavimento.
+- La cattedrale resta dentro la sua impronta (tetto dal bordo superiore, gradini prima del bordo inferiore). Nella fila in basso la sporgenza dei tetti è solida (`houseFootprint`): il vicolo è chiuso.
+- Le torce (`HUB_TORCHES`) hanno una base solida e si ordinano con gli altri; la luce resta sopra tutto.
+- Il fabbro è ridisegnato nello stile degli sprite dei personaggi (`smithPixels`), con incudine contornata e quattro tempi della martellata.
+
+Le impronte valgono anche per il server cooperativo, che usa le stesse regole. Controllati test e fotogrammi dell'anteprima; **prova manuale nell'hub ancora da fare**.
+
 ## Equipaggiamento dell'arciere: parti che dovevano restare nascoste
 
 Segnalazione dell'utente (1 novembre 2026): stivali e armatura non si adattavano al corpo e mostravano le parti posteriori. Rilevati nell'anteprima, su entrambi i corpi:
