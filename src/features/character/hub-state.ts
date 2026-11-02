@@ -15,12 +15,21 @@ export const HUB_HOUSES:readonly HubObstacle[]=[
  {x:0,y:522,width:220,height:118},
  {x:832,y:140,width:128,height:175},{x:842,y:332,width:118,height:172},{x:740,y:522,width:220,height:118},
 ];
-/** Cattedrale a sinistra: la sua impronta è solo la base, guglie e tetto si alzano sopra. */
+/** Sporgenza dei tetti sopra la facciata (vedi `drawHouse` in hub-art). */
+export const HUB_ROOF_OVERHANG=18;
+/** Nella fila in basso il tetto sporge verso chi cammina dietro le case: la sporgenza è solida, così nessuno ci finisce sopra. */
+export function houseFootprint(house:HubObstacle):HubObstacle {
+ return house.y+house.height>=HUB_MAP.height?{...house,y:house.y-HUB_ROOF_OVERHANG,height:house.height+HUB_ROOF_OVERHANG}:house;
+}
+/** Cattedrale a sinistra: tetto, guglie e gradini restano dentro questa impronta, che arriva fino al tetto della casa sotto. */
 export const HUB_CATHEDRAL:HubObstacle={x:0,y:140,width:128,height:364};
 /** Muro di cinta gotico in basso: tra i due tratti resta aperto il varco. */
 export const HUB_WALLS:readonly HubObstacle[]=[{x:220,y:580,width:225,height:60},{x:515,y:580,width:225,height:60}];
 export const HUB_CRATES:readonly HubObstacle[]=[{x:149,y:184,width:28,height:26},{x:176,y:202,width:24,height:24},{x:773,y:178,width:30,height:28},{x:804,y:211,width:22,height:24},{x:148,y:478,width:28,height:28},{x:786,y:489,width:26,height:26}];
-export const HUB_OBSTACLES:readonly HubObstacle[]=[...HUB_HOUSES,HUB_CATHEDRAL,...HUB_WALLS,...HUB_CRATES,...HUB_STATIONS.map(s=>({x:s.x-s.width/2,y:s.y-s.height/2,width:s.width,height:s.height}))];
+/** Torce degli angoli: `y` è il punto d'appoggio del palo, la cui base è solida. */
+export const HUB_TORCHES:readonly {readonly x:number;readonly y:number}[]=[{x:155,y:160},{x:805,y:160}];
+export const torchFootprint=(t:{readonly x:number;readonly y:number}):HubObstacle=>({x:t.x-5,y:t.y-4,width:10,height:6});
+export const HUB_OBSTACLES:readonly HubObstacle[]=[...HUB_HOUSES.map(houseFootprint),HUB_CATHEDRAL,...HUB_WALLS,...HUB_CRATES,...HUB_TORCHES.map(torchFootprint),...HUB_STATIONS.map(s=>({x:s.x-s.width/2,y:s.y-s.height/2,width:s.width,height:s.height}))];
 export function hubBlocked(position:Vec2):boolean {
  const r=HUB_MAP.playerRadius;
  if(position.x<r||position.y<r||position.x>HUB_MAP.width-r||position.y>HUB_MAP.height-r)return true;

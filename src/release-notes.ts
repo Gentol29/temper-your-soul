@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
 {
+  "version": "0.7.2",
+  "date": "2026-11-02",
+  "changes": [
+    "Rifugio: muro di cinta, case, cattedrale e casse coprono chi ci passa dietro, invece di essere disegnati sotto ogni personaggio. Niente più passi sopra i merli.",
+    "La cattedrale resta nella sua area: il tetto non copre più la casa sopra e i gradini non finiscono sul tetto della casa sotto. Chiuso il vicolo fra le due e resa solida la sporgenza dei tetti in basso.",
+    "Le torce degli angoli hanno una base solida e si disegnano nel giusto ordine rispetto ai personaggi; la luce resta invariata.",
+    "Fabbro ridisegnato nello stile degli sprite dei personaggi, con martello in quattro tempi, tenaglie e incudine contornata.",
+    "Le stesse aree solide valgono per il server cooperativo, senza cambi al protocollo. Nessuna modifica a salvataggi o bilanciamento. Controlli automatici e anteprima fatti; prova manuale nell'hub ancora da confermare."
+  ],
+  "balanceChanges": []
+},
+{
   "version": "0.7.1",
   "date": "2026-11-02",
   "changes": [

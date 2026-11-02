@@ -1,11 +1,30 @@
-import { HUB_HOUSES, HUB_CRATES, HUB_CATHEDRAL, HUB_WALLS, HUB_STATIONS, type HubObstacle, type HubStation } from '../character/hub-state';
+import { HUB_HOUSES, HUB_CRATES, HUB_CATHEDRAL, HUB_WALLS, HUB_STATIONS, HUB_TORCHES, type HubObstacle, type HubStation } from '../character/hub-state';
 import { drawLight } from './lights';
 import { TORCH_LIGHT } from './themes/crypt';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
+import { PixelPainter } from './pixel-painter';
+import type { CharacterPixels } from './character-art';
 const hash=(x:number,y:number)=>{let n=Math.imul(x+11,374761393)^Math.imul(y+17,668265263);n=Math.imul(n^(n>>>13),1274126177);return (n^(n>>>16))>>>0;};
 function rect(c:CanvasRenderingContext2D,color:string,x:number,y:number,w:number,h:number):void {c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h);}
-/** Selciato e facciate rasterizzati una sola volta, senza immagini esterne. */
-export function drawTown(c:CanvasRenderingContext2D):void {
+/**
+ * Edifici, muri e casse dell'hub: ciascuno si disegna nel proprio riquadro e il renderer lo ordina con
+ * personaggi e postazioni secondo `base`, il bordo inferiore dell'impronta solida. Così chi passa dietro
+ * un muro o una casa viene coperto, invece di camminarci sopra.
+ */
+export interface HubStructure {
+ readonly base:number;
+ readonly bounds:{readonly x:number;readonly y:number;readonly width:number;readonly height:number};
+ readonly draw:(c:CanvasRenderingContext2D)=>void;
+}
+const box=(o:HubObstacle,left:number,top:number,right:number,bottom:number)=>({x:o.x-left,y:o.y-top,width:o.width+left+right,height:o.height+top+bottom});
+export const HUB_STRUCTURES:readonly HubStructure[]=[
+ ...HUB_HOUSES.map(o=>({base:o.y+o.height,bounds:box(o,6,27,6,3),draw:(c:CanvasRenderingContext2D)=>drawHouse(c,o)})),
+ {base:HUB_CATHEDRAL.y+HUB_CATHEDRAL.height,bounds:box(HUB_CATHEDRAL,4,4,4,0),draw:c=>drawCathedral(c,HUB_CATHEDRAL)},
+ ...HUB_WALLS.map(o=>({base:o.y+o.height,bounds:box(o,2,64,2,0),draw:(c:CanvasRenderingContext2D)=>drawWall(c,o)})),
+ ...HUB_CRATES.map(o=>({base:o.y+o.height,bounds:box(o,1,11,1,1),draw:(c:CanvasRenderingContext2D)=>drawCrate(c,o,false)})),
+];
+/** Selciato e ombre degli edifici, rasterizzati una sola volta: gli edifici sono in `HUB_STRUCTURES`. */
+export function drawTownGround(c:CanvasRenderingContext2D):void {
  rect(c,'#242529',0,0,960,640);
  for(let y=0;y<640;y+=12)for(let x=-16;x<960;x+=24){const offset=(y/12%2)*12,n=hash(x,y),px=x+offset;
   rect(c,['#3d3c3b','#42403d','#37383b','#48443f','#343538'][n%5]!,px+1,y+1,22,10);
@@ -23,17 +42,16 @@ export function drawTown(c:CanvasRenderingContext2D):void {
  for(let y=-48;y<=48;y+=4)for(let x=-72;x<=72;x+=4){const d=Math.abs(x)/1.5+Math.abs(y);if(d>76)continue;
   rect(c,d>65?'#766b54':d>60?'#282b30':((x+y)%12===0?'#54504a':'#454440'),480+x,265+y,4,4);
  }
- for(const house of HUB_HOUSES)drawHouse(c,house);
- drawCathedral(c,HUB_CATHEDRAL);
- for(const wall of HUB_WALLS)drawWall(c,wall);
- for(const crate of HUB_CRATES)drawCrate(c,crate);
+ // Ombre proiettate a terra: restano sotto chiunque passi accanto agli edifici.
+ for(const o of HUB_HOUSES)rect(c,'#12171cd9',o.x+8,o.y+12,o.width+7,o.height+8);
+ rect(c,'#12171cd9',HUB_CATHEDRAL.x+HUB_CATHEDRAL.width-4,HUB_CATHEDRAL.y+30,14,HUB_CATHEDRAL.height-32);
+ for(const o of HUB_CRATES)rect(c,'#12191b99',o.x+3,o.y+5,o.width+4,o.height+2);
  // Detriti, muschio e griglie di scolo.
  for(const x of [154,790])for(const y of [350,530]){rect(c,'#171d20',x,y,20,12);for(let i=0;i<5;i++)rect(c,'#4b4d49',x+i*4,y,1,12);}
  for(const [x,y] of [[183,268],[786,386],[337,533],[612,185]]){rect(c,'#1b2422',x!,y!,18,5);rect(c,'#3f4937',x!+3,y!-2,6,3);}
 }
 function drawHouse(c:CanvasRenderingContext2D,o:HubObstacle):void {
  const {x,y,width:w,height:h}=o,faceY=y+h-48;
- rect(c,'#12171cd9',x+8,y+12,w+7,h+8);
  rect(c,'#363335',x,y,w,h);rect(c,'#686051',x,faceY,w,4);
  for(let by=faceY+5;by<y+h;by+=9)for(let bx=x;bx<x+w;bx+=18){const shift=(Math.floor(by/9)%2)*9;
   rect(c,['#4f4942','#585046','#494541'][hash(bx,by)%3]!,bx+shift+1,by,16,7);rect(c,'#696052',bx+shift+2,by,13,1);
@@ -67,10 +85,11 @@ function spire(c:CanvasRenderingContext2D,cx:number,baseY:number,w:number,h:numb
  }
  rect(c,'#8a8070',cx-1,baseY-h-(cross?9:4),2,cross?10:5);if(cross)rect(c,'#8a8070',cx-4,baseY-h-6,8,2);
 }
-/** Cattedrale: navata di ardesia, due torri con guglie, rosone e portale a sesto acuto. */
+/** Gradini davanti al portale: la facciata si ferma prima, così tutta la cattedrale resta nella sua impronta. */
+const CATHEDRAL_STEPS=18;
+/** Cattedrale: navata di ardesia, due torri con guglie, rosone e portale a sesto acuto. Il tetto parte dal bordo dell'impronta, senza coprire la casa sopra. */
 function drawCathedral(c:CanvasRenderingContext2D,o:HubObstacle):void {
- const {x,y,width:w,height:h}=o,b=y+h,ridge=x+Math.floor(w/2),cornice=b-132,roofTop=y-40;
- rect(c,'#12171cd9',x+w-4,y+30,14,h-14);
+ const {x,y,width:w,height:h}=o,b=y+h-CATHEDRAL_STEPS,ridge=x+Math.floor(w/2),cornice=b-132,roofTop=y;
  for(let ty=roofTop;ty<cornice;ty+=8)for(let tx=x+14;tx<x+w-14;tx+=14){const n=hash(tx,ty),off=(Math.floor(ty/8)%2)*7;
   rect(c,(tx<ridge?['#33405a','#3a4864','#2d3850']:['#4a5775','#536281','#40506c'])[n%3]!,tx+off,ty,13,6);rect(c,'#4a4a50',tx+off,ty,11,1);
  }
@@ -125,8 +144,8 @@ function drawWall(c:CanvasRenderingContext2D,o:HubObstacle):void {
 function drawFlame(c:CanvasRenderingContext2D,x:number,base:number,time:number,phase:number):void {
  rect(c,'#e7a76c',x-4,base-17,8,10);rect(c,'#ffe4a0',x-2,base-19+Math.sin(time*8+phase)*2,4,7);
 }
-function drawCrate(c:CanvasRenderingContext2D,o:HubObstacle):void {
- const {x,y,width:w,height:h}=o;rect(c,'#12191b99',x+3,y+5,w+4,h+2);rect(c,'#30271f',x,y-10,w,h+10);rect(c,'#755a3d',x+2,y-8,w-4,h+6);
+function drawCrate(c:CanvasRenderingContext2D,o:HubObstacle,shadow=true):void {
+ const {x,y,width:w,height:h}=o;if(shadow)rect(c,'#12191b99',x+3,y+5,w+4,h+2);rect(c,'#30271f',x,y-10,w,h+10);rect(c,'#755a3d',x+2,y-8,w-4,h+6);
  for(let i=5;i<w-3;i+=6)rect(c,'#4d3b2c',x+i,y-8,1,h+6);rect(c,'#ad8852',x+1,y-10,w-2,3);rect(c,'#ad8852',x+1,y+h-3,w-2,3);
  for(let i=0;i<Math.min(w,h);i+=3)rect(c,'#957247',x+2+i,y-5+i,3,3);rect(c,'#302d28',x+1,y-7,2,h+4);rect(c,'#302d28',x+w-3,y-7,2,h+4);
 }
@@ -135,20 +154,66 @@ export const NPC_FRAMES:readonly SpriteFrame[]=[0,1,2,3].map(frame=>[
  '....fgfffggf....','...cfghhhgfc....',frame%2?'...c.ghhhg.c....':'...c.ghhhgc.....','.....ghhhg......','.....ghhhg......',
  '.....giiig......','.....i..ii......',frame===1?'....ii...i......':'.....i..ii......','....aa..aaa.....',
 ]);
-/** Fabbro dalla stazza possente, calvo con barba grigia: ispirato al fabbro di Berserk, nello stile a pixel del gioco. */
-const SMITH_BASE:SpriteFrame=[
- '.....aaaaaaaa.....','....abbbbbbbba....','....affffffffa....','...adbbbbbbbbda...','...adebabbabeda...','...addbbbbbbdda...',
- '....adddddddda....','...addeddddedda...','.abbaiddddddiabba.','.abbaiiddddiiabba.','.abbaggggggggabba.','.acbaghhhhhhgabca.',
- '..abagjjjjjjgaba..','....agggggggga....','....akkakkakka....','...akkka.akkka....',
-];
-const withRows=(rows:Readonly<Record<number,string>>):SpriteFrame=>SMITH_BASE.map((row,i)=>rows[i]??row);
-export const SMITH_FRAMES:readonly SpriteFrame[]=[
- SMITH_BASE,
- withRows({10:'.abbaggggggggabba.',11:'.abbaghhhhhhgabba.',12:'..aaagjjjjjjgaaa..'}),
- withRows({15:'..akkka...akkka...'}),
- withRows({10:'.abbaggggggggabba.',11:'.abbaghhhhhhgabba.',12:'..aaagjjjjjjgaaa..',15:'...akkka..akkka...'}),
-];
-const SMITH_NEW_PALETTE:Palette={a:'#1d1a1e',b:'#b98a66',c:'#8c6046',d:'#a8a39a',e:'#6a6764',f:'#8a3a2e',g:'#4b3226',h:'#6e4c37',i:'#3a3f4a',j:'#2a1f1a',k:'#2d2625'};
+/** Dimensioni del fabbro: stessa griglia degli sprite dei personaggi (64 → 48), più larga per martello e tenaglie. */
+export const SMITH_ART={width:54,height:48} as const;
+/** Mani del braccio col martello nei quattro tempi: alzato, a metà, colpo sull'incudine, a metà. */
+const SMITH_HANDS:readonly (readonly [number,number])[]=[[36,9],[42,14],[45,21],[42,14]];
+const smithCache=new Map<number,CharacterPixels>();
+/**
+ * Fabbro dalla stazza possente, calvo con barba grigia e grembiule di cuoio, nello stile degli sprite dei
+ * personaggi: contorni `#241d27`, ombre e luci della pelle, griglia 64 ridotta a 48 come in `characterPixels`.
+ */
+export function smithPixels(frame:number):CharacterPixels {
+ const f=((Math.floor(frame)%4)+4)%4,cached=smithCache.get(f);if(cached)return cached;
+ const p=new PixelPainter(72,64,1,12,4);
+ const o='#241d27',skin='#c99a76',skinLight='#e0b48e',skinShadow='#8c6046',beard='#a8a39a',beardDark='#6a6764';
+ const leather='#6e4c37',leatherDark='#4b3226',iron='#8e9699',ironDark='#4c5661',ironLight='#c9cfcf',wood='#8f6a45';
+ const limb=(a:readonly [number,number],b:readonly [number,number],r:number,color:string)=>{
+  const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1,nx=-dy/l*r,ny=dx/l*r;
+  p.poly([[a[0]+nx,a[1]+ny],[b[0]+nx,b[1]+ny],[b[0]-nx,b[1]-ny],[a[0]-nx,a[1]-ny]],color);
+ };
+ const b=f===2?1:0;
+ // Braccio lontano: le tenaglie tengono il pezzo sull'incudine.
+ limb([24,26+b],[40,33],3,o);limb([24,26+b],[40,33],1.8,skinShadow);
+ p.line(40,33,52,29,o);p.line(41,34,52,31,ironDark);p.rect(51,29,3,3,'#e07a3a');
+ // Gambe e stivali.
+ for(const x of [24,31]){p.rect(x-1,40,7,14,o);p.rect(x,41,5,10,'#3a3f4a');p.rect(x,50,6,3,'#2d2625');}
+ // Busto massiccio a torso nudo.
+ p.poly([[19,23+b],[26,20+b],[38,20+b],[43,24+b],[42,36+b],[38,43],[22,43],[18,35+b]],o);
+ p.poly([[21,24+b],[27,22+b],[37,22+b],[41,25+b],[40,35+b],[37,41],[23,41],[20,34+b]],skin);
+ p.poly([[22,25+b],[27,23+b],[30,23+b],[28,31+b],[22,32+b]],skinLight);p.line(30,25+b,30,33+b,skinShadow);
+ // Grembiule di cuoio con cinghie e fibbia.
+ p.poly([[24,28+b],[37,28+b],[39,48],[22,48]],o);p.poly([[25,29+b],[36,29+b],[37,47],[23,47]],leather);
+ p.line(26,22+b,25,28+b,leatherDark);p.line(35,22+b,36,28+b,leatherDark);p.line(30,31+b,30,45,leatherDark);
+ p.rect(24,36+b,13,2,leatherDark);p.rect(29,36+b,3,2,'#b68b50');
+ // Testa calva e barba grigia.
+ p.poly([[25,8+b],[32,6+b],[37,9+b],[38,16+b],[35,22+b],[27,22+b],[24,17+b],[24,11+b]],o);
+ p.poly([[26,9+b],[32,7+b],[36,10+b],[37,16+b],[34,20+b],[28,20+b],[25,16+b]],skin);
+ p.poly([[27,9+b],[31,8+b],[32,11+b],[28,12+b]],skinLight);p.rect(25,13+b,2,3,skinShadow);
+ p.line(31,12+b,35,12+b,beardDark);p.rect(33,13+b,2,1,o);
+ p.poly([[26,16+b],[37,15+b],[37,19+b],[34,25+b],[29,24+b],[26,19+b]],o);
+ p.poly([[27,16+b],[36,16+b],[36,19+b],[33,23+b],[29,23+b],[27,19+b]],beard);
+ p.line(28,19+b,32,22+b,beardDark);p.line(32,17+b,35,17+b,'#3a2f2c');
+ // Braccio col martello: il manico prosegue la direzione dell'avambraccio, la testa è di traverso.
+ const shoulder:readonly [number,number]=[33,25+b],hand:readonly [number,number]=[SMITH_HANDS[f]![0],SMITH_HANDS[f]![1]+b];
+ limb(shoulder,hand,3.2,o);limb(shoulder,hand,2,skin);
+ const dx=hand[0]-shoulder[0],dy=hand[1]-shoulder[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l;
+ const head:readonly [number,number]=[hand[0]+ux*11,hand[1]+uy*11];
+ limb([hand[0]-ux*2,hand[1]-uy*2],head,1.4,o);limb([hand[0]-ux*2,hand[1]-uy*2],head,.8,wood);
+ const top:readonly [number,number]=[head[0]-uy*4,head[1]+ux*4],bottom:readonly [number,number]=[head[0]+uy*4,head[1]-ux*4];
+ limb(top,bottom,3,o);limb(top,bottom,2,iron);limb(top,[head[0],head[1]],.8,ironLight);limb(bottom,[head[0],head[1]],.6,ironDark);
+ p.rect(hand[0]-2,hand[1]-2,4,4,o);p.rect(hand[0]-1,hand[1]-1,3,3,skin);
+ const scale=64/SMITH_ART.height;
+ const result:CharacterPixels={width:SMITH_ART.width,height:SMITH_ART.height,pixels:Array.from({length:SMITH_ART.height},(_,y)=>Array.from({length:SMITH_ART.width},(_,x)=>p.pixels[Math.floor((y+.5)*scale)]![Math.floor((x+.5)*scale)]!))};
+ smithCache.set(f,result);return result;
+}
+const smithRasters=new Map<number,HTMLCanvasElement>();
+function smithRaster(frame:number):HTMLCanvasElement {
+ let raster=smithRasters.get(frame);
+ if(!raster){const art=smithPixels(frame);raster=document.createElement('canvas');raster.width=art.width;raster.height=art.height;const g=raster.getContext('2d')!;
+  art.pixels.forEach((row,py)=>row.forEach((color,px)=>{if(color){g.fillStyle=color;g.fillRect(px,py,1,1);}}));smithRasters.set(frame,raster);}
+ return raster;
+}
 const SMITH_PALETTE:Palette={a:'#22242a',b:'#433329',c:'#b58b67',d:'#27202a',e:'#614333',f:'#706b62',g:'#3b3130',h:'#76503b',i:'#3b4149'};
 const MERCHANT_PALETTE:Palette={...SMITH_PALETTE,b:'#4a3938',f:'#675c4b',g:'#313a37',h:'#4b6258',i:'#303b3d'};
 export function drawHubStation(c:CanvasRenderingContext2D,s:HubStation,time:number):void {
@@ -172,11 +237,11 @@ export function drawHubStation(c:CanvasRenderingContext2D,s:HubStation,time:numb
   rect(c,'#95806b',x-29,y+5,58,5);rect(c,'#252b31',x-13,y-77,26,17);rect(c,'#716356',x-17,y-80,34,5);
   for(let i=0;i<3;i++)rect(c,'#8f827966',x-7+i*5+frame*2,y-85-i*8-frame*2,7,5);
  }else if(s.id==='smith'){
-  drawSprite(c,SMITH_FRAMES[frame]!,x-30,y-17,2,SMITH_NEW_PALETTE);
-  rect(c,'#8e9699',x+10,y-15,34,7);rect(c,'#4c5661',x+14,y-8,26,6);rect(c,'#535660',x+23,y-2,9,12);rect(c,'#85837c',x+16,y+9,24,4);
-  // Il martello parte dal pugno destro e cala sull'incudine.
-  const lift=frame===1?10:frame===2?0:5,top=y-14-lift;rect(c,'#8f6a45',x-1,top,3,y+8-top);rect(c,'#b3b6b0',x-4,top-3,11,6);rect(c,'#6f7478',x-4,top+1,11,2);
-  if(frame===2){rect(c,'#ffc16b',x+17,y-19,2,2);rect(c,'#e59b4c',x+24,y-24,2,2);}
+  // Incudine con contorno scuro, poi il fabbro: martello e tenaglie ci arrivano sopra.
+  rect(c,'#241d27',x+9,y-16,36,9);rect(c,'#241d27',x+13,y-9,28,8);rect(c,'#241d27',x+22,y-3,11,14);rect(c,'#241d27',x+15,y+8,26,6);
+  rect(c,'#8e9699',x+10,y-15,34,7);rect(c,'#c9cfcf',x+10,y-15,34,1);rect(c,'#4c5661',x+14,y-8,26,6);rect(c,'#535660',x+23,y-2,9,12);rect(c,'#85837c',x+16,y+9,24,4);
+  c.drawImage(smithRaster(frame),Math.round(x-4-SMITH_ART.width/2),Math.round(y-SMITH_ART.height+15));
+  if(frame===2){rect(c,'#ffc16b',x+21,y-21,2,2);rect(c,'#e59b4c',x+26,y-25,2,2);rect(c,'#ffe4a0',x+15,y-23,1,1);}
  }else{
   // Bottega: tenda di tela, bancone e mercante animato.
   rect(c,'#6b513a',x-33,y-53,3,65);rect(c,'#6b513a',x+30,y-53,3,65);
@@ -186,13 +251,17 @@ export function drawHubStation(c:CanvasRenderingContext2D,s:HubStation,time:numb
   rect(c,'#a36d4a',x-20,y-13,8,5);rect(c,'#a5ac9b',x+12,y-14,9,6);
  }
 }
-/** Torce agli angoli: stessa luce, stesso sfarfallio e stessa fiamma delle torce della cripta. */
+/** Palo e fiamma di una torcia d'angolo: si ordina con personaggi ed edifici secondo il punto d'appoggio. */
+export function drawTorch(c:CanvasRenderingContext2D,t:{readonly x:number;readonly y:number},time:number):void {
+ rect(c,'#10161b99',t.x-6,t.y,12,4);
+ rect(c,'#252328',t.x-3,t.y-21,6,23);rect(c,'#b48a51',t.x-5,t.y-26,10,8);
+ drawFlame(c,t.x,t.y-14,time,t.x);
+}
+/** Luce delle torce e della fucina: stesso sfarfallio delle torce della cripta, disegnata sopra a tutto. */
 export function drawTownLights(c:CanvasRenderingContext2D,time:number):void {
- for(const [x,y] of [[155,160],[805,160]]){
-  const base=y!-14,flicker=Math.sin(time*8+x!)*.5+Math.sin(time*13+base)*.5;
-  drawLight(c,x!,base-12,TORCH_LIGHT.color,TORCH_LIGHT.radius+flicker*4,.85+flicker*.1);
-  rect(c,'#252328',x!-3,y!-21,6,23);rect(c,'#b48a51',x!-5,y!-26,10,8);
-  drawFlame(c,x!,base,time,x!);
+ for(const {x,y} of HUB_TORCHES){
+  const base=y-14,flicker=Math.sin(time*8+x)*.5+Math.sin(time*13+base)*.5;
+  drawLight(c,x,base-12,TORCH_LIGHT.color,TORCH_LIGHT.radius+flicker*4,.85+flicker*.1);
  }
  // La fucina proietta la stessa luce delle torce.
  const forge=HUB_STATIONS.find(s=>s.id==='forge')!,fl=Math.sin(time*8+forge.x)*.5+Math.sin(time*13+forge.y)*.5;

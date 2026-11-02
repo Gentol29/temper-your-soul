@@ -250,7 +250,7 @@ Per un nuovo oggetto servono: id stabile, famiglia e classe, skill/statistiche/c
 
 ## Verifiche e prossimi passi
 
-`npm run verify` deve uscire con codice 0. I **713 test attuali** coprono simulazione, contenuti, classi, salvataggi, profili, GS, raggiungibilità delle soglie e probabilità; il conteggio va aggiornato quando cambia. La suite è headless e **non certifica** DOM, aspetto, bilanciamento o sensazione di gioco. Sono stati eseguiti anche controlli browser isolati desktop/390 px; gli script temporanei locali non costituiscono una suite browser versionata.
+`npm run verify` deve uscire con codice 0. I **785 test attuali** coprono simulazione, contenuti, classi, salvataggi, profili, GS, raggiungibilità delle soglie e probabilità; il conteggio va aggiornato quando cambia. La suite è headless e **non certifica** DOM, aspetto, bilanciamento o sensazione di gioco. Sono stati eseguiti anche controlli browser isolati desktop/390 px; gli script temporanei locali non costituiscono una suite browser versionata.
 
 Priorità per chi riprende il lavoro:
 
