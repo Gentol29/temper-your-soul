@@ -115,6 +115,9 @@ sockets.on('connection', (ws,req) => {
       const room = client.room; if (!room) throw new Error('Entra prima in un party.');
       if(m.type!=='trade_ack'&&(settling.has(client.identity)||ledger.pending(client.identity).length))throw new Error('Salvataggio dello scambio in corso: attendi la ricevuta.');
       switch (m.type) {
+        case 'party_leave': room.leaveParty(client.id);publish(room);break;
+        case 'party_create': room.createParty(client.id);publish(room);break;
+        case 'hub_presence': if(typeof m.present!=='boolean')throw new Error('Presenza non valida.');room.setPresence(client.id,m.present);publish(room);break;
         case 'hub_input': {const move=m.move as {x?:unknown;y?:unknown}|undefined;if(!move||typeof move.x!=='number'||typeof move.y!=='number'||!Number.isFinite(move.x)||!Number.isFinite(move.y))throw new Error('Movimento non valido.');room.hub.inputs.set(client.id,{move:new Vec2(move.x,move.y).normalized(),at:now});break;}
         case 'party_invite': if(typeof m.target!=='string')throw new Error('Giocatore non valido.');room.hub.invite(client.id,m.target);publish(room);break;
         case 'party_accept': if(typeof m.accept!=='boolean')throw new Error('Risposta non valida.');room.hub.accept(client.id,m.accept);publish(room);break;
@@ -138,7 +141,7 @@ sockets.on('connection', (ws,req) => {
         }
         case 'portal_start': {
           if([...clients.values()].some(c=>c.room===room&&room.hub.members.has(c.id)&&(settling.has(c.identity)||ledger.pending(c.identity).length)))throw new Error('Attendi il salvataggio degli scambi.');
-          if(typeof m.dungeonId!=='string')throw new Error('Dungeon non valido.');room.choose(client.id,m.dungeonId);room.chooseMode(client.id,m.mode,0);for(const member of room.hub.members)room.ready.add(member);room.start(client.id,randomUUID(),randomBytes(4).readUInt32LE());publish(room);break;
+          if(typeof m.dungeonId!=='string')throw new Error('Dungeon non valido.');room.startFromPortal(client.id,m.dungeonId,m.mode,randomUUID(),randomBytes(4).readUInt32LE());publish(room);break;
         }
         case 'character': {
           if ((room.playing&&room.hub.members.has(client.id)) || typeof m.character !== 'string' || m.character.length > 60_000) throw new Error('Personaggio non modificabile durante il combattimento.');
@@ -151,7 +154,7 @@ sockets.on('connection', (ws,req) => {
         case 'mode': room.chooseMode(client.id, m.mode, m.grade); publish(room); break;
         case 'temper': room.chooseTemper(client.id, m.index); break;
         case 'pact': room.answerPact(client.id, m.accept); break;
-        case 'ready': if (!room.hub.members.has(client.id)||room.playing || typeof m.ready !== 'boolean') throw new Error('Stato non valido.'); if (m.ready) room.ready.add(client.id); else room.ready.delete(client.id); publish(room); break;
+        case 'ready': if (room.hub.present.get(client.id)===false||!room.hub.members.has(client.id)||room.playing || typeof m.ready !== 'boolean') throw new Error('Stato non valido.'); if (m.ready) room.ready.add(client.id); else room.ready.delete(client.id); publish(room); break;
         case 'start': room.start(client.id, randomUUID(), randomBytes(4).readUInt32LE()); publish(room); break;
         case 'input': { const intent = cleanIntent(m.intent); if (!intent) throw new Error('Input non valido.'); room.inputs.set(client.id, { intent, receivedAt: now }); break; }
         default: throw new Error('Comando non valido.');
@@ -172,7 +175,7 @@ setInterval(() => {
     if (rooms.size) stepTimings.add(performance.now() - stepStart);
     accumulator -= NETWORK.step; steps++;
     if (steps % NETWORK.snapshotSteps === 0) for (const room of rooms.values()) {
-      for(const [ws,client]of clients)if(client.room===room)send(ws,{type:'hub',state:room.hub.view(room.leaderId)});
+      for(const [ws,client]of clients)if(client.room===room)send(ws,{type:'hub',state:room.hub.view(room.ownerId)});
       if (!room.playing && completed.get(room) === room.battleId) continue;
       const networkStart = performance.now();
       const snapshot = room.snapshot(); if (!snapshot) continue;

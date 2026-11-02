@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Vec2 } from '../../core/vec2';
 import { MemoryStore } from '../character/save-store';
 import type { GameEvent } from '../combat/events';
@@ -24,7 +24,6 @@ import {
   cuesForEvent,
   FAR_GAIN,
   MAX_PAN,
-  MENU_AMBIENCE_GAIN,
   musicFor,
   PAUSE_DUCK,
   spatialize,
@@ -180,8 +179,8 @@ describe('regia: musica e ambiente', () => {
     expect(musicFor(scene('playing', false), withRage)).toEqual({ id: 'swamp', gain: 1 });
   });
 
-  it('l\'ambiente segue il tema: basso dietro i menu e in pausa', () => {
-    expect(ambienceFor(scene('menu'))).toEqual({ id: 'swamp', gain: MENU_AMBIENCE_GAIN });
+  it('l\'ambiente del dungeon parte all’ingresso e resta più basso in pausa', () => {
+    for (const screen of ['menu', 'dungeons', 'inventory'] as const) expect(ambienceFor(scene(screen))).toEqual({ id: null, gain: 0 });
     expect(ambienceFor(scene('playing'))).toEqual({ id: 'swamp', gain: 1 });
     expect(ambienceFor(scene('paused'))).toEqual({ id: 'swamp', gain: PAUSE_DUCK });
   });
@@ -323,4 +322,26 @@ describe('catalogo e crediti', () => {
   it('le licenze ammesse non includono clausole NC o ND', () => {
     for (const license of Object.values(AUDIO_LICENSES)) expect(license.url).not.toMatch(/-nc|-nd/);
   });
+});
+
+
+it('le anteprime delle card non richiedono audio dei dungeon; musica e ambiente partono all’ingresso', () => {
+  const requested: string[] = [];
+  vi.stubGlobal('Audio', class {
+    constructor(url: string) { requested.push(url); }
+  });
+  try {
+    const player = new AudioPlayer(null);
+    for (let pass = 0; pass < 3; pass++) {
+      for (const dungeon of DUNGEONS) {
+        player.setScene({ screen: 'dungeons', theme: dungeon.arena.theme, enraged: false });
+      }
+    }
+    expect(requested).toEqual([MUSIC.menu.file!.url]);
+    const theme = DUNGEONS[0]!.arena.theme;
+    player.setScene({ screen: 'playing', theme, enraged: false });
+    expect(requested).toEqual([MUSIC.menu.file!.url, MUSIC[theme].file!.url, AMBIENCE[theme].file!.url]);
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

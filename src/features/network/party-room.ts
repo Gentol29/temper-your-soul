@@ -23,6 +23,7 @@ export class PartyRoom {
   readonly ready = new Set<string>();
   readonly inputs = new Map<string, { intent: PlayerIntent; receivedAt: number }>();
   leaderId = '';
+  ownerId = '';
   dungeonId = 'crypt';
   mode: PartyMode = 'descent';
   grade = 0;
@@ -49,7 +50,7 @@ export class PartyRoom {
     const character = deserializeCharacter(raw);
     if (!character?.created) throw new Error('Crea prima un personaggio.');
     this.characters.set(id, character);this.hub.enter(id,visitor);
-    if (!this.leaderId) this.leaderId = id;
+    if(!this.ownerId)this.ownerId=id;if(!this.leaderId&&!visitor)this.leaderId=id;
   }
   leave(id: string): void {
     this.hub.leave(id);this.characters.delete(id); this.ready.delete(id); this.inputs.delete(id);
@@ -58,7 +59,25 @@ export class PartyRoom {
       const player = this.match?.players.get(id);
       if (player && this.playing) player.health.current = 0;
     }
-    if (this.leaderId === id) {this.leaderId=[...this.hub.members][0]??this.characters.keys().next().value??'';if(this.leaderId)this.hub.members.add(this.leaderId);}
+    if(this.ownerId===id)this.ownerId=this.characters.keys().next().value??'';
+    if (this.leaderId === id) {this.leaderId=[...this.hub.members][0]??'';}
+  }
+  leaveParty(id:string):void {
+    this.hub.cancel(id);this.hub.requireFree(id);
+    if(!this.hub.members.delete(id))return;
+    this.ready.delete(id);this.inputs.delete(id);
+    if(this.playing){if(this.run)this.run.removePlayer(id);else {const player=this.match?.players.get(id);if(player)player.health.current=0;}}
+    if(this.leaderId===id)this.leaderId=[...this.hub.members][0]??'';
+  }
+  createParty(id:string):void {
+    if(!this.characters.has(id)||this.hub.members.size)throw new Error('Un party è già presente: chiedi un invito.');
+    this.hub.requireFree(id);this.hub.members.add(id);this.leaderId=id;this.ready.clear();
+  }
+  setPresence(id:string,present:boolean):void {this.hub.setPresence(id,present);if(!present)this.ready.delete(id);}
+  startFromPortal(id:string,dungeonId:string,mode:unknown,battleId:string,seed:number):void {
+    this.requireLeader(id);
+    if([...this.hub.members].some(member=>this.hub.present.get(member)===false||(member!==id&&!this.ready.has(member))))throw new Error('Gli altri membri devono essere pronti e presenti nell’HUB.');
+    const ready=[...this.ready];this.choose(id,dungeonId);this.chooseMode(id,mode,0);for(const member of ready)this.ready.add(member);this.ready.add(id);this.start(id,battleId,seed);
   }
   choose(id: string, dungeonId: string): void {
     this.requireLeader(id);
@@ -77,7 +96,7 @@ export class PartyRoom {
   start(id: string, battleId: string, seed: number): void {
     this.requireLeader(id);
     if (this.playing) throw new Error('La partita è già iniziata.');
-    if(this.hub.views().some(t=>t.players.some(p=>this.hub.members.has(p))))throw new Error('Completa gli scambi prima di partire.');
+    if([...this.hub.members].some(p=>Boolean(this.hub.tradeFor(p))))throw new Error('Completa gli scambi prima di partire.');
     if ([...this.hub.members].some(key => !this.ready.has(key))) throw new Error('Tutti i membri devono essere pronti.');
     const dungeon = dungeonById(this.dungeonId)!;
     const gates = this.mode === 'pilgrimage' ? DUNGEONS : [dungeon];
@@ -165,7 +184,7 @@ export class PartyRoom {
     return state;
   }
   state(): PartyState {
-    return { code: this.code, leaderId: this.leaderId, dungeonId: this.dungeonId, mode: this.mode, grade: this.grade, playing: this.playing,
+    return { code: this.code, ownerId:this.ownerId, leaderId: this.leaderId, dungeonId: this.dungeonId, mode: this.mode, grade: this.grade, playing: this.playing,
       members: this.memberViews(false), visitors:this.memberViews(true) };
   }
   private memberViews(visitors:boolean):PartyState['members']{

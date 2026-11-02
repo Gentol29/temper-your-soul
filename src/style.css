@@ -1509,3 +1509,62 @@ body.room-fading .room-fade { opacity: 1; }
 .trade-cell{aspect-ratio:1;min-width:0;border:1px solid var(--relic-border);background:#0c0d1288;box-shadow:inset 0 0 0 2px #201b25;display:grid;place-items:center}
 .trade-cell .item-slot{width:100%;height:100%;margin:0;min-width:0}
 @media(max-width:650px){.trade-items{max-width:240px;max-height:none}.trade-cell .pixel-icon{width:38px;height:38px}}
+
+/* Sessione HUB e gruppo di raid hanno comandi separati. */
+.party-toggle{position:fixed;top:16px;right:16px;z-index:33;padding:10px;width:54px;height:54px}
+.party-toggle .pixel-icon{width:30px;height:30px}
+.hub-controls .party-toggle{position:static;width:auto;height:auto}
+.party-panel{top:80px;max-height:calc(100vh - 96px);overflow:auto;contain:layout;width:300px}
+.party-heading .relic-button{padding:3px 9px;font-size:18px;line-height:1.2}
+.party-heading .party-open{flex:1;text-align:left}
+.party-inline-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.party-inline-actions .relic-button{padding:9px 7px;font-size:11px}
+.party-session-owner{display:block;color:var(--gold);margin:8px 0;font-size:11px}
+.party-panel .party-link{width:100%;margin-top:12px;padding:8px;font-size:10px;box-sizing:border-box}
+.party-inline-note{font-size:11px;line-height:1.5;color:var(--muted);margin:10px 0 0}
+.party-member-status{font-size:8px;margin-top:2px}.party-member-status.is-ready{color:#add4a3}
+.party-inline-actions .party-ready{color:#e0edcf;border-color:#7f9c6e;background:linear-gradient(#456347,#243b30);box-shadow:inset 0 0 0 2px #253529,0 3px 0 #090b12}
+.party-inline-actions .party-ready:hover,.party-inline-actions .party-ready[aria-pressed=true]{background:linear-gradient(#638554,#344c38);border-color:#b4c48a}
+.party-inline-actions .party-danger{color:#f4d5cc;border-color:#a86667;background:linear-gradient(#7a414c,#452432);box-shadow:inset 0 0 0 2px #49232f,0 3px 0 #090b12}
+.party-inline-actions .party-danger:hover{background:linear-gradient(#99525a,#5c2d3d);border-color:#d28b83}
+@media(max-width:650px){.party-panel,.in-hub .party-panel{width:280px;max-width:calc(100vw - 32px)}.party-toggle{width:44px;height:44px;padding:7px}.party-panel{top:70px}}
+
+/* Barra globale: un solo ancoraggio per tutte le schermate dopo il menu iniziale. */
+:root{--global-top:16px;--global-size:48px;--global-bottom:80px}
+#main-menu-button,#global-controls>#pause-button{display:none}
+#global-controls{position:fixed;inset:var(--global-top) 16px auto auto;display:flex;flex-wrap:nowrap;gap:8px;z-index:60}
+#global-controls>button{position:static;box-sizing:border-box;width:var(--global-size);height:var(--global-size);min-width:0;padding:9px;display:grid;place-items:center;font-size:27px;flex:none}
+#global-controls .pixel-icon{width:28px;height:28px}
+#global-controls>button:hover,#global-controls>button:active{transform:none}
+.global-wallet{position:fixed;top:var(--global-top);left:16px;height:var(--global-size);max-width:calc(100vw - 264px);display:flex;align-items:center;gap:8px;z-index:60;color:#f5d58b;font:16px var(--relic-pixel);text-shadow:1px 2px #17121c;pointer-events:none}
+.global-wallet .pixel-icon{width:28px;height:28px;flex:none}
+#global-gold{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.initial-menu #global-controls,.initial-menu .global-wallet,.initial-menu #party-panel,.initial-menu #settings-panel{display:none}
+#party-panel,#settings-panel{position:fixed;top:var(--global-bottom);right:16px;z-index:61;box-sizing:border-box;max-height:calc(100dvh - var(--global-bottom) - 16px)}
+.hud-boss{top:var(--global-bottom)}
+.performance-toggle{top:var(--global-bottom)}
+.performance-panel{top:120px}
+.descent-hud{top:120px}
+.screen:not(#screen-menu){padding-top:100px}
+.hub-dialog{padding-top:96px;box-sizing:border-box}
+@media(max-width:650px){
+ :root{--global-top:8px;--global-size:40px;--global-bottom:64px}
+ #global-controls{right:8px;gap:4px}
+ #global-controls>button{padding:6px}
+ .global-wallet{left:8px;gap:4px;font-size:8px;max-width:calc(100vw - 196px)}
+ .global-wallet .pixel-icon{width:22px;height:22px}
+ #party-panel,#settings-panel{right:8px;max-width:calc(100vw - 16px)}
+ .descent-hud{top:108px}
+}
+
+/* Navigazione al menu centralizzata nelle impostazioni. */
+#inventory-back,.hub-menu-button{display:none}
+
+.dungeon-references{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.dungeon-bestiary{font-size:12px;padding:7px 12px}
+
+.dungeon-card.is-unavailable{opacity:.5}
+.dungeon-enter[aria-disabled=true],.dungeon-enter[aria-disabled=true]:hover{cursor:not-allowed;transform:none;background:linear-gradient(#302630,#211b25);border-color:#66525f;color:#b9a7b3}
+.dungeon-close{width:42px;height:42px;display:grid;place-items:center;padding:0;font-size:26px;line-height:1}
+#fullscreen-button>svg{display:block;place-self:center;flex:none}
+.toast.toast-error{z-index:70;bottom:80px;color:#ff6b6b;background:#21131ef5;border-color:#c45262;font:16px/1.7 var(--relic-pixel);text-align:center}

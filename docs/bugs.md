@@ -11,6 +11,7 @@ Segnalazione dell'utente (2 novembre 2026). Case, cattedrale, muri e casse erano
 
 Le impronte valgono anche per il server cooperativo, che usa le stesse regole. Controllati test e fotogrammi dell'anteprima; **prova manuale nell'hub ancora da fare**.
 
+
 ## Equipaggiamento dell'arciere: parti che dovevano restare nascoste
 
 Segnalazione dell'utente (1 novembre 2026): stivali e armatura non si adattavano al corpo e mostravano le parti posteriori. Rilevati nell'anteprima, su entrambi i corpi:
@@ -313,3 +314,21 @@ Il widget del party si riallinea anche dalla presenza autorevole periodica nell�
 Scambia invia prima una richiesta: «Accetti lo scambio da X?» con Sì/No. Solo il destinatario può accettare; prima del consenso il server rifiuta offerte e conferme, e nessun inventario di scambio viene aperto. No, chiusura o disconnessione annullano la richiesta. La doppia conferma finale resta necessaria. Mostra profilo visualizza statistiche, ritratto ed equipaggiamento indossato, senza zaino o deposito. Protocollo 12; riavvio server e ricarica client richiesti.
 
 Controllo browser automatico con un client locale e uno tramite tunnel Cloudflare reale: link pubblico dal leader locale, due membri nel widget dopo accettazione, profilo senza zaino, No che annulla la richiesta e Sì che apre le offerte su entrambi i client. Conferma manuale dell’utente ancora da ricevere.
+
+
+Sessione HUB, 2 novembre: corretta la disconnessione degli ospiti dopo quattro secondi senza snapshot quando il party è in dungeon; gli ospiti ricevono solo presenza HUB e heartbeat. Separata l’uscita dal gruppo dalla disconnessione e preservata la sessione passando per menu o run singole. Nuovi test di regressione e controllo browser; conferma manuale ancora da ricevere.
+
+
+### Danno da contatto dopo la rimozione delle iframe · corretto localmente
+Segnalazione del proprietario: un pipistrello vicino applicava danno fino a ogni passo, rendendo il contatto letale in pochi istanti. Aggiunta cadenza per nemico/bersaglio: mob 0,8 s, boss/luogotenenti 1 s; carica del boss inclusa. Orb già rimossi dopo collisione nel codice precedente: copertura regressiva del consumo e collisione lungo il tratto per quelli veloci o inizialmente sovrapposti. Conferma giocata ancora da ricevere.
+
+
+### HUD e party · correzione locale 2 novembre 2026
+Rimosso il richiamo alla pausa aprendo il party e unificati gli ancoraggi dei controlli fra rifugio e dungeon. Rimosso il pulsante Profilo/oro; oro in contatore dedicato. Verifica visiva e prova giocata ancora da confermare.
+
+
+HUD nell’HUB: barra e tendine spostate fuori dal contesto di sovrapposizione di main, che le rendeva coperte dal rifugio. Visibilità esclusa solo nel menu iniziale. Prova visiva ancora da confermare.
+
+
+### Audio delle anteprime · 2 novembre 2026
+Hover sulle card dungeon: l’anteprima caricava ripetutamente gli MP3 di ambiente del tema. La regia mantiene ora la sola musica menu fuori dalla partita; musica e ambiente del dungeon vengono selezionati all’ingresso. Test di regressione sui file richiesti. Bestiario usa ora la classe condivisa relic-button.

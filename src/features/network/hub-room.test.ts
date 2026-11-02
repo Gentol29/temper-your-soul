@@ -68,3 +68,26 @@ it('lo scambio richiede il consenso del destinatario prima di aprire offerte o c
  r.hub.acceptTrade('b',request.id,false);expect(r.hub.tradeFor('a')).toBeUndefined();
  r.hub.request('a','b');r.hub.acceptTrade('b',r.hub.view('b').requests![0]!.id,true);expect(r.hub.views()).toHaveLength(1);expect(r.hub.view('a').requests).toEqual([]);
 });
+
+
+describe('sessione HUB indipendente dal party',()=>{
+ it('lasciare il party conserva stanza, proprietario, posizione e personaggio',()=>{
+  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);const character=r.characters.get('a'),position=r.hub.positions.get('a');
+  r.leaveParty('a');expect(r.ownerId).toBe('a');expect(r.leaderId).toBe('b');expect(r.characters.get('a')).toBe(character);expect(r.hub.positions.get('a')).toBe(position);expect(r.state().visitors!.map(p=>p.id)).toContain('a');
+  r.leaveParty('b');expect(r.state().members).toEqual([]);expect(r.leaderId).toBe('');r.createParty('b');expect(r.leaderId).toBe('b');expect(r.ownerId).toBe('a');
+ });
+ it('menu e run in singolo rendono assenti dal mondo ma conservano istanza e gruppo',()=>{
+  const r=setup();r.ready.add('a');r.setPresence('a',false);expect(r.characters.size).toBe(2);expect(r.ownerId).toBe('a');expect(r.hub.members.has('a')).toBe(true);expect(r.ready.has('a')).toBe(false);expect(r.hub.view(r.ownerId).players.find(p=>p.id==='a')!.present).toBe(false);
+  expect(()=>r.hub.request('b','a')).toThrow('Avvicinati');r.setPresence('a',true);expect(r.hub.view(r.ownerId).players.find(p=>p.id==='a')!.present).toBe(true);r.enter('c',serializeCharacter(hero('Gamma')),true);expect(r.code).toBe('hub-test');
+ });
+ it('il portale attende gli altri pronti e porta solo il party nella destinazione scelta',()=>{
+  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);expect(()=>r.startFromPortal('a','crypt','descent','raid',1)).toThrow('pronti');
+  r.ready.add('b');r.setPresence('b',false);expect(()=>r.startFromPortal('a','crypt','descent','raid',1)).toThrow('presenti');r.setPresence('b',true);r.ready.add('b');r.startFromPortal('a','crypt','descent','raid',1);expect([...r.match!.players.keys()]).toEqual(['a','b']);expect(r.playing).toBe(true);
+ });
+ it('uscire dal gruppo durante il raid non espelle dall’HUB e non chiude il raid degli altri',()=>{
+  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);r.ready.add('b');r.startFromPortal('a','crypt','descent','raid',1);r.leaveParty('b');expect(r.characters.has('b')).toBe(true);expect(r.hub.positions.has('b')).toBe(true);expect(r.hub.members.has('b')).toBe(false);expect(r.playing).toBe(true);expect(r.run!.view().status).toBe('playing');
+ });
+ it('un visitatore che disconnette il proprietario non viene aggiunto al party automaticamente',()=>{
+  const r=setup();r.leave('a');expect(r.ownerId).toBe('b');expect(r.leaderId).toBe('');expect(r.hub.members.size).toBe(0);expect(r.characters.has('b')).toBe(true);
+ });
+});

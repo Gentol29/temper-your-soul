@@ -401,3 +401,25 @@ Verifica: 781 test in 69 file, tipi e build superati. Controllo browser desktop 
 
 
 Pubblicazione autorizzata su main · 2 novembre 2026: release v0.07.00 con il riepilogo completo di comandi HUB, party condiviso, inviti pubblici, scambi e finestre compatte nelle note del gioco. Nessuna modifica di bilanciamento.
+
+
+### Sessione cooperativa e party indipendenti · modifica locale 2 novembre 2026
+L’icona Party accanto allo zaino apre un riquadro con membri e comandi; rimossa la finestra separata con destinazione, modalità, boss e avvio. La destinazione si sceglie dal portale. Nel riquadro: Pronto verde (con stato selezionato), Lascia il party rosso, Copia invito HUB e Torna in singolo. Crea party apre una sessione condivisa; il link invita a visitare l’HUB del creatore, senza aggiungere automaticamente al gruppo di raid. L’invito al gruppo resta tramite E e accettazione.
+
+La proprietà dell’HUB è distinta dalla guida del party. Lascia il party rimuove solo dal gruppo e dall’eventuale raid, conservando connessione, personaggio, deposito e posizione nell’HUB; se serve la guida passa al membro successivo. Se il gruppo è vuoto si può ricrearlo nella stessa sessione. Torna in singolo disconnette dalla sessione condivisa. Menu e run locali mantengono la connessione: durante l’assenza lo sprite non è visibile né interagibile nell’HUB e la prontezza viene tolta. Il proprietario può restare al menu o in una run singola e gli ospiti continuano a usare l’istanza. Il gruppo di un solo membro e gli ospiti fuori dal gruppo possono avviare una run locale; un gruppo di più membri parte insieme dal portale del leader quando gli altri sono pronti e presenti. I requisiti di accesso dei personaggi restano validi. Nel raid cooperativo, tornare al menu abbandona il raid/gruppo ma conserva la sessione.
+
+Resta un solo gruppo di raid per istanza in questo incremento; più gruppi asincroni nella medesima istanza sono futuri. L’istanza vive finché almeno una connessione rimane attiva, non oltre lo spegnimento del server o l’uscita di tutti. Depositi e progressi restano personali e locali al browser. Protocollo 13: riavviare il server e ricaricare tutti i client. Nessun cambiamento ai salvataggi o al bilanciamento.
+
+Controllo browser automatico: icona accanto allo zaino, comandi nel riquadro senza selettori dungeon, colori verde/rosso, uscita dal gruppo conservando l’HUB, menu e run singola con rientro nella stessa sessione, ricreazione del gruppo, invito/prontezza e partenza in Cripta di due membri dal portale. Prova manuale dell’utente e resa mobile ancora da confermare.
+
+Verifica finale sessione/party: 789 test in 69 file, tipi e build superati. Controllo di sensibilità del test di uscita dal gruppo eseguito con regressione temporanea e codice ripristinato; prova browser di Torna in singolo riuscita. Nessun commit o push.
+
+
+### Prova successiva · cadenza nemici e orb
+Verificare in partita pipistrello a contatto, sciami, cariche, orb sovrapposti e cooperativa: la cadenza provvisoria 0,8 s dei mob / 1 s dei boss deve essere punitiva ma leggibile. Nessuna protezione globale dopo il danno. Test automatici a 60/120 Hz, assorbimento orb fermo/veloce, parata e primo impatto in party; mutazione del recupero rilevata e ripristinata. Nessuna prova giocata dell’utente dichiarata.
+
+Verifica della correzione: 800 test in 70 file, tipi e build superati. Server locale aggiornato e risposta HTTP 200; nessuna conferma giocata dichiarata.
+
+
+### Menu e Bestiario · 2 novembre 2026
+Da confermare a mano: HUD nell’HUB, menu iniziale senza zaino, Bestiario delle quattro card con profilo nuovo e profilo con uccisioni, ritorno ai dungeon.

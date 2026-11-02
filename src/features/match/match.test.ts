@@ -215,11 +215,11 @@ describe('danni al giocatore', () => {
     expect(far.player.health.current).toBe(100);
   });
 
-  it('il contatto con il boss ferisce anche in due passi consecutivi', () => {
+  it('il contatto con il boss attende il recupero fra due colpi', () => {
     const match = createQuietMatch();
     match.boss!.position = match.player.position.add(new Vec2(20,0));
     match.step(STEP,intent(match));expect(match.player.health.current).toBe(100-GUARDIAN_STATS.contactDamage);
-    match.step(STEP,intent(match));expect(match.player.health.current).toBe(100-2*GUARDIAN_STATS.contactDamage);
+    match.step(STEP,intent(match));expect(match.player.health.current).toBe(100-GUARDIAN_STATS.contactDamage);
     expect(match.player.isInvulnerable).toBe(false);
   });});
 

@@ -7,7 +7,9 @@ export class FullscreenToggle {
   constructor(private readonly onChange: () => void) {
     this.button.addEventListener('click', () => void this.toggle());
     document.addEventListener('fullscreenchange', () => {
-      this.button.textContent = document.fullscreenElement ? 'Esci da schermo intero · F' : 'Schermo intero · F';
+      const label=document.fullscreenElement ? 'Esci da schermo intero' : 'Schermo intero';
+      this.button.setAttribute('aria-label',label);this.button.title=label+' · F';
+      this.button.setAttribute('aria-pressed',String(Boolean(document.fullscreenElement)));
       this.onChange();
     });
   }
@@ -17,7 +19,7 @@ export class FullscreenToggle {
       if (document.fullscreenElement) await document.exitFullscreen();
       else await document.documentElement.requestFullscreen();
     } catch {
-      this.button.textContent = 'Usa F11 nel browser';
+      this.button.title = 'Usa F11 nel browser';
     }
   }
 }

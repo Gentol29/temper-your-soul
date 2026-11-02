@@ -28,14 +28,14 @@ import type { SnapshotFrame } from './snapshot-codec';
  * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 7: skill e stati di classe; classe nel setup; la discesa (stanze, porte, premi,
  * tempre) e i servitori compatti (tipo alla nascita, poi posizione e stato).
  */
-export const NETWORK = { protocolVersion: 12, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 13, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';
 export const PARTY_MODES: readonly PartyMode[] = ['descent', 'duel', 'pilgrimage'];
 
 export interface PartyMember { id: string; name: string; character: string; appearance: CharacterAppearance; gearScore: number; ready: boolean }
-export interface PartyState { code: string; leaderId: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; visitors?: PartyMember[]; playing: boolean }
+export interface PartyState { ownerId?:string; code: string; leaderId: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; visitors?: PartyMember[]; playing: boolean }
 export interface CombatStats { damageDealt: number; damageReceived: number; healing: number }
 
 /** Come il client ricostruisce la partita di una stanza: mappa (stanza modello o arena del dungeon), boss, vita massima. */

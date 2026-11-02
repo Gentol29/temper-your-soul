@@ -1,3 +1,6 @@
+import { BACKPACK_SPRITE } from './features/presentation/item-sprites';
+import { GOLD_COIN_SPRITE } from './features/presentation/currency-sprites';
+import { renderPixelIcon } from './features/ui/pixel-icon';
 import {applyTradeDelta} from './features/character/trade-transfer';
 import {serializeCharacter} from './features/character/save-format';
 import { HubScreen } from './features/ui/hub-screen';
@@ -75,6 +78,7 @@ const END_DELAY = { won: 1.7, lost: 1.3 } as const;
 const ROOM_FADE = 0.45;
 /** Per quanti millisecondi resta visibile un avviso. */
 const TOAST_MS = 6000;
+const GEAR_SCORE_NOTICE_MS = 2000;
 
 /**
  * Schermata corrente dell'applicazione. Le prime sono fuori dalla partita (mostrano lo sfondo di un dungeon);
@@ -125,11 +129,13 @@ export class Game {
   /** Passaggio alla stanza successiva: dissolvenza, poi `enter`. */
   private pendingRoom: { remaining: number; enter: () => void } | null = null;
   private readonly screens = new Screens();
-  private readonly party = new PartyPanel(() => this.pauseIfPlaying(), snapshot => this.receiveSnapshot(snapshot), () => {
+  private readonly party = new PartyPanel(() => { this.settingsPanel?.close(); this.input.releaseAll(); }, snapshot => this.receiveSnapshot(snapshot), () => {
     if (this.networkBattleId) { this.networkBattleId = ''; this.showToast('Hai lasciato il combattimento cooperativo.'); this.showMenu(); }
   });
   private networkBattleId = '';
   private hubSession='';
+  private dismissedNetworkRun='';
+  private lastPresence:boolean|null=null;
   private lastHubInput=0;
   private networkView: NetworkView | null = null;
   /** Numero della discesa in singolo: una discesa nuova nella stessa stanza modello rifa' calare la grata. */
@@ -196,7 +202,7 @@ export class Game {
     const storage = browserStorage();
     this.saveStore = new SaveStore(storage);
     this.audio = new AudioPlayer(storage);
-    this.settingsPanel = new SettingsPanel(this.audio, this.input, storage, { onOpen: () => this.pauseIfPlaying() });
+    this.settingsPanel = new SettingsPanel(this.audio, this.input, storage, { onOpen: () => { this.party.close(); this.pauseIfPlaying(); } });
     const loaded = this.saveStore.loadRoster();
     this.roster=loaded.roster;
     this.loadStatus = loaded.status;
@@ -205,8 +211,6 @@ export class Game {
     this.hub = new HubScreen({portal:()=>this.openDungeons(),save:()=>{this.persist();},inventory:()=>this.openInventory(),menu:()=>this.showMenu()});
     this.menu = new MainMenu({
       onDungeons: () => this.openHub(),
-      onInventory: () => this.openInventory(),
-      onBestiary: () => this.openBestiary(),
     });
     this.adminMenu = new AdminMenu(ADMIN_TOOLS_ENABLED, {
       onGrantItems: (rarity) => {
@@ -225,10 +229,12 @@ export class Game {
       onDuel: (dungeon) => this.startDungeon(dungeon, 'duel', 0),
       onPilgrimage: () => this.startDungeon(DUNGEONS[0]!, 'pilgrimage', 0),
       onPreview: (dungeon) => this.preview(dungeon),
+      onBestiary: (dungeon) => this.openBestiary(dungeon),
+      onInsufficientGearScore: (minimum) => this.showToast(`Punteggio gear score non sufficiente, gear score richiesto ${minimum}.`, GEAR_SCORE_NOTICE_MS, true),
       onBack: () => this.openHub(),
     });
     this.inventoryScreen = new InventoryScreen({ onChange: () => this.persist(), onBack: () => this.openHub() }, this.input.bindings);
-    this.bestiaryScreen = new BestiaryScreen({ onBack: () => this.openHub() });
+    this.bestiaryScreen = new BestiaryScreen({ onBack: () => this.openDungeons() });
     this.match = this.createMatch(this.dungeon);
     this.menu.setNote(
       storage === null ? 'Salvataggio locale non disponibile: i progressi non verranno conservati.' : LOAD_NOTES[this.loadStatus],
@@ -246,7 +252,12 @@ export class Game {
       else if (action === 'toggle_minimap') this.minimap.toggle();
       else if (action === 'toggle_fullscreen') void this.fullscreen.toggle();
     });
-    const profileButton=document.createElement('button');profileButton.id='player-profile-button';profileButton.className='player-profile-button';profileButton.textContent='Profilo';profileButton.onclick=()=>this.openPlayerProfile();document.body.append(profileButton);
+    const profileButton=document.createElement('button');profileButton.id='player-profile-button';profileButton.className='relic-button secondary';profileButton.title='Personaggio e zaino';profileButton.setAttribute('aria-label','Personaggio e zaino');profileButton.append(renderPixelIcon(BACKPACK_SPRITE));profileButton.onclick=()=>this.openPlayerProfile();requireElement('global-controls').prepend(profileButton);
+    requireElement('global-controls').insertBefore(requireElement('party-toggle'),requireElement('settings-button'));
+    requireElement('global-wallet').prepend(renderPixelIcon(GOLD_COIN_SPRITE));
+    // L'hub è un fratello di main: anche i controlli globali devono stare fuori dal suo stacking context.
+    document.body.append(requireElement('global-wallet'),requireElement('global-controls'),requireElement('party-panel'),requireElement('settings-panel'));
+    const menuButton=document.createElement('button');menuButton.className='relic-button secondary';menuButton.textContent='Menu principale';menuButton.onclick=()=>{this.settingsPanel.close();this.showMenu();};requireElement('settings-panel').append(menuButton);
     requireElement('pause-button').addEventListener('click', () => this.togglePause());
     requireElement('main-menu-button').addEventListener('click',()=>this.showMenu());
     this.overlay.onButtons(
@@ -281,7 +292,7 @@ export class Game {
   private showMenu(): void {
     this.hub.hide();
     this.profileDialog?.close();
-    if (this.networkBattleId && this.screen === 'playing') this.party.client.leave();
+    if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
     this.networkBattleId = '';
     this.networkRun = null;
     this.networkRoom = null;
@@ -306,7 +317,7 @@ export class Game {
         this.persist();this.showMenu();
       }
     }));
-    for (const id of ['menu-dungeons', 'menu-inventory', 'menu-bestiary']) {
+    for (const id of ['menu-dungeons']) {
       (requireElement(id) as HTMLButtonElement).disabled = !this.character.created;
     }
     this.adminMenu.setAvailable(this.character.created);
@@ -314,7 +325,7 @@ export class Game {
 
   private openHub(): void {
     if(!this.character.created){this.showMenu();return;}
-    if(this.networkBattleId&&this.screen==='playing')this.party.client.leave();
+    if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
     this.screen='hub';this.input.releaseAll();this.clearBattleFeedback();this.overlay.hide();this.screens.show(null);
     document.body.classList.add('in-menu');this.hub.show(this.character,this.roster);this.updateParty();
@@ -354,11 +365,11 @@ export class Game {
     this.updateParty();
   }
 
-  private openBestiary(): void {
+  private openBestiary(dungeon: DungeonDefinition): void {
     if (!this.character.created) return;
     this.screen = 'bestiary';
     this.screens.show('bestiary');
-    this.bestiaryScreen.render(this.character);
+    this.bestiaryScreen.render(this.character, dungeon.id);
   }
 
   /** Sfondo delle schermate fuori dalla partita: la mappa e il boss del dungeon indicato, fermi. */
@@ -374,7 +385,7 @@ export class Game {
   }
 
   private startDungeon(dungeon: DungeonDefinition, mode: Mode, _grade: number): void {
-    if (this.party.client.state) {
+    if (this.party.client.state&&this.party.client.isMember&&this.party.client.state.members.length>1) {
       if(this.party.client.state.leaderId!==this.party.client.playerId){this.showToast('Solo il leader può avviare il portale.');return;}
       this.party.client.send({type:'portal_start',dungeonId:dungeon.id,mode});this.party.close();return;
     }
@@ -387,8 +398,8 @@ export class Game {
   /** Nuova partita nel dungeon corrente: il Duello con il boss, oppure una Discesa (o un Pellegrinaggio) da capo. */
   private startMatch(): void {
     this.hub.hide();
-    if (this.party.client.state) { this.party.openDialog(); return; }
-    this.networkBattleId = '';
+    if(this.party.client.state&&this.party.client.isMember&&this.party.client.state.members.length>1){this.startDungeon(this.dungeon,this.mode,0);return;}
+    this.networkBattleId = '';this.networkView=null;this.allyPoses.clear();
     this.renderAppearance = undefined; this.allyVisuals = [];
     if(!this.character.created)return;
     if (this.mode === 'pilgrimage') {
@@ -460,6 +471,7 @@ export class Game {
     if(this.profileDialog){this.profileDialog.close();return;}
     if(this.screen==='hub'){if(!this.hub.closeDialog())this.showMenu();return;}
     if (this.settingsPanel.isOpen) this.settingsPanel.close();
+    else if (this.screen === 'bestiary') this.openDungeons();
     else if (IDLE_SCREENS.includes(this.screen) && this.screen !== 'menu') this.showMenu();
     else this.togglePause();
   }
@@ -709,6 +721,7 @@ export class Game {
 
   private receiveSnapshot(snapshot: BattleSnapshot): void {
     const me = this.party.client.playerId;
+    if(!this.party.client.isMember||snapshot.id.split(':')[0]===this.dismissedNetworkRun)return;
     if (this.completedBattles.has(snapshot.id) || !snapshot.players.some(p => p.id === me)) return;
     if (snapshot.id !== this.networkBattleId) {
       const state = this.party.client.state, dungeon = dungeonById(snapshot.dungeonId);
@@ -882,12 +895,13 @@ export class Game {
     return saved;
   }
 
-  private showToast(text: string): void {
+  private showToast(text: string, duration = TOAST_MS, error = false): void {
     const toast = requireElement('toast');
     toast.textContent = text;
+    toast.classList.toggle('toast-error', error);
     toast.classList.remove('hidden');
     window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => toast.classList.add('hidden'), TOAST_MS);
+    this.toastTimer = window.setTimeout(() => toast.classList.add('hidden'), duration);
   }
 
   // --- Pausa, audio, ridimensionamento ---------------------------------------------------------------------------
@@ -983,8 +997,11 @@ export class Game {
     const frameStart = performance.now();
     this.party.client.flushSnapshot();
     const partyState=this.party.client.state,hub=this.party.client.hub;
-    if(partyState&&this.hubSession!==partyState.code&&(!partyState.playing||!partyState.members.some(m=>m.id===this.party.client.playerId))){this.hubSession=partyState.code;this.party.close();this.openHub();}
-    if(!partyState)this.hubSession='';
+    if(partyState&&this.hubSession!==partyState.code&&(!partyState.playing||!partyState.members.some(m=>m.id===this.party.client.playerId))){this.hubSession=partyState.code;this.openHub();}
+    if(!partyState){this.hubSession='';this.lastPresence=null;}
+    if(partyState&&this.networkBattleId&&!this.party.client.isMember){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.networkBattleId='';this.networkView=null;this.openHub();}
+    if(partyState){const present=this.screen==='hub'||this.screen==='dungeons';if(present!==this.lastPresence){this.lastPresence=present;this.party.client.send({type:'hub_presence',present});}}
+
     this.hub.setOnline(hub&&partyState?{id:this.party.client.playerId,view:hub,busy:this.party.client.tradeSaving,send:m=>this.party.client.send(m)}:null);
     const delta = Math.min((time - this.lastTime) / 1000, MAX_FRAME_TIME);
     this.lastTime = time;
@@ -1019,8 +1036,9 @@ export class Game {
     this.camera.follow(renderedMatch.player.position);
     if (view) renderedMatch.player.aim = renderedMatch.player.position.add(this.camera.pointerOffset(this.input.pointer));
     this.hud.update(this.match, levelProgress(this.character.totalXp));
-    const profileButton=requireElement('player-profile-button'),profileLabel=`Profilo · ${this.roster.gold} oro`;
-    if(profileButton.textContent!==profileLabel)profileButton.textContent=profileLabel;
+    document.body.classList.toggle('initial-menu',this.screen==='menu');
+    const balance=requireElement('global-gold'),goldLabel=this.roster.gold.toLocaleString('it-IT');
+    if(balance.textContent!==goldLabel)balance.textContent=goldLabel;
     const views = this.descentViews();
     if (views !== null && (this.screen === 'playing' || this.screen === 'paused')) this.descentHud.update(views.run, views.room, views.localId);
     // Minimappa della stanza (anche nel Duello) e, tenendo premuto Tab, la mappa intera della discesa.

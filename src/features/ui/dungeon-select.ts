@@ -30,6 +30,8 @@ export class DungeonSelect {
       /** Passando sopra una scheda lo sfondo mostra la mappa di quel dungeon. */
       readonly onPreview: (dungeon: DungeonDefinition) => void;
       readonly onBack: () => void;
+      readonly onInsufficientGearScore: (minimum: number) => void;
+      readonly onBestiary: (dungeon: DungeonDefinition) => void;
     },
   ) {
     requireElement('dungeons-back').addEventListener('click', handlers.onBack);
@@ -84,16 +86,26 @@ export class DungeonSelect {
         ),
       );
       const table = lootTableFor(dungeon.id);
-      card.append(el('p', 'dungeon-rewards', `${PROGRESSION.rewards[dungeon.id as keyof typeof PROGRESSION.rewards]} XP · Set livello ${table.itemLevel}`), renderLootRate(table));
+      const references = el('div', 'dungeon-references');
+      const bestiary = el('button', 'relic-button secondary dungeon-bestiary', 'Bestiario');
+      bestiary.type = 'button';
+      bestiary.setAttribute('aria-label', `Bestiario · ${dungeon.name}`);
+      bestiary.addEventListener('click', () => this.handlers.onBestiary(dungeon));
+      references.append(renderLootRate(table), bestiary);
+      card.append(el('p', 'dungeon-rewards', `${PROGRESSION.rewards[dungeon.id as keyof typeof PROGRESSION.rewards]} XP · Set livello ${table.itemLevel}`), references);
       const allowed = canEnterDungeon(dungeon, character.gearScore);
       const minimum = minimumDungeonGearScore(dungeon);
       const buttons = el('div', 'dungeon-buttons');
-      const descend = el('button', 'primary dungeon-enter', allowed ? 'Discesa →' : `Richiesti ${minimum} GS · Hai ${character.gearScore}`);
+      card.classList.toggle('is-unavailable', !allowed);
+      const descend = el('button', 'primary dungeon-enter', 'Discesa');
       descend.type = 'button';
-      descend.disabled = !allowed;
+      descend.setAttribute('aria-disabled', String(!allowed));
       descend.title = allowed ? 'Stanze di servitori, una scelta di porte a ogni tappa, il boss in fondo.' : `Ingresso: almeno ${minimum} GS equipaggiati · Attuali ${character.gearScore}`;
-      descend.addEventListener('click', () => this.handlers.onDescent(dungeon, 0));
-      const duel = el('button', 'secondary dungeon-duel', 'Duello');
+      descend.addEventListener('click', () => {
+        if (!canEnterDungeon(dungeon, character.gearScore)) { this.handlers.onInsufficientGearScore(minimum); return; }
+        this.handlers.onDescent(dungeon, 0);
+      });
+      const duel = el('button', 'relic-button secondary dungeon-duel', 'Duello');
       duel.type = 'button';
       duel.disabled = !allowed || !character.canDuel(dungeon.id);
       duel.title = character.canDuel(dungeon.id) ? 'Solo il boss, come un tempo.' : 'Si apre dopo aver sconfitto il boss in una discesa.';

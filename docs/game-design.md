@@ -641,3 +641,34 @@ Il widget del party si riallinea anche dalla presenza autorevole periodica nell�
 Scambia invia prima una richiesta: «Accetti lo scambio da X?» con Sì/No. Solo il destinatario può accettare; prima del consenso il server rifiuta offerte e conferme, e nessun inventario di scambio viene aperto. No, chiusura o disconnessione annullano la richiesta. La doppia conferma finale resta necessaria. Mostra profilo visualizza statistiche, ritratto ed equipaggiamento indossato, senza zaino o deposito. Protocollo 12; riavvio server e ricarica client richiesti.
 
 Controllo browser automatico con un client locale e uno tramite tunnel Cloudflare reale: link pubblico dal leader locale, due membri nel widget dopo accettazione, profilo senza zaino, No che annulla la richiesta e Sì che apre le offerte su entrambi i client. Conferma manuale dell’utente ancora da ricevere.
+
+
+### Sessione cooperativa e party indipendenti · modifica locale 2 novembre 2026
+L’icona Party accanto allo zaino apre un riquadro con membri e comandi; rimossa la finestra separata con destinazione, modalità, boss e avvio. La destinazione si sceglie dal portale. Nel riquadro: Pronto verde (con stato selezionato), Lascia il party rosso, Copia invito HUB e Torna in singolo. Crea party apre una sessione condivisa; il link invita a visitare l’HUB del creatore, senza aggiungere automaticamente al gruppo di raid. L’invito al gruppo resta tramite E e accettazione.
+
+La proprietà dell’HUB è distinta dalla guida del party. Lascia il party rimuove solo dal gruppo e dall’eventuale raid, conservando connessione, personaggio, deposito e posizione nell’HUB; se serve la guida passa al membro successivo. Se il gruppo è vuoto si può ricrearlo nella stessa sessione. Torna in singolo disconnette dalla sessione condivisa. Menu e run locali mantengono la connessione: durante l’assenza lo sprite non è visibile né interagibile nell’HUB e la prontezza viene tolta. Il proprietario può restare al menu o in una run singola e gli ospiti continuano a usare l’istanza. Il gruppo di un solo membro e gli ospiti fuori dal gruppo possono avviare una run locale; un gruppo di più membri parte insieme dal portale del leader quando gli altri sono pronti e presenti. I requisiti di accesso dei personaggi restano validi. Nel raid cooperativo, tornare al menu abbandona il raid/gruppo ma conserva la sessione.
+
+Resta un solo gruppo di raid per istanza in questo incremento; più gruppi asincroni nella medesima istanza sono futuri. L’istanza vive finché almeno una connessione rimane attiva, non oltre lo spegnimento del server o l’uscita di tutti. Depositi e progressi restano personali e locali al browser. Protocollo 13: riavviare il server e ricaricare tutti i client. Nessun cambiamento ai salvataggi o al bilanciamento.
+
+Controllo browser automatico: icona accanto allo zaino, comandi nel riquadro senza selettori dungeon, colori verde/rosso, uscita dal gruppo conservando l’HUB, menu e run singola con rientro nella stessa sessione, ricreazione del gruppo, invito/prontezza e partenza in Cripta di due membri dal portale. Prova manuale dell’utente e resa mobile ancora da confermare.
+
+
+### Cadenza dei danni nemici · 2 novembre 2026
+Il contatto non è più danno a ogni passo: intervallo provvisorio 0,8 s fra tentativi della stessa coppia mob/giocatore, 1 s per boss e luogotenenti. Definizioni configurabili con `contactInterval`; cadenza condivisa fra contatto e carica del boss. Un tentativo parato/schivato consuma il recupero del nemico. Altri attaccanti, proiettili e zone rimangono indipendenti: nessuna invulnerabilità automatica. Uscire e rientrare dal contatto non azzera il timer.
+Ogni orb viene consumato al primo impatto, anche contro parata/invulnerabilità da skill. Ora si considera tutto il segmento percorso nel passo e il primo corpo vivo lungo la traiettoria, evitando attraversamenti e impatti scelti dall’ordine del party. Danno per colpo, difesa e periodicità delle zone invariati. Stato autorevole sul server, nessun nuovo campo nel protocollo.
+
+
+### Barra HUD permanente · 2 novembre 2026
+Dopo il menu iniziale, contatore oro automatico fisso a sinistra e comandi fissi a destra in ordine zaino, party, impostazioni, fullscreen a icona. Il party non mette in pausa; party e impostazioni si chiudono reciprocamente. Il menu principale è raggiungibile dalle impostazioni. Nessuna modifica a premi o raccolta.
+
+
+### Menu e Bestiario · 2 novembre 2026
+Menu iniziale senza zaino e Bestiario. Ogni card dungeon affianca Bestiario a Loot rate %: mostra solo i servitori e luogotenenti di quel dungeon già abbattuti almeno una volta; messaggio esplicito se nessuno è scoperto. La chiusura torna ai dungeon.
+
+
+### Audio delle anteprime · 2 novembre 2026
+Le anteprime dei dungeon sono solo visive: nessun caricamento di musica o ambiente specifico durante hover/focus. Queste tracce partono entrando nel dungeon; i menu mantengono la propria musica.
+
+
+### Accesso dungeon nella UI · 2 novembre 2026
+Le card senza GS sufficiente sono opacizzate. Discesa conserva il nome e aria-disabled; il tentativo con mouse, tocco o tastiera mostra per 2 secondi «Punteggio gear score non sufficiente, gear score richiesto X.» in rosso e Silkscreen. Non avvia la partita. Soglie 100/200 GS invariate. Duello usa lo stile Reliquiario; X chiude la scelta e torna all’HUB. Verifica visiva e prova manuale ancora da confermare.

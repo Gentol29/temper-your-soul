@@ -4,7 +4,9 @@ Gioco d’azione 2D per browser in **TypeScript strict**, Canvas 2D e DOM, senza
 
 **Stato al 1 novembre 2026:** prototipo TypeScript con quattro dungeon, tre classi, profili locali multipli, livelli/XP, mana, 25 famiglie di oggetti, vincoli di classe, GS, audio e cooperativa autorevole fino a quattro giocatori. La revisione locale della PR #4 mantiene mappe, 32 servitori a tema con élite, luogotenenti/pre-boss, Bestiario e scelta delle direzioni lungo otto tappe. **Nessuna ricompensa intermedia**: niente XP, oggetti, braci, cure a fine stanza, sigilli, tempre o Altare. Le skill restano quelle dell’equipaggiamento; solo il boss finale assegna gli XP e il bottino già previsti (25% di possibilità di un oggetto). La progressione tra stanze verrà progettata in un secondo momento. Salvataggio v7 compatibile con v6, protocollo cooperativo 5. La qualità visiva e il bilanciamento richiedono ancora prove manuali; il permadeath non è implementato. Sul ramo `feature/grafica-fasi-2` (non ancora committato): fasi 1–4 dello studio grafico (luce, muri a tre quarti, minimappa e mappa della discesa, stanze con massicci, grate e atmosfera), fasi 7 e 8 (vene B e C: 55 servitori nuovi, sette comportamenti, otto luogotenenti, vene nella discesa) fasi 5 e 6 (pozzi, ponti e ripari distruttibili in otto stanze nuove, campo di flusso per i servitori, tileset CC0 ricolorati per tema) e protocollo cooperativo 8; vedi `docs/compito-grafica.md`.
 
-Aggiornamento locale del 2 novembre: hub condiviso, visite e inviti al party, partenza comune dal portale e scambi a doppia conferma. Salvataggio v10 e protocollo 12; dettagli e limiti in [game-design.md](docs/game-design.md#hub-condiviso-e-scambi--incremento-locale-2-novembre-2026). Il registro `.tools/trade-ledger.json` conserva le consegne pendenti e va mantenuto ai riavvii del server.
+Aggiornamento locale del 2 novembre: hub condiviso, visite e inviti al party, partenza comune dal portale e scambi a doppia conferma. Salvataggio v10 e protocollo 13; dettagli e limiti in [game-design.md](docs/game-design.md#hub-condiviso-e-scambi--incremento-locale-2-novembre-2026). Il registro `.tools/trade-ledger.json` conserva le consegne pendenti e va mantenuto ai riavvii del server.
+
+Modifica locale successiva: icona Party con comandi nel riquadro, inviti all’HUB e uscita dal gruppo separata da Torna in singolo. La sessione resta collegata passando al menu o facendo una run locale; un solo gruppo per istanza, non persistente dopo l’uscita di tutti o il riavvio server.
 
 ## Prima di lavorare: istruzioni per collaboratori e agenti AI
 
@@ -362,3 +364,18 @@ Primo commit di `codex/bilanciamento-impostazioni`: taratura del combattimento, 
 
 ### Integrazione main · v0.06.00
 Su richiesta esplicita del proprietario del 2 novembre 2026, il lavoro completo viene integrato e pubblicato direttamente su `origin/main`, nel repository `Jabbazz/temper-your-soul`, senza fork né PR. Questa preferenza sostituisce il precedente flusso tramite fork indicato nella skill locale. Destinazione predefinita del push: origin. Versione package/lock `0.6.0`; changelog main con riepilogo completo e storico v0.05.01 conservato. Salvataggio v9 e protocollo 10; riavviare server cooperativo e ricaricare i client.
+
+
+### Correzione locale 0.7.2 · ritmo dei colpi nemici
+Contatto fisico con recupero per nemico/bersaglio (mob 0,8 s; boss/luogotenenti 1 s), cariche incluse, senza reintrodurre invulnerabilità dopo il danno. Orb consumati al primo impatto; collisione anche lungo il tratto percorso per i colpi veloci. Danno per colpo invariato. Changelog con storico conservato; cadenze provvisorie da confermare giocando.
+
+
+### Menu e Bestiario · 2 novembre 2026
+Preparazione locale v0.08.00 su main allineato a 4082d46: barra HUD persistente, party senza pausa, Bestiario per dungeon solo con mostri scoperti e menu iniziale senza zaino. Include i precedenti cambi locali di contatto, orb, HUB condiviso e scambi; nessun commit o push eseguito.
+
+
+### Pubblicazione autorizzata · v0.08.00
+Incremento su main: HUD globale, navigazione e Bestiario per dungeon, accesso GS con avviso, audio delle anteprime senza caricamenti dei dungeon, comandi party e correzioni dei colpi nemici. Card con maggiore separazione fra riferimenti e azioni. Piano sprite incluso come preparazione rinviata, nessuna generazione. Verifica completa automatica; controllo visivo e prova giocata della versione combinata ancora da confermare (browser integrato in timeout). Protocollo 13: riavviare il server e ricaricare i client.
+
+
+Integrazione finale v0.08.00: base aggiornata alla PR v0.07.03 (`95881c7`), menu Admin conservato. Distanza sotto Bestiario/Loot rate: 20 px. Pubblicazione su origin/main autorizzata dal proprietario dopo verifica completa.

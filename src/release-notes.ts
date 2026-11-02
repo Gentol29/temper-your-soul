@@ -158,6 +158,27 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
   };
 
 export const RELEASES: readonly ReleaseNotes[] = [
+  {
+    version: '0.8.0', date: '2026-11-02',
+    changes: [
+      "Integrata la PR v0.07.03 con menu Admin conservato. Maggiore spazio fra Bestiario/Loot rate e i pulsanti Discesa/Duello nelle card. Incluso il piano sprite PixelLab già predisposto e rinviato: nessuna nuova generazione o sostituzione di asset.",
+      "Duello nello stile condiviso; card senza GS sufficiente opacizzate, Discesa bloccata con avviso rosso di 2 secondi. Icona fullscreen centrata e X nella selezione dungeon per tornare all’HUB. Soglie GS invariate.",
+      "Bestiario con lo stile Reliquiario condiviso. Le anteprime delle card non caricano più gli MP3 dei dungeon: musica e ambiente partono all’ingresso; nei menu resta la musica menu.",
+      "Contatto fisico dei mob: intervallo minimo per nemico e bersaglio 0,8 s; boss e luogotenenti 1 s, cariche incluse. Nessuna invulnerabilità automatica dopo il danno. Valori provvisori da confermare giocando.",
+      "Ogni orb si consuma al primo impatto; collisione verificata anche lungo il percorso dei colpi veloci. Danno per colpo invariato.",
+      "HUB condiviso: visite, inviti, partenza dal portale e scambi a doppia conferma con consegne persistenti. Salvataggio v10 e protocollo 13: riavviare il server e ricaricare i client.",
+      "Party con comandi nella tendina, inviti all’HUB, uscita dal gruppo separata dal ritorno in singolo e sessione conservata passando al menu o a una run locale.",
+      "Barra permanente dopo il menu iniziale: oro automatico a sinistra; zaino, party, impostazioni e fullscreen a icona a destra, visibili anche nell’HUB. Aprire il party non mette in pausa. Navigazione al menu centralizzata nelle impostazioni.",
+      "Menu iniziale senza zaino e Bestiario. Bestiario accanto a Loot rate % in ogni card dungeon: mostra solo i mostri scoperti di quel dungeon, con ritorno alla selezione.",
+      "Tipi, test e build verificati; conferma visiva e prova giocata della versione combinata ancora necessarie.",
+    ],
+    balanceChanges: [
+      { label: 'Mob · intervallo minimo di contatto a 60 Hz', before: 1 / 60, after: 0.8, unit: 's' },
+      { label: 'Boss/luogotenenti · intervallo minimo di contatto a 60 Hz', before: 1 / 60, after: 1, unit: 's' },
+      { label: 'Pipistrello del campanile · contatto continuo · senza difesa · danno su 2 s a 60 Hz (HP sufficienti)', before: 600, after: 15, unit: 'HP' },
+    ],
+  },
+
 {
   "version": "0.7.3",
   "date": "2026-11-02",

@@ -43,7 +43,7 @@ export class PartyClient {
       const key=`temper-your-soul:network-identity:${profileId}`,store=browserStorage();let identity=store?.getItem(key);if(!identity){identity=crypto.randomUUID();try{store?.setItem(key,identity);}catch{/* La sessione continua, senza ripresa dopo chiusura. */}}
       this.send({ visitor:Boolean(code),identity, type: 'enter', protocol: NETWORK.protocolVersion, character: this.serialized, ...(code ? { code } : {}) });
       this.timer = window.setInterval(() => {
-        if (performance.now() - this.lastReply > 12_000 || (this.state?.playing && performance.now() - this.lastSnapshot > 4000)) {
+        if (performance.now() - this.lastReply > 12_000 || (this.state?.playing && this.state.members.some(m=>m.id===this.playerId) && performance.now() - this.lastSnapshot > 4000)) {
           this.error('Connessione interrotta: il server non risponde.'); this.leave(); return;
         }
         this.send({ type: 'ping', sent: performance.now() });
@@ -114,6 +114,8 @@ export class PartyClient {
     if (this.state && (!this.state.playing||!this.state.members.some(m=>m.id===this.playerId)) && !this.tradeSaving && !this.hub?.requests?.some(r=>r.from===this.playerId||r.to===this.playerId) && !this.hub?.trades.some(t=>t.players.includes(this.playerId)) && text !== this.serialized) { this.serialized = text; this.send({ type: 'character', character: text }); }
   }
   send(message: ClientMessage): void { if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(message)); }
+  get isMember():boolean{return Boolean(this.state?.members.some(m=>m.id===this.playerId));}
+  leaveParty():void{this.send({type:'party_leave'});}
   input(intent: PlayerIntent): boolean {
     const now = performance.now(); if (now - this.lastInput < NETWORK.inputMs) return false;
     this.lastInput = now; this.send({ type: 'input', intent }); return true;

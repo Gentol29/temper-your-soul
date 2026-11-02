@@ -1,3 +1,5 @@
+import { CONTACT_ATTACKS, ContactAttacks } from '../combat/contact-attacks';
+import { projectileImpactFraction } from '../combat/projectile-impact';
 import { partyHealthMultiplier } from '../combat/party-health';
 import { ClassCombat, type EnemyTarget } from '../classes/class-combat';
 import type { HitEffect } from '../classes/skill-mechanics';
@@ -136,6 +138,7 @@ export class Match {
   readonly report = new Map<string, { damageDealt: number; damageReceived: number; healing: number }>();
   viewPlayerId = 'local';
   get player(): Player { return this.players.get(this.viewPlayerId) ?? this.players.values().next().value!; }
+  private readonly contactAttacks = new ContactAttacks();
   private readonly owners = new Map<number, string>();
   /** Da quale schema del boss (o servitore) viene ogni proiettile o zona nemica (per la fonte dei danni subiti). */
   private readonly sources = new Map<number, DamageSource>();
@@ -291,7 +294,7 @@ export class Match {
       if (!target) { this.end(false); return; }
       boss.step(dt, this.bossContext(target));
       for (const player of this.players.values()) {
-        if (player.position.distanceTo(boss.position) < boss.stats.contactDistance) this.hurtPlayer(boss.stats.contactDamage, player, CONTACT_SOURCE);
+        if (player.position.distanceTo(boss.position) < boss.stats.contactDistance) this.hurtByContact(boss.stats.contactDamage, player, boss, boss.stats.contactInterval ?? CONTACT_ATTACKS.bossInterval, CONTACT_SOURCE);
       }
     }
 
@@ -417,13 +420,13 @@ export class Match {
         this.sources.set(this.nextId - 1, { kind: 'zone', name: this.currentPattern });
       },
       hurtPlayer: amount => {
-        this.hurtPlayer(amount, target, chargeSource());
+        if (this.boss) this.hurtByContact(amount, target, this.boss, this.boss.stats.contactInterval ?? CONTACT_ATTACKS.bossInterval, chargeSource());
       },
       hurtNearbyPlayers: amount => {
         const boss = this.boss;
         if (boss === null) return;
         for (const player of this.players.values()) {
-          if (player.position.distanceTo(boss.position) < boss.stats.chargeHitDistance) this.hurtPlayer(amount, player, chargeSource());
+          if (player.position.distanceTo(boss.position) < boss.stats.chargeHitDistance) this.hurtByContact(amount, player, boss, boss.stats.contactInterval ?? CONTACT_ATTACKS.bossInterval, chargeSource());
         }
       },
       summon: (summons, count, center) => this.summon(summons, count, center),
@@ -564,7 +567,7 @@ export class Match {
         this.spawnMinion(definition, position, { parentId: parent.id, maxHealth: this.minionHealth(definition) });
       },
       hurtPlayer: (amount, player, minion) => {
-        if (this.hurtPlayer(amount, player, sourceOf(minion))) {
+        if (this.hurtByContact(amount, player, minion, minion.definition.contactInterval ?? CONTACT_ATTACKS.minionInterval, sourceOf(minion))) {
           const slow = minion.definition.slowOnHit ?? minion.elite?.slowOnHit;
           if (slow !== undefined) player.slowFor = Math.max(player.slowFor, slow);
         }
@@ -638,6 +641,7 @@ export class Match {
     const boss = this.boss;
     for (const projectile of this.projectiles) {
       if (projectile.isExpired) continue;
+      const previous = projectile.position;
       projectile.advance(dt);
       const solid = solidAt(this.arena, projectile.position);
       if (pillarAt(this.arena, projectile.position) !== undefined || solid !== undefined) {
@@ -648,10 +652,14 @@ export class Match {
       }
       if (projectile.team === 'enemy') {
         let victim: Player | undefined;
+        let firstImpact = Infinity;
         for (const p of this.players.values()) {
-          if (!p.health.isDead && projectile.position.distanceTo(p.position) < projectile.radius + HIT_RADIUS.player) { victim = p; break; }
+          if (p.health.isDead) continue;
+          const fraction = projectileImpactFraction(previous, projectile.position, p.position, projectile.radius + HIT_RADIUS.player);
+          if (fraction !== null && fraction < firstImpact) { victim = p; firstImpact = fraction; }
         }
         if (victim) {
+          projectile.position = previous.lerp(projectile.position, firstImpact);
           if (this.hurtPlayer(projectile.damage, victim, this.sources.get(projectile.id), projectile.spec.unblockable)) {
             const slow = this.slowingShots.get(projectile.id);
             if (slow !== undefined) victim.slowFor = Math.max(victim.slowFor, slow);
@@ -765,6 +773,12 @@ export class Match {
       struck,
       ...(owner ? { playerId: owner } : {}),
     });
+  }
+
+  private hurtByContact(amount: number, player: Player, attacker: object, interval: number, source: DamageSource): boolean {
+    if (this.status !== 'playing' || player.health.isDead || amount <= 0) return false;
+    if (!this.contactAttacks.tryAttack(attacker, player, this.time, interval)) return false;
+    return this.hurtPlayer(amount, player, source);
   }
 
   /**

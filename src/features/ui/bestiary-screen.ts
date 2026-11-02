@@ -14,7 +14,7 @@ import { el, requireElement } from './dom';
 
 /**
  * Il bestiario: una pagina per servitore, divisa per dungeon e per vena («Catacombe 4/7»). Si apre con la prima
- * uccisione; prima si vede solo la sagoma. Ogni pagina dice ruolo, schema del boss che insegna, uccisioni e
+ * uccisione; le pagine non ancora scoperte restano nascoste. Ogni pagina dice ruolo, schema del boss che insegna, uccisioni e
  * un'iscrizione.
  */
 export class BestiaryScreen {
@@ -24,11 +24,15 @@ export class BestiaryScreen {
     requireElement('bestiary-back').addEventListener('click', handlers.onBack);
   }
 
-  render(character: Character): void {
+  private dungeonId: string | undefined;
+
+  render(character: Character, dungeonId = this.dungeonId): void {
+    this.dungeonId = dungeonId;
     const sections: HTMLElement[] = [];
     let known = 0;
     let total = 0;
     for (const dungeon of DUNGEONS) {
+      if (dungeonId !== undefined && dungeon.id !== dungeonId) continue;
       const section = el('section', 'bestiary-section');
       section.append(el('h3', '', dungeon.name));
       const veins = VEIN_MINIONS[dungeon.id];
@@ -41,14 +45,14 @@ export class BestiaryScreen {
         const lieutenant = vein === 'a' ? LIEUTENANTS[dungeon.id] : VEIN_LIEUTENANTS[dungeon.id]?.[vein];
         if (lieutenant !== undefined) cards.push(lieutenantCard(lieutenant, character.bestiary[lieutenant.id] ?? 0));
         const opened = cards.filter((card) => !card.classList.contains('locked')).length;
-        grid.append(...cards);
+        grid.append(...cards.filter((card) => !card.classList.contains('locked')));
         total += cards.length;
         known += opened;
-        section.append(el('h4', 'bestiary-vein', `${veinName(dungeon.id, vein)} ${opened}/${cards.length}`), grid);
+        if (opened > 0) section.append(el('h4', 'bestiary-vein', `${veinName(dungeon.id, vein)} ${opened}/${cards.length}`), grid);
       }
       sections.push(section);
     }
-    this.list.replaceChildren(el('p', 'bestiary-count', `Pagine aperte: ${known} di ${total}`), ...sections);
+    this.list.replaceChildren(el('p', 'bestiary-count', known > 0 ? `Mostri scoperti: ${known} di ${total}` : 'Nessun mostro scoperto in questo dungeon. Abbattine uno per aggiungerlo al Bestiario.'), ...sections);
   }
 }
 

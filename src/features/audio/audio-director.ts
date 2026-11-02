@@ -124,8 +124,6 @@ export interface LoopChoice<Id extends string> {
 
 /** Quanto si abbassa la musica in pausa. Provvisorio. */
 export const PAUSE_DUCK = 0.4;
-/** Volume dell'ambiente del dungeon mostrato dietro i menu. Provvisorio. */
-export const MENU_AMBIENCE_GAIN = 0.35;
 
 const MENU_SCREENS: readonly AudioScreen[] = ['menu', 'dungeons', 'inventory'];
 
@@ -140,9 +138,9 @@ export function musicFor(scene: AudioScene, music: Readonly<Record<MusicId, Loop
   return { id, gain: scene.screen === 'paused' ? PAUSE_DUCK : 1 };
 }
 
-/** Ambiente: quello del tema del dungeon, piu' basso dietro i menu e in pausa. */
+/** Ambiente del dungeon solo dopo l'ingresso; in pausa resta più basso. */
 export function ambienceFor(scene: AudioScene): LoopChoice<ArenaThemeId> {
-  if (MENU_SCREENS.includes(scene.screen)) return { id: scene.theme, gain: MENU_AMBIENCE_GAIN };
+  if (MENU_SCREENS.includes(scene.screen)) return { id: null, gain: 0 };
   return { id: scene.theme, gain: scene.screen === 'paused' ? PAUSE_DUCK : 1 };
 }
 

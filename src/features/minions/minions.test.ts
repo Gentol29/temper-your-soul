@@ -92,7 +92,7 @@ describe('servitori: comportamento', () => {
     const hits = eventsOfType(events, 'damage_dealt').filter((event) => event.target === 'player');
     expect(hits.length).toBeGreaterThan(0);
     expect(hits[0]).toMatchObject({ amount: SPORELING.contactDamage, source: { kind: 'minion', name: SPORELING.name } });
-    expect(hits.length).toBeGreaterThan(4);
+    expect(hits.length).toBeLessThanOrEqual(4);
     expect(match.player.isInvulnerable).toBe(false);
   });
 

@@ -4,15 +4,12 @@ import {deserializeCharacter} from '../character/save-format';
 import {tradeWindow} from './trade-window';
 import { HubState, HUB_MAP } from '../character/hub-state';
 import { Vec2 } from '../../core/vec2';
-import { GOLD_COIN_SPRITE } from '../presentation/currency-sprites';
-import { el, requireElement } from './dom';
+import { el } from './dom';
 import type { Character } from '../character/character';
 import type { CharacterRoster } from '../character/character-roster';
 import { acquireBasic, upgradeItem, HUB_PRICES } from '../character/hub-services';
 import { hubOffer } from './hub-offer';
 import { storageWindow } from './storage-window';
-import { BACKPACK_SPRITE } from '../presentation/item-sprites';
-import { renderPixelIcon } from './pixel-icon';
 import { STARTER_SETS } from '../character/creation';
 import { HubRenderer } from '../presentation/hub-renderer';
 import { hideItemTooltip } from './item-slot';
@@ -26,45 +23,30 @@ export class HubScreen {
   private onlineId='';
   private socialKey='';
   private socialTrade='';
-  private readonly partyRoot=requireElement('party-panel');
-  private readonly partyAnchor=document.createComment('party-panel-home');
   private readonly prompt=el('p','hub-prompt');
   private readonly state=new HubState();
   private panel:HTMLElement|null=null;
   private character!:Character;
   private roster!:CharacterRoster;
-  private readonly wallet=el('div','hub-wallet');
-  private readonly balance=el('span','hub-gold-amount');
-  private readonly toolbar=el('nav','hub-controls');
-  private readonly settingsButton=requireElement('settings-button');
-  private readonly settingsPanel=requireElement('settings-panel');
-  private readonly settingsButtonAnchor=document.createComment('settings-button-home');
-  private readonly settingsPanelAnchor=document.createComment('settings-panel-home');
   get dialogOpen():boolean{return this.panel!==null;}
   constructor(private readonly handlers:{portal:()=>void;save:()=>void;inventory:()=>void;menu:()=>void}) {
     this.canvas.setAttribute('aria-label','Piazza del rifugio: WASD per muoverti, E vicino a NPC e strutture');
     this.canvas.tabIndex=0;this.renderer=new HubRenderer(this.canvas);
     this.prompt.className='hub-interaction-tooltip hidden';this.prompt.setAttribute('role','status');
-    this.partyRoot.before(this.partyAnchor);
-    this.settingsButton.before(this.settingsButtonAnchor);this.settingsPanel.before(this.settingsPanelAnchor);
-    this.toolbar.setAttribute('aria-label','Comandi del rifugio');
-    this.wallet.append(renderPixelIcon(GOLD_COIN_SPRITE),this.balance);this.wallet.setAttribute('role','status');
     const button=(label:string,action:()=>void)=>{const b=el('button','relic-button secondary',label);b.type='button';b.onclick=action;return b;};
-    const backpack=button('',()=>this.openProfile());backpack.classList.add('backpack-button','hub-character-button');backpack.setAttribute('aria-label','Personaggio e zaino');backpack.title='Personaggio e zaino';backpack.append(renderPixelIcon(BACKPACK_SPRITE));
-    this.toolbar.append(backpack);
     const menu=button('Menu principale',handlers.menu);menu.classList.add('hub-menu-button');
-    this.root.append(this.canvas,this.prompt,this.toolbar,this.wallet,menu);document.body.append(this.root);
+    this.root.append(this.canvas,this.prompt,menu);document.body.append(this.root);
   }
   show(character:Character,roster:CharacterRoster):void {
     this.closeDialog();this.character=character;this.roster=roster;
-    this.root.append(this.partyRoot);this.toolbar.append(this.settingsButton);this.root.append(this.settingsPanel);this.settingsButton.classList.add('relic-button','secondary');document.body.classList.add('in-hub');
+    document.body.classList.add('in-hub');
     this.root.classList.remove('hidden');this.refresh();this.step(0,Vec2.ZERO);this.canvas.focus();
   }
-  hide():void{this.closeDialog();this.root.classList.add('hidden');this.partyAnchor.after(this.partyRoot);this.settingsButtonAnchor.after(this.settingsButton);this.settingsPanelAnchor.after(this.settingsPanel);this.settingsButton.classList.remove('relic-button','secondary');document.body.classList.remove('in-hub');}
-  private refresh():void{this.balance.textContent=this.roster.gold.toLocaleString('it-IT');this.wallet.setAttribute('aria-label',`${this.roster.gold} oro`);}
+  hide():void{this.closeDialog();this.root.classList.add('hidden');document.body.classList.remove('in-hub');}
+  private refresh():void{}
   step(dt:number,move:Vec2):void {
     this.state.step(this.dialogOpen?0:dt,this.dialogOpen?Vec2.ZERO:move);
-    this.time+=dt;this.renderer.draw(this.state,this.character.appearance(),this.time,this.online?.view.players.filter(p=>p.id!==this.online!.id));
+    this.time+=dt;this.renderer.draw(this.state,this.character.appearance(),this.time,this.online?.view.players.filter(p=>p.id!==this.online!.id&&p.present!==false));
     const target=this.interactionTarget();this.prompt.classList.toggle('hidden',!target||this.dialogOpen);
     if(target){
       const point=this.renderer.screenPoint(target.x+('width' in target?target.width/2:18),target.y-28);
@@ -88,7 +70,7 @@ export class HubScreen {
     else if(wasSocial)this.closeDialog();
     else if(invite){const from=online.view.players.find(p=>p.id===invite);const card=this.dialog('Invito al party',true);card.append(el('p','',`${from?.name??'Un giocatore'} ti invita nel party.`));for(const [label,accept]of [['Accetta',true],['Rifiuta',false]] as const){const b=el('button','relic-button',label);b.onclick=()=>{online.send({type:'party_accept',accept});this.closeDialog();};card.append(b);}}
   }
-  private nearPlayer():HubPlayer|undefined{return this.online?.view.players.filter(p=>p.id!==this.online!.id).sort((a,b)=>this.state.position.distanceTo(new Vec2(a.x,a.y))-this.state.position.distanceTo(new Vec2(b.x,b.y))).find(p=>this.state.position.distanceTo(new Vec2(p.x,p.y))<HUB_MAP.interactionRadius);}
+  private nearPlayer():HubPlayer|undefined{return this.online?.view.players.filter(p=>p.id!==this.online!.id&&p.present!==false).sort((a,b)=>this.state.position.distanceTo(new Vec2(a.x,a.y))-this.state.position.distanceTo(new Vec2(b.x,b.y))).find(p=>this.state.position.distanceTo(new Vec2(p.x,p.y))<HUB_MAP.interactionRadius);}
   private interactPlayer(peer:HubPlayer):void {
     const online=this.online;if(!online)return;const card=this.dialog(peer.name,true);
     const action=(label:string,run:()=>void)=>{const b=el('button','relic-button hub-social-action',label);b.onclick=run;card.append(b);};

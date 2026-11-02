@@ -34,6 +34,8 @@ export interface BossStats {
   /** Sotto questa distanza tra i centri il boss ferisce il giocatore per contatto, con questo danno. */
   readonly contactDistance: number;
   readonly contactDamage: number;
+  /** Secondi fra colpi fisici sullo stesso giocatore; default in CONTACT_ATTACKS. */
+  readonly contactInterval?: number;
   /** Danno della carica e distanza dal boss in carica sotto la quale il giocatore viene colpito. */
   readonly chargeDamage: number;
   readonly chargeHitDistance: number;

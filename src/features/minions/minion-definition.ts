@@ -209,6 +209,8 @@ export interface MinionDefinition {
   readonly hitRadius: number;
   /** Danno al contatto (o dell'esplosione, per `kamikaze`). */
   readonly contactDamage: number;
+  /** Secondi fra colpi fisici sullo stesso giocatore; default in CONTACT_ATTACKS. */
+  readonly contactInterval?: number;
   /** Solo `kamikaze`: raggio dell'esplosione attorno al servitore. */
   readonly blastRadius?: number;
   /** Raffiche a intervalli (torrette, tiratori, orbitanti, pesanti che colpiscono da vicino). */

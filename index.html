@@ -6,7 +6,7 @@
     <title>Temper your soul</title>
     <link rel="icon" href="data:," />
   </head>
-  <body class="in-menu">
+  <body class="in-menu initial-menu">
     <main>
       <div class="stage">
         <canvas id="game" tabindex="0" aria-label="Arena di combattimento: muoviti con WASD e mira con il mouse"></canvas>
@@ -32,14 +32,15 @@
       <div id="descent-map" class="descent-map-overlay hidden"></div>
       <div id="room-banner" class="room-banner hidden" role="status"></div>
       <div id="room-fade" class="room-fade hidden" aria-hidden="true"></div>
-      <aside id="party-panel" class="party-panel" aria-label="Party cooperativo"></aside>
+      <aside id="party-panel" class="party-panel" aria-label="Party"></aside>
       <button id="performance-button" type="button" class="performance-toggle" aria-expanded="false" aria-controls="performance-panel">FPS · F2</button>
       <aside id="performance-panel" class="performance-panel hidden" aria-label="Diagnostica prestazioni"></aside>
-      <div class="actions">
+      <div id="global-wallet" class="global-wallet" role="status" aria-label="Oro"><span id="global-gold">0</span></div>
+      <nav class="actions" id="global-controls" aria-label="Comandi di gioco">
         <button id="settings-button" data-settings-navigation type="button" aria-label="Impostazioni" title="Impostazioni" aria-expanded="false" aria-controls="settings-panel"><span aria-hidden="true">⚙</span></button>
-        <button id="fullscreen-button" type="button">Schermo intero · F</button>
+        <button id="fullscreen-button" type="button" aria-label="Schermo intero" title="Schermo intero · F"><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg></button>
         <button id="pause-button" type="button">Pausa · ESC</button>
-      </div>
+      </nav>
       <section class="audio-panel hidden" id="settings-panel" role="dialog" aria-label="Impostazioni"></section>
 
       <div class="hint">WASD · Muoviti &nbsp;|&nbsp; ESC · Pausa &nbsp;|&nbsp; R · Ricomincia &nbsp;|&nbsp; <span id="audio-state">Audio disattivato · M</span></div>
@@ -60,8 +61,6 @@
           <div id="menu-appearance"></div>
           <div class="menu-buttons">
             <button id="menu-dungeons" type="button">Entra nel rifugio →</button>
-            <button id="menu-inventory" type="button" class="secondary backpack-button" aria-label="Apri lo zaino e l’equipaggiamento"></button>
-            <button id="menu-bestiary" type="button" class="secondary">Bestiario</button>
           </div>
           <details class="admin-menu hidden" id="admin-menu">
             <summary>Admin · sviluppo</summary>
@@ -94,7 +93,7 @@
             </div>
             <div class="screen-head-buttons">
               <button id="dungeons-pilgrimage" type="button" class="secondary">Pellegrinaggio</button>
-              <button id="dungeons-back" type="button" class="secondary">← Menu</button>
+              <button id="dungeons-back" type="button" class="secondary dungeon-close" aria-label="Chiudi e torna all’HUB" title="Torna all’HUB">×</button>
             </div>
           </div>
           <div class="dungeon-list" id="dungeon-list"></div>
@@ -108,7 +107,7 @@
               <span class="eyebrow">BESTIARIO</span>
               <h2>I servitori dei boss</h2>
             </div>
-            <button id="bestiary-back" type="button" class="secondary">← Menu</button>
+            <button id="bestiary-back" type="button" class="secondary">← Dungeon</button>
           </div>
           <div id="bestiary-list"></div>
         </div>
@@ -152,7 +151,7 @@
         </div>
       </div>
 
-      <div class="toast hidden" id="toast"></div>
+      <div class="toast hidden" id="toast" role="status"></div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
