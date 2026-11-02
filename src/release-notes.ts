@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
 {
+  "version": "0.7.1",
+  "date": "2026-11-02",
+  "changes": [
+    "Rifugio rinnovato in stile gotico: al posto delle due case in basso al centro c'è un muro di cinta con merli, arcate cieche e contrafforti con pinnacoli, con il varco centrale ancora aperto.",
+    "Al posto delle due case a sinistra sorge una cattedrale molto più alta delle case, con navata, due torri con guglie, rosone e portale a sesto acuto. Solo la base è solida.",
+    "Fabbro ridisegnato (calvo, barba grigia, braccia nude, grembiule, ispirato al fabbro di Berserk) con martello in mano; fabbro e incudine sono ora accanto alla fucina.",
+    "La fiamma della fucina è animata come quella delle torce e proietta la stessa luce; le torce usano luce, sfarfallio e fiamma delle torce della cripta. Rimosse le due torce in basso.",
+    "Solo grafica e posizioni dell'hub: nessuna modifica a salvataggi, protocollo o bilanciamento. Controlli automatici e vista nel browser fatti; prova manuale a mano ancora da confermare."
+  ],
+  "balanceChanges": []
+},
+{
   "version": "0.7.0",
   "date": "2026-11-02",
   "changes": [

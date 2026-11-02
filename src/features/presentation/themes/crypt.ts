@@ -165,6 +165,9 @@ function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
   }
 }
 
+/** Luce delle torce, riusata dalle torce del rifugio. */
+export const TORCH_LIGHT = CRYPT_DECOR.torchLight;
+
 /** Una torcia con la sua luce: su un piede sul pavimento, oppure appesa alla faccia del muro (`sconce`). */
 function drawTorch(ctx: CanvasRenderingContext2D, x: number, y: number, clock: number, sconce: boolean): void {
   const light = CRYPT_DECOR.torchLight;
