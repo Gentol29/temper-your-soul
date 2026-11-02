@@ -121,7 +121,9 @@ La revisione locale della PR #4 mantiene mappe, 32 servitori a tema con élite, 
 
 Le tappe restano: Soglia → due direzioni di Scontro → Scontro/Prova/Reliquiario → Luogotenente → Santuario/Assedio → Scontro/Caccia → Anticamera → Boss. Reliquiario, Santuario e Anticamera sono stanze tranquille, senza premi o recuperi di vita. Le Prove mantengono gli obiettivi; completarli non assegna bonus.
 
-Le porte mostrano il tipo di stanza: in cooperativa tutti i membri vivi devono sostare sulla stessa uscita. Il Bestiario conserva le uccisioni. Restano il Duello sbloccato dopo la prima vittoria e il Pellegrinaggio già presenti nella PR. Non sono disponibili gradi di tempra né menu a tendina per dungeon/modalità: la lobby usa pulsanti.
+Le porte mostrano il tipo di stanza: in cooperativa tutti i membri vivi devono sostare sulla stessa uscita. Il Bestiario conserva le uccisioni.
+
+**Strumenti admin (provvisori, solo fase di sviluppo):** nel menu principale la tendina «Admin · sviluppo» è visibile a tutti finché `ADMIN_TOOLS_ENABLED` in `src/features/admin/admin-tools.ts` resta vero. Aggiunge allo zaino un pezzo di ogni famiglia della classe del personaggio, alla rarità scelta e al livello massimo, senza duplicare le famiglie già possedute a quella rarità; un secondo comando apre tutte le pagine del Bestiario con un'uccisione fittizia, conservando quelle vere. Le modifiche si salvano nel profilo e valgono anche per scambi e cooperativa: va spento o legato a un ruolo prima di una versione pubblica. Restano il Duello sbloccato dopo la prima vittoria e il Pellegrinaggio già presenti nella PR. Non sono disponibili gradi di tempra né menu a tendina per dungeon/modalità: la lobby usa pulsanti.
 
 I vecchi campi del salvataggio relativi a braci/benedizioni/gradi sono conservati per non perdere dati, ma non attribuiscono bonus e non sono utilizzabili. Il protocollo 5 impedisce di mescolare client e server delle due versioni. Aggiornare tutte le schede dopo il riavvio.
 
@@ -250,7 +252,7 @@ Per un nuovo oggetto servono: id stabile, famiglia e classe, skill/statistiche/c
 
 ## Verifiche e prossimi passi
 
-`npm run verify` deve uscire con codice 0. I **785 test attuali** coprono simulazione, contenuti, classi, salvataggi, profili, GS, raggiungibilità delle soglie e probabilità; il conteggio va aggiornato quando cambia. La suite è headless e **non certifica** DOM, aspetto, bilanciamento o sensazione di gioco. Sono stati eseguiti anche controlli browser isolati desktop/390 px; gli script temporanei locali non costituiscono una suite browser versionata.
+`npm run verify` deve uscire con codice 0. I **789 test attuali** coprono simulazione, contenuti, classi, salvataggi, profili, GS, raggiungibilità delle soglie e probabilità; il conteggio va aggiornato quando cambia. La suite è headless e **non certifica** DOM, aspetto, bilanciamento o sensazione di gioco. Sono stati eseguiti anche controlli browser isolati desktop/390 px; gli script temporanei locali non costituiscono una suite browser versionata.
 
 Priorità per chi riprende il lavoro:
 
