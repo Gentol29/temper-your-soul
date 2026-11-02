@@ -43,6 +43,9 @@ import { renderDefeat, renderDescentDefeat, renderDescentVictory, renderVictory 
 import { PhaseBanner } from './features/ui/phase-banner';
 import { CombatTally } from './features/match/combat-tally';
 import { MainMenu } from './features/ui/main-menu';
+import { AdminMenu } from './features/ui/admin-menu';
+import { RARITY_STATS } from './features/items/rarity';
+import { ADMIN_TOOLS_ENABLED, grantClassItems, unlockBestiary } from './features/admin/admin-tools';
 import { Overlay } from './features/ui/overlay';
 import { Screens } from './features/ui/screens';
 import { PartyPanel } from './features/ui/party-panel';
@@ -138,6 +141,7 @@ export class Game {
   private renderAppearance: Scene['appearance'];
   private readonly fullscreen: FullscreenToggle;
   private readonly menu: MainMenu;
+  private readonly adminMenu: AdminMenu;
   private readonly dungeonSelect: DungeonSelect;
   private readonly inventoryScreen: InventoryScreen;
   private readonly bestiaryScreen: BestiaryScreen;
@@ -203,6 +207,18 @@ export class Game {
       onDungeons: () => this.openHub(),
       onInventory: () => this.openInventory(),
       onBestiary: () => this.openBestiary(),
+    });
+    this.adminMenu = new AdminMenu(ADMIN_TOOLS_ENABLED, {
+      onGrantItems: (rarity) => {
+        const added = grantClassItems(this.character, rarity);
+        if (added.length > 0) { this.inventoryScreen.reset(); this.persist(); }
+        this.showToast(added.length > 0 ? `Admin: ${added.length} oggetti ${RARITY_STATS[rarity].label.toLowerCase()} aggiunti allo zaino.` : 'Admin: hai già tutti gli oggetti della classe a questa rarità.');
+      },
+      onUnlockBestiary: () => {
+        const opened = unlockBestiary(this.character);
+        if (opened > 0) this.persist();
+        this.showToast(opened > 0 ? `Admin: ${opened} pagine del bestiario aperte.` : 'Admin: il bestiario è già tutto aperto.');
+      },
     });
     this.dungeonSelect = new DungeonSelect({
       onDescent: (dungeon, grade) => this.startDungeon(dungeon, 'descent', grade),
@@ -293,6 +309,7 @@ export class Game {
     for (const id of ['menu-dungeons', 'menu-inventory', 'menu-bestiary']) {
       (requireElement(id) as HTMLButtonElement).disabled = !this.character.created;
     }
+    this.adminMenu.setAvailable(this.character.created);
   }
 
   private openHub(): void {

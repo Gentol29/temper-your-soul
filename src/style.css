@@ -914,6 +914,12 @@ button.secondary:hover {
   box-shadow: inset 0 0 0 5px #17121c88, 0 18px 60px #0006;
 }
 .menu-card .eyebrow { color: #d69880; }
+/* Strumenti di sviluppo: tendina discreta sotto i comandi principali. */
+.admin-menu { margin: 4px auto 10px; max-width: 420px; text-align: left; border: 1px dashed #655567; border-radius: 6px 14px; padding: 6px 12px; color: #cdb7cc; font-size: 13px; }
+.admin-menu summary { cursor: pointer; color: #d69880; letter-spacing: 1px; }
+.admin-menu-body { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; margin-top: 10px; }
+.admin-menu-body select { font: inherit; color: #ffe7c6; background: #191720; border: 1px solid #655567; border-radius: 4px; padding: 4px 6px; }
+.admin-menu-body button { grid-column: 1 / -1; padding: 8px 12px; }
 button:focus-visible { outline: 2px solid #ffe1a2; outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) {
   :is(.menu-buttons button, .relic-button), .overlay-buttons button, .screen-head button, .actions button { transition: none; }

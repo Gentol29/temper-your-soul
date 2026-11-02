@@ -159,6 +159,17 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
 {
+  "version": "0.7.3",
+  "date": "2026-11-02",
+  "changes": [
+    "Menu principale: nuova tendina «Admin · sviluppo», provvisoria e visibile a tutti in questa fase (si spegne con ADMIN_TOOLS_ENABLED).",
+    "«Tutti gli oggetti della classe» aggiunge allo zaino un pezzo di ogni famiglia equipaggiabile dalla classe del personaggio, alla rarità scelta e al livello 20; le famiglie già possedute a quella rarità non si duplicano.",
+    "«Sblocca tutto il bestiario» apre tutte le pagine di servitori e luogotenenti con un'uccisione fittizia, conservando le uccisioni vere.",
+    "Nessun cambio a formato dei salvataggi, protocollo o bilanciamento. Gli oggetti generati si salvano nel profilo come quelli trovati. Controlli automatici e prova nel browser fatti; prova manuale da confermare."
+  ],
+  "balanceChanges": []
+},
+{
   "version": "0.7.2",
   "date": "2026-11-02",
   "changes": [
