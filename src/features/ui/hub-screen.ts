@@ -1,6 +1,11 @@
-import { HubState } from '../character/hub-state';
+import type {HubView,HubPlayer} from '../network/hub-protocol';
+import type {ClientMessage} from '../network/protocol';
+import {deserializeCharacter} from '../character/save-format';
+import {tradeWindow} from './trade-window';
+import { HubState, HUB_MAP } from '../character/hub-state';
 import { Vec2 } from '../../core/vec2';
-import { el } from './dom';
+import { GOLD_COIN_SPRITE } from '../presentation/currency-sprites';
+import { el, requireElement } from './dom';
 import type { Character } from '../character/character';
 import type { CharacterRoster } from '../character/character-roster';
 import { acquireBasic, upgradeItem, HUB_PRICES } from '../character/hub-services';
@@ -17,48 +22,90 @@ export class HubScreen {
   private readonly canvas=el('canvas','hub-world');
   private readonly renderer:HubRenderer;
   private time=0;
+  private online:{id:string;view:HubView;busy:boolean;send:(m:ClientMessage)=>void}|null=null;
+  private onlineId='';
+  private socialKey='';
+  private socialTrade='';
+  private readonly partyRoot=requireElement('party-panel');
+  private readonly partyAnchor=document.createComment('party-panel-home');
   private readonly prompt=el('p','hub-prompt');
   private readonly state=new HubState();
   private panel:HTMLElement|null=null;
   private character!:Character;
   private roster!:CharacterRoster;
-  private readonly wallet=el('p','hub-wallet');
+  private readonly wallet=el('div','hub-wallet');
+  private readonly balance=el('span','hub-gold-amount');
+  private readonly toolbar=el('nav','hub-controls');
+  private readonly settingsButton=requireElement('settings-button');
+  private readonly settingsPanel=requireElement('settings-panel');
+  private readonly settingsButtonAnchor=document.createComment('settings-button-home');
+  private readonly settingsPanelAnchor=document.createComment('settings-panel-home');
   get dialogOpen():boolean{return this.panel!==null;}
   constructor(private readonly handlers:{portal:()=>void;save:()=>void;inventory:()=>void;menu:()=>void}) {
     this.canvas.setAttribute('aria-label','Piazza del rifugio: WASD per muoverti, E vicino a NPC e strutture');
     this.canvas.tabIndex=0;this.renderer=new HubRenderer(this.canvas);
     this.prompt.className='hub-interaction-tooltip hidden';this.prompt.setAttribute('role','status');
-    const controls=el('footer','hub-controls');
+    this.partyRoot.before(this.partyAnchor);
+    this.settingsButton.before(this.settingsButtonAnchor);this.settingsPanel.before(this.settingsPanelAnchor);
+    this.toolbar.setAttribute('aria-label','Comandi del rifugio');
+    this.wallet.append(renderPixelIcon(GOLD_COIN_SPRITE),this.balance);this.wallet.setAttribute('role','status');
     const button=(label:string,action:()=>void)=>{const b=el('button','relic-button secondary',label);b.type='button';b.onclick=action;return b;};
     const backpack=button('',()=>this.openProfile());backpack.classList.add('backpack-button','hub-character-button');backpack.setAttribute('aria-label','Personaggio e zaino');backpack.title='Personaggio e zaino';backpack.append(renderPixelIcon(BACKPACK_SPRITE));
-    controls.append(backpack,button('Menu principale',handlers.menu));
-    this.root.append(this.canvas,this.prompt,controls,this.wallet);document.body.append(this.root);
+    this.toolbar.append(backpack);
+    const menu=button('Menu principale',handlers.menu);menu.classList.add('hub-menu-button');
+    this.root.append(this.canvas,this.prompt,this.toolbar,this.wallet,menu);document.body.append(this.root);
   }
   show(character:Character,roster:CharacterRoster):void {
     this.closeDialog();this.character=character;this.roster=roster;
+    this.root.append(this.partyRoot);this.toolbar.append(this.settingsButton);this.root.append(this.settingsPanel);this.settingsButton.classList.add('relic-button','secondary');document.body.classList.add('in-hub');
     this.root.classList.remove('hidden');this.refresh();this.step(0,Vec2.ZERO);this.canvas.focus();
   }
-  hide():void{this.closeDialog();this.root.classList.add('hidden');}
-  private refresh():void{this.wallet.textContent=`Oro dell’account · ${this.roster.gold}`;}
+  hide():void{this.closeDialog();this.root.classList.add('hidden');this.partyAnchor.after(this.partyRoot);this.settingsButtonAnchor.after(this.settingsButton);this.settingsPanelAnchor.after(this.settingsPanel);this.settingsButton.classList.remove('relic-button','secondary');document.body.classList.remove('in-hub');}
+  private refresh():void{this.balance.textContent=this.roster.gold.toLocaleString('it-IT');this.wallet.setAttribute('aria-label',`${this.roster.gold} oro`);}
   step(dt:number,move:Vec2):void {
-    if(!this.dialogOpen)this.state.step(dt,move);
-    this.time+=dt;this.renderer.draw(this.state,this.character.appearance(),this.time);
-    const target=this.nearest();this.prompt.classList.toggle('hidden',!target||this.dialogOpen);
+    this.state.step(this.dialogOpen?0:dt,this.dialogOpen?Vec2.ZERO:move);
+    this.time+=dt;this.renderer.draw(this.state,this.character.appearance(),this.time,this.online?.view.players.filter(p=>p.id!==this.online!.id));
+    const target=this.interactionTarget();this.prompt.classList.toggle('hidden',!target||this.dialogOpen);
     if(target){
-      const point=this.renderer.screenPoint(target.x+target.width/2,target.y-28);
+      const point=this.renderer.screenPoint(target.x+('width' in target?target.width/2:18),target.y-28);
       this.prompt.textContent=`E · ${target.name}`;
       this.prompt.style.left=Math.max(8,Math.min(window.innerWidth-210,point.x+12))+'px';
       this.prompt.style.top=Math.max(12,Math.min(window.innerHeight-80,point.y))+'px';
     }
   }
-  private nearest(){return this.state.nearest();}
-  interact():void{if(this.dialogOpen)return;const target=this.nearest();if(!target)return;if(target.id==='portal'){this.handlers.portal();return;}this.openService(target.id,target.name);}
-  closeDialog():boolean{if(!this.panel)return false;hideItemTooltip();this.panel.remove();this.panel=null;return true;}
-  private dialog(title:string):HTMLElement {
-    this.closeDialog();const veil=el('div','hub-dialog'),card=el('div','hub-dialog-card menu-card');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label',title);const close=el('button','relic-button secondary','Chiudi · ESC');close.onclick=()=>this.closeDialog();const header=el('header','hub-dialog-head');header.append(el('h2','',title),close);card.append(header);veil.append(card);this.root.append(veil);this.panel=veil;close.focus();return card;
+  setOnline(online:{id:string;view:HubView;busy:boolean;send:(m:ClientMessage)=>void}|null):void {
+    this.online=online;
+    if(!online){const hadTrade=Boolean(this.socialTrade);this.onlineId='';this.socialKey='';this.socialTrade='';if(hadTrade)this.closeDialog();return;}
+    const me=online.view.players.find(p=>p.id===online.id);
+    if(me&&(this.onlineId!==online.id||this.state.position.distanceTo(new Vec2(me.x,me.y))>40))this.state.position=new Vec2(me.x,me.y);
+    this.onlineId=online.id;
+    const trade=online.view.trades.find(t=>t.players.includes(online.id)),invite=online.view.invites[online.id];
+    const request=online.view.requests?.find(r=>r.from===online.id||r.to===online.id);
+    const key=JSON.stringify([trade,invite,request]);if(key===this.socialKey)return;this.socialKey=key;
+    const wasSocial=Boolean(this.socialTrade);this.socialTrade='';
+    if(trade){const peer=online.view.players.find(p=>trade.players.includes(p.id)&&p.id!==online.id);const card=this.dialog('Scambio con '+(peer?.name??'giocatore'));this.socialTrade=trade.id;card.append(tradeWindow(this.character,trade,online.id,peer?.name??'Giocatore',online.send));}
+    else if(request){const incoming=request.to===online.id,peer=online.view.players.find(p=>p.id===(incoming?request.from:request.to));const card=this.dialog(incoming?'Richiesta di scambio':'Scambio in attesa',true);this.socialTrade=request.id;card.append(el('p','',incoming?`Accetti lo scambio da ${peer?.name??'giocatore'}?`:`In attesa della risposta di ${peer?.name??'giocatore'}…`));if(incoming){for(const [label,accept]of [['Sì',true],['No',false]] as const){const b=el('button','relic-button',label);b.onclick=()=>{online.send({type:'trade_accept',id:request.id,accept});this.socialTrade='';this.closeDialog();};card.append(b);}}}
+    else if(wasSocial)this.closeDialog();
+    else if(invite){const from=online.view.players.find(p=>p.id===invite);const card=this.dialog('Invito al party',true);card.append(el('p','',`${from?.name??'Un giocatore'} ti invita nel party.`));for(const [label,accept]of [['Accetta',true],['Rifiuta',false]] as const){const b=el('button','relic-button',label);b.onclick=()=>{online.send({type:'party_accept',accept});this.closeDialog();};card.append(b);}}
   }
-  openProfile():void{this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.openProfile();}}));}
+  private nearPlayer():HubPlayer|undefined{return this.online?.view.players.filter(p=>p.id!==this.online!.id).sort((a,b)=>this.state.position.distanceTo(new Vec2(a.x,a.y))-this.state.position.distanceTo(new Vec2(b.x,b.y))).find(p=>this.state.position.distanceTo(new Vec2(p.x,p.y))<HUB_MAP.interactionRadius);}
+  private interactPlayer(peer:HubPlayer):void {
+    const online=this.online;if(!online)return;const card=this.dialog(peer.name,true);
+    const action=(label:string,run:()=>void)=>{const b=el('button','relic-button hub-social-action',label);b.onclick=run;card.append(b);};
+    action('Mostra profilo',()=>{const character=deserializeCharacter(peer.character);if(character)this.dialog('Profilo di '+peer.name).append(playerProfile(character,null,{showInventory:false}));});
+    action('Scambia',()=>{online.send({type:'trade_request',target:peer.id});this.closeDialog();});
+    if(!peer.member&&online.view.players.find(p=>p.id===online.id)?.member)action('Invita al party',()=>{online.send({type:'party_invite',target:peer.id});this.closeDialog();});
+  }
+  private interactionTarget(){const peer=this.nearPlayer(),station=this.nearest();if(peer&&station&&this.state.position.distanceTo(new Vec2(station.x,station.y))<this.state.position.distanceTo(new Vec2(peer.x,peer.y)))return station;return peer??station;}
+  private nearest(){return this.state.nearest();}
+  interact():void{if(this.dialogOpen)return;const target=this.interactionTarget();if(!target)return;if('member' in target){this.interactPlayer(target);return;}if(target.id==='portal'){this.handlers.portal();return;}this.openService(target.id,target.name);}
+  closeDialog():boolean{if(!this.panel)return false;if(this.socialTrade){const trade=this.online?.view.trades.find(t=>t.id===this.socialTrade);if(trade?.committing)return false;this.online?.send({type:'trade_cancel'});this.socialTrade='';}hideItemTooltip();this.panel.remove();this.panel=null;return true;}
+  private dialog(title:string,compact=false):HTMLElement {
+    this.closeDialog();const veil=el('div','hub-dialog'),card=el('div','hub-dialog-card menu-card');if(compact)card.classList.add('hub-dialog-compact');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label',title);const close=el('button','relic-button secondary',compact?'×':'Chiudi · ESC');close.setAttribute('aria-label','Chiudi · ESC');close.onclick=()=>this.closeDialog();const header=el('header','hub-dialog-head');header.append(el('h2','',title),close);card.append(header);veil.append(card);this.root.append(veil);this.panel=veil;close.focus();return card;
+  }
+  openProfile():void{if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.openProfile();}}));}
   private openService(id:string,name:string):void {
+    if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;
     const card=this.dialog(name),character=this.character;
     if(id==='storage'){
       card.classList.add('hub-storage-dialog');card.append(storageWindow(character,this.roster.gold,()=>{this.handlers.save();this.refresh();}));return;

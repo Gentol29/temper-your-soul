@@ -363,3 +363,41 @@ Pannelli, pulsanti, bordi, colori e font riutilizzano gli stili del menu. Mercan
 Salvataggio **v9** per le posizioni del deposito, con migrazione v8 e precedenti e oro del roster conservato. Protocollo **10** impedisce di mescolare client incapaci di leggere il nuovo formato del personaggio: riavviare server e ricaricare le schede.
 
 Verifica automatica: **764 test in 65 file**, tipi e build tramite `npm run verify`. Mutazione temporanea del controllo sulle caselle occupate rilevata dal nuovo test e ripristinata. Verifica browser desktop: ritratto originale, deposito e zaino affiancati, drag-and-drop nei due sensi, salvataggio dell’oggetto nella casella 12 dopo ricaricamento, offerte con icone di mercante/fabbro/forgia. Queste sono prove automatiche del browser; conferma giocata dell’utente e prova su touch/responsive restano da fare. Nessun commit o push.
+
+
+### Comandi e saldo del rifugio · modifica locale 2 novembre 2026
+Rimosso il conteggio degli oggetti dallo zaino. Saldo nell’hub in alto a sinistra: moneta pixel art statica e cifra, senza riquadro o dicitura. Zaino e ingranaggio Impostazioni in alto a destra, con il medesimo pannello Audio/Associazione tasti del menu. Verifica automatica: 764 test, tipi e build superati. Controllo browser desktop di disposizione, apertura impostazioni nell’hub, ritorno al menu e assenza del conteggio. Conferma manuale e schermi piccoli ancora da provare. Nessuna modifica a economia, salvataggi o protocollo; nessun commit/push richiesto per questo incremento.
+
+
+## Hub condiviso e scambi · incremento locale 2 novembre 2026
+
+La finestra Party è disponibile anche nel rifugio. Il link della stanza porta nell’hub del creatore come visitatore; avvicinandosi a un giocatore, E apre Mostra profilo, Scambia e Invita al party (se non è già membro). L’invito richiede accettazione. Limiti provvisori regolabili: otto presenze nel rifugio, quattro membri del party. Dal portale il leader sceglie dungeon e modalità e avvia insieme tutti i membri, con i requisiti GS esistenti; i visitatori restano nel rifugio e possono continuare a usare i servizi. Deposito, oro e personaggio rimangono personali. Se il leader esce, la guida passa a un membro rimasto o al primo visitatore.
+
+Lo scambio mostra il proprio zaino selezionabile e l’offerta dell’altro giocatore, con sprite degli oggetti. Sono ammessi oggetti non equipaggiati nello zaino, fino a 40 per offerta (limite provvisorio). Ogni modifica azzera entrambe le conferme; entrambi devono confermare l’offerta corrente e accettare la conferma finale. Prima della registrazione, annullare o disconnettersi lascia gli oggetti invariati. Durante il completamento le modifiche al personaggio sono bloccate.
+
+Il server registra prima i trasferimenti pendenti in `.tools/trade-ledger.json` (percorso configurabile con `TRADE_LEDGER_PATH`); conservare questo file ai riavvii. Il browser salva il trasferimento e una ricevuta nella stessa raccolta locale, poi conferma al server. Le consegne pendenti vengono riproposte alla riconnessione della medesima identità browser/profilo, senza duplicare gli oggetti già ricevuti. Stanze e partite rimangono non persistenti; questa identità locale non è un account cloud o un sistema anti-manomissione. Cambiare origine del browser o cancellare i dati locali non recupera il profilo.
+
+Salvataggi v10 con migrazione dei formati precedenti e inventari v10 legittimamente vuoti preservati; protocollo cooperativo 11: riavviare il server e ricaricare tutti i client dopo l’aggiornamento. Nessun nuovo bilanciamento di combattimento.
+
+Controllo browser automatico con due origini separate: ingresso come visitatore, invito e accettazione, profilo remoto, scambio Spada/Bastone con doppia conferma, deposito privato e partenza simultanea in Cripta anche con deposito aperto sul secondo client. Non è una conferma manuale dell’utente. Da provare manualmente: fluidità e leggibilità con più persone, rete pubblica e schermi piccoli.
+
+Verifica finale dell’incremento: `verify` superato, 778 test in 68 file, tipi e build. Controllo di sensibilità: consentire temporaneamente lo scambio dopo una sola conferma fa fallire il test dedicato; codice corretto ripristinato. Nessun commit o push eseguito.
+
+
+### Correzioni party, inviti e profili · 2 novembre 2026
+
+Il widget del party si riallinea anche dalla presenza autorevole periodica nell’hub dopo l’accettazione dell’invito. Il link della stanza apre una visita all’hub; l’invito tramite E e la sua accettazione aggiungono il visitatore ai quattro membri del party. Inviti condivisibili solo con URL pubblico HTTPS, mai localhost/LAN: `npm.cmd run tunnel` registra il tunnel Cloudflare corrente per la porta del server. Restano supportati `PUBLIC_URL` e il riconoscimento dell’accesso tramite Cloudflare. Senza indirizzo pubblico noto, Copia invito è disabilitato invece di copiare un link locale.
+
+Scambia invia prima una richiesta: «Accetti lo scambio da X?» con Sì/No. Solo il destinatario può accettare; prima del consenso il server rifiuta offerte e conferme, e nessun inventario di scambio viene aperto. No, chiusura o disconnessione annullano la richiesta. La doppia conferma finale resta necessaria. Mostra profilo visualizza statistiche, ritratto ed equipaggiamento indossato, senza zaino o deposito. Protocollo 12; riavvio server e ricarica client richiesti.
+
+Controllo browser automatico con un client locale e uno tramite tunnel Cloudflare reale: link pubblico dal leader locale, due membri nel widget dopo accettazione, profilo senza zaino, No che annulla la richiesta e Sì che apre le offerte su entrambi i client. Conferma manuale dell’utente ancora da ricevere.
+
+Verifica delle correzioni: 781 test in 69 file, tipi e build superati; controllo browser tramite tunnel reale riuscito. Nessun commit/push.
+
+
+### Finestre sociali compatte e slot di scambio · 2 novembre 2026
+Richiesta/attesa scambio, invito al party e menu E del giocatore usano una finestra larga al massimo 360 px, con chiusura compatta e stile Reliquiario. Le due griglie dello scambio mantengono almeno nove caselle 3×3, anche vuote; oltre nove oggetti si estendono in gruppi di nove senza introdurre nuovi limiti allo scambio. Oggetti e selezione mantengono sprite e tooltip esistenti. Nessuna modifica a regole, protocollo o salvataggi.
+Verifica: 781 test in 69 file, tipi e build superati. Controllo browser desktop del menu compatto e delle nove caselle per lato con inventario vuoto e offerta contenente uno sprite; conferma manuale dell’utente e resa su schermi piccoli ancora da ricevere. Nessun nuovo test automatico per questa modifica di sola presentazione. Nessun commit/push.
+
+
+Pubblicazione autorizzata su main · 2 novembre 2026: release v0.07.00 con il riepilogo completo di comandi HUB, party condiviso, inviti pubblici, scambi e finestre compatte nelle note del gioco. Nessuna modifica di bilanciamento.

@@ -293,3 +293,12 @@ Segnalazione dell’utente con screenshot: durante creazione personaggio e ridim
 Aggiornamento rifugio 2 novembre: controllo desktop nel browser ora riuscito usando il server locale sulla porta 5176. Restano da confermare dall’utente aspetto, controlli e resa responsive. La precedente nota sul mancato controllo visivo resta storica.
 
 Deposito, 2 novembre: durante la prova browser il trascinamento HTML nativo non trasferiva l’oggetto. Sostituito con Pointer Events e verificato il trasferimento nei due sensi e il salvataggio della posizione. La resa su dispositivi touch è ancora da confermare.
+
+
+### Correzioni party, inviti e profili · 2 novembre 2026
+
+Il widget del party si riallinea anche dalla presenza autorevole periodica nell’hub dopo l’accettazione dell’invito. Il link della stanza apre una visita all’hub; l’invito tramite E e la sua accettazione aggiungono il visitatore ai quattro membri del party. Inviti condivisibili solo con URL pubblico HTTPS, mai localhost/LAN: `npm.cmd run tunnel` registra il tunnel Cloudflare corrente per la porta del server. Restano supportati `PUBLIC_URL` e il riconoscimento dell’accesso tramite Cloudflare. Senza indirizzo pubblico noto, Copia invito è disabilitato invece di copiare un link locale.
+
+Scambia invia prima una richiesta: «Accetti lo scambio da X?» con Sì/No. Solo il destinatario può accettare; prima del consenso il server rifiuta offerte e conferme, e nessun inventario di scambio viene aperto. No, chiusura o disconnessione annullano la richiesta. La doppia conferma finale resta necessaria. Mostra profilo visualizza statistiche, ritratto ed equipaggiamento indossato, senza zaino o deposito. Protocollo 12; riavvio server e ricarica client richiesti.
+
+Controllo browser automatico con un client locale e uno tramite tunnel Cloudflare reale: link pubblico dal leader locale, due membri nel widget dopo accettazione, profilo senza zaino, No che annulla la richiesta e Sì che apre le offerte su entrambi i client. Conferma manuale dell’utente ancora da ricevere.

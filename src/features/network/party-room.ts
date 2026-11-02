@@ -1,6 +1,8 @@
+import {HUB_NETWORK} from './hub-protocol';
+import {HubRoom} from './hub-room';
 import { bossForParty } from '../combat/party-health';
 import { SeededRng } from '../../core/rng';
-import { deserializeCharacter, serializeCharacter } from '../character/save-format';
+import { deserializeCharacter } from '../character/save-format';
 import type { Character } from '../character/character';
 import type { GameEvent } from '../combat/events';
 import { DUNGEONS, dungeonById } from '../dungeons/dungeons';
@@ -33,29 +35,30 @@ export class PartyRoom {
   private rewards: Record<string, ItemRoll[]> = {};
   private rewarded = false;
   private lootRng = new SeededRng(1);
-  constructor(readonly code: string) {}
+  readonly hub:HubRoom;
+  constructor(readonly code: string) {this.hub=new HubRoom(this.characters,()=>this.playing,code);}
 
   /** In combattimento: il duello o la discesa non sono finiti. */
   get playing(): boolean {
     if (this.run !== null) return this.run.status === 'playing';
     return this.match?.status === 'playing';
   }
-  enter(id: string, raw: string): void {
-    if (this.playing) throw new Error('Il party è già in dungeon. Attendi la fine della partita.');
-    if (this.characters.size >= NETWORK.capacity) throw new Error('Il party è completo.');
+  enter(id: string, raw: string, visitor=false): void {
+    if (this.playing&&!visitor) throw new Error('Il party è già in dungeon. Attendi la fine della partita.');
+    if ((!visitor&&this.hub.members.size>=NETWORK.capacity)||this.characters.size >= HUB_NETWORK.capacity) throw new Error('Il party è completo.');
     const character = deserializeCharacter(raw);
     if (!character?.created) throw new Error('Crea prima un personaggio.');
-    this.characters.set(id, character);
+    this.characters.set(id, character);this.hub.enter(id,visitor);
     if (!this.leaderId) this.leaderId = id;
   }
   leave(id: string): void {
-    this.characters.delete(id); this.ready.delete(id); this.inputs.delete(id);
+    this.hub.leave(id);this.characters.delete(id); this.ready.delete(id); this.inputs.delete(id);
     if (this.run !== null && this.playing) this.run.removePlayer(id);
     else {
       const player = this.match?.players.get(id);
       if (player && this.playing) player.health.current = 0;
     }
-    if (this.leaderId === id) this.leaderId = this.characters.keys().next().value ?? '';
+    if (this.leaderId === id) {this.leaderId=[...this.hub.members][0]??this.characters.keys().next().value??'';if(this.leaderId)this.hub.members.add(this.leaderId);}
   }
   choose(id: string, dungeonId: string): void {
     this.requireLeader(id);
@@ -74,10 +77,12 @@ export class PartyRoom {
   start(id: string, battleId: string, seed: number): void {
     this.requireLeader(id);
     if (this.playing) throw new Error('La partita è già iniziata.');
-    if ([...this.characters.keys()].some(key => !this.ready.has(key))) throw new Error('Tutti i membri devono essere pronti.');
+    if(this.hub.views().some(t=>t.players.some(p=>this.hub.members.has(p))))throw new Error('Completa gli scambi prima di partire.');
+    if ([...this.hub.members].some(key => !this.ready.has(key))) throw new Error('Tutti i membri devono essere pronti.');
     const dungeon = dungeonById(this.dungeonId)!;
     const gates = this.mode === 'pilgrimage' ? DUNGEONS : [dungeon];
-    for (const character of this.characters.values()) {
+    for (const [key,character] of this.characters) {
+      if(!this.hub.members.has(key))continue;
       for (const gate of gates) {
         if (!canEnterDungeon(gate, character.gearScore)) throw new Error(`${character.name}: servono ${minimumDungeonGearScore(gate)} GS.`);
       }
@@ -86,14 +91,14 @@ export class PartyRoom {
     }
     this.run = null;
     if (this.mode === 'duel') {
-      const members = [...this.characters].map(([key, character]) => ({ id: key, loadout: character.loadout(), totalXp: character.totalXp, characterClass: character.characterClass }));
+      const members = [...this.characters].filter(([key])=>this.hub.members.has(key)).map(([key, character]) => ({ id: key, loadout: character.loadout(), totalXp: character.totalXp, characterClass: character.characterClass }));
       this.match = new Match({ rng: new SeededRng(seed), dungeon, loadout: members[0]!.loadout, members, boss: bossForParty(dungeon.boss,members.length) });
       spreadPlayers(this.match);
     } else {
       this.run = new DescentRun({
         mode: this.mode,
         dungeonId: this.mode === 'pilgrimage' ? DUNGEONS[0]!.id : dungeon.id,
-        members: [...this.characters].map(([key, character]) => ({ id: key, loadout: character.loadout(), totalXp: character.totalXp, characterClass: character.characterClass })),
+        members: [...this.characters].filter(([key])=>this.hub.members.has(key)).map(([key, character]) => ({ id: key, loadout: character.loadout(), totalXp: character.totalXp, characterClass: character.characterClass })),
         seed,
         grade: this.grade,
         // Le vene di servitori sono quelle sbloccate dal capo gruppo.
@@ -109,6 +114,7 @@ export class PartyRoom {
     match.events.connect(event => { if (match === this.match) this.events.push(event); });
   }
   tick(now: number): void {
+    this.hub.tick(now);
     if (!this.match || !this.playing) return;
     const intents = new Map<string, PlayerIntent>();
     for (const [id, input] of this.inputs) if (now - input.receivedAt <= NETWORK.staleInputMs) intents.set(id, input.intent);
@@ -132,7 +138,7 @@ export class PartyRoom {
     }
     if (!this.rewarded) {
       this.rewarded = true; this.ready.clear();
-      if (this.match.status === 'won') for (const id of this.characters.keys()) this.rewards[id] = rollLoot(lootTableFor(this.dungeonId), this.match.rng);
+      if (this.match.status === 'won') for (const id of this.hub.members) this.rewards[id] = rollLoot(lootTableFor(this.dungeonId), this.match.rng);
     }
   }
   /** Un giocatore sceglie una tempra fra quelle offerte. */
@@ -160,7 +166,10 @@ export class PartyRoom {
   }
   state(): PartyState {
     return { code: this.code, leaderId: this.leaderId, dungeonId: this.dungeonId, mode: this.mode, grade: this.grade, playing: this.playing,
-      members: [...this.characters].map(([id, c]) => ({ id, character: serializeCharacter(c), name: c.name!, appearance: c.appearance(), gearScore: c.gearScore, ready: this.ready.has(id) })) };
+      members: this.memberViews(false), visitors:this.memberViews(true) };
+  }
+  private memberViews(visitors:boolean):PartyState['members']{
+    return [...this.characters].filter(([id])=>this.hub.members.has(id)!==visitors).map(([id,c])=>({id,character:this.hub.publicCharacter(id),name:c.name!,appearance:c.appearance(),gearScore:c.gearScore,ready:this.ready.has(id)}));
   }
   private requireLeader(id: string): void { if (id !== this.leaderId) throw new Error(`Solo il leader può scegliere e avviare ${MODE_NAMES[this.mode]}.`); }
 }

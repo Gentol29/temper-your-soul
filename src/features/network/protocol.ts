@@ -1,3 +1,4 @@
+import type {HubView,HubCommand,TradeDelta} from './hub-protocol';
 import type { ClassCombatSnapshot } from '../classes/class-combat';
 import type { CharacterClass } from '../character/character-class';
 import { SeededRng } from '../../core/rng';
@@ -27,14 +28,14 @@ import type { SnapshotFrame } from './snapshot-codec';
  * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 7: skill e stati di classe; classe nel setup; la discesa (stanze, porte, premi,
  * tempre) e i servitori compatti (tipo alla nascita, poi posizione e stato).
  */
-export const NETWORK = { protocolVersion: 10, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 12, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';
 export const PARTY_MODES: readonly PartyMode[] = ['descent', 'duel', 'pilgrimage'];
 
 export interface PartyMember { id: string; name: string; character: string; appearance: CharacterAppearance; gearScore: number; ready: boolean }
-export interface PartyState { code: string; leaderId: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; playing: boolean }
+export interface PartyState { code: string; leaderId: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; visitors?: PartyMember[]; playing: boolean }
 export interface CombatStats { damageDealt: number; damageReceived: number; healing: number }
 
 /** Come il client ricostruisce la partita di una stanza: mappa (stanza modello o arena del dungeon), boss, vita massima. */
@@ -81,8 +82,8 @@ export interface BattleSnapshot {
   /** Vita dei ripari della stanza per indice (protocollo 8); assente nelle stanze senza ripari. */
   covers?: number[];
 }
-export type ClientMessage =
-  | { type: 'enter'; code?: string; character: string; protocol: number }
+export type ClientMessage = HubCommand
+  | { type: 'enter'; code?: string; character: string; protocol: number; visitor?:boolean; identity?:string }
   | { type: 'character'; character: string }
   | { type: 'choose'; dungeonId: string }
   | { type: 'mode'; mode: PartyMode; grade: number }
@@ -93,6 +94,10 @@ export type ClientMessage =
   | { type: 'pact'; accept: boolean }
   | { type: 'ping'; sent: number };
 export type ServerMessage =
+  | {type:'hub';state:HubView}
+  | {type:'trade_committed';delta:TradeDelta}
+  | {type:'trade_saved';id:string}
+
   | { type: 'party'; playerId: string; state: PartyState; inviteBase?: string }
   | { type: 'snapshot'; snapshot: BattleSnapshot }
   | SnapshotFrame

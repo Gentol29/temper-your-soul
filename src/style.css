@@ -1459,9 +1459,9 @@ body.room-fading .room-fade { opacity: 1; }
 /* Piazza del rifugio: Canvas esteso a tutto il viewport, pixel interi. */
 .hub-screen{position:fixed;inset:0;z-index:25;overflow:hidden;color:var(--text)}
 .hub-screen.hidden{display:none}.hub-world{display:block;width:100%;height:100%;image-rendering:pixelated;outline:none}
-.hub-controls{position:absolute;left:16px;bottom:16px;display:flex;gap:8px;max-width:calc(100vw - 32px);flex-wrap:wrap}
+.hub-controls{position:absolute;right:16px;top:16px;display:flex;gap:8px;max-width:calc(100vw - 32px);flex-wrap:wrap}
 .hub-controls button{font-size:12px;padding:9px 14px}.hub-controls .hub-character-button{padding:8px 12px;min-width:60px}
-.hub-wallet{position:absolute;right:16px;bottom:62px;margin:0;padding:8px 12px;background:var(--relic-panel);border:1px solid var(--relic-copper);color:#d8bb7d;font:8px var(--relic-pixel)}
+.hub-wallet{position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:8px;color:#f5d58b;text-shadow:1px 2px #17121c;font:16px var(--relic-pixel);pointer-events:none}.hub-wallet>.pixel-icon{width:32px;height:32px}.hub-menu-button{position:absolute;left:16px;bottom:16px;padding:9px 14px;font-size:12px}.in-hub #settings-panel{top:82px;max-height:calc(100vh - 98px)}.hub-controls #settings-button{min-width:60px;min-height:52px}.in-hub .hub-wallet{font-size:16px}
 .hub-interaction-tooltip{position:absolute;z-index:2;margin:0;max-width:202px;padding:9px 12px;border:1px solid var(--relic-copper);background:var(--relic-panel);color:var(--relic-ivory);font:8px var(--relic-pixel);box-shadow:3px 3px 0 #070b13;pointer-events:none}
 .hub-interaction-tooltip:before{content:'';position:absolute;left:-6px;top:12px;width:8px;height:8px;background:#18181d;border-left:1px solid #c5a46d;border-bottom:1px solid #c5a46d;transform:rotate(45deg)}
 .hub-interaction-tooltip.hidden{display:none}
@@ -1471,7 +1471,7 @@ body.room-fading .room-fade { opacity: 1; }
 .player-profile{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:24px;align-items:center;padding-top:18px}.profile-portrait{height:360px;display:grid;place-items:center}.game-character-preview{position:static;inset:auto;height:336px;max-height:100%;max-width:100%;width:288px;image-rendering:pixelated;object-fit:contain}
 .profile-stats p{border-bottom:1px solid #8b744433;padding-bottom:9px}.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.profile-cell{aspect-ratio:1;border:1px solid #8d774e;background:#0c0d1288;min-width:54px;display:grid;place-items:center}.profile-cell .item-slot{width:100%;height:100%}.profile-modal::backdrop{background:#08090ce0}.player-profile-button{position:fixed;left:16px;top:110px;z-index:22}.in-menu .player-profile-button{display:none}
 .hub-dialog-card h2,.player-profile h2{font-family:var(--relic-title);font-weight:normal;color:var(--gold)}.profile-pages{display:flex;align-items:center;justify-content:space-between;gap:10px}
-@media(max-width:650px){.player-profile{grid-template-columns:1fr 1fr;gap:12px}.profile-portrait{height:220px}.player-profile>section:last-child{grid-column:1/-1}.profile-grid{max-width:240px}.hub-dialog-card,.profile-modal{padding:14px}.hub-controls button{font-size:11px;padding:7px}.hub-wallet{font-size:8px}}
+@media(max-width:650px){.player-profile{grid-template-columns:1fr 1fr;gap:12px}.profile-portrait{height:220px}.player-profile>section:last-child{grid-column:1/-1}.profile-grid{max-width:240px}.hub-dialog-card,.profile-modal{padding:14px}.hub-controls button{font-size:11px;padding:7px}.hub-wallet{font-size:16px}}
 
 /* Pannelli e comandi del rifugio riutilizzano il Reliquiario del menu. */
 .hub-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}.hub-dialog-head h2{margin:0;color:var(--relic-ivory);font:30px var(--relic-title)}
@@ -1483,3 +1483,23 @@ body.room-fading .room-fade { opacity: 1; }
 @media(max-width:650px){.storage-window{grid-template-columns:1fr}.storage-panel{max-width:350px;width:100%;margin:auto}.hub-offer-list{grid-template-columns:1fr}.hub-dialog-head h2{font-size:25px}.hub-dialog-head .relic-button{padding:8px;font-size:11px}.profile-equipment{grid-template-columns:repeat(2,minmax(0,1fr))}.hub-storage-dialog{padding:12px}.storage-backpack{padding:12px}}
 
 .profile-equipment-slot>.item-slot{padding:4px}.profile-equipment-slot .pixel-icon{width:36px;height:36px}.storage-draggable{touch-action:none;cursor:grab}.storage-draggable:active{cursor:grabbing}.storage-drag-ghost{position:fixed!important;z-index:9999!important;pointer-events:none!important;opacity:.85;width:64px!important;height:64px!important;transform:none!important}.storage-drag-ghost .pixel-icon{width:40px;height:40px}
+
+/* Hub condiviso e scambi: stesso Reliquiario dei pannelli personali. */
+.in-hub .party-panel{position:absolute;top:84px;right:16px;z-index:3}.trade-window{display:grid;grid-template-columns:1fr 1fr;gap:20px}.trade-side{padding:16px;background:#17121c99;border:1px solid var(--relic-border);border-radius:8px 20px}.trade-side h3{margin:0 0 10px;color:var(--relic-ivory);font:26px var(--relic-title)}.trade-side p{font-size:12px;line-height:1.6;color:var(--muted)}.trade-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;max-height:40vh;overflow:auto;padding:5px}.trade-items .item-slot{width:60px;height:60px;padding:6px}.trade-items .pixel-icon{width:44px;height:44px}.trade-window>.relic-button{grid-column:1/-1;padding:12px}.hub-social-action{display:block;width:100%;padding:12px;margin-top:12px}.trade-confirm{padding:24px;max-width:520px;color:var(--text)}.trade-confirm::backdrop{background:#080910cc}.trade-confirm h2{font:30px var(--relic-title)}.trade-confirm p{line-height:1.6}.trade-confirm button{padding:10px 16px;margin-right:10px}
+@media(max-width:650px){.trade-window{grid-template-columns:1fr}.in-hub .party-panel{width:220px;max-width:calc(100vw - 32px);top:82px}.trade-items{max-height:25vh}}
+
+.player-profile-public{grid-template-columns:minmax(140px,1fr) minmax(220px,1.3fr)}
+@media(max-width:650px){.player-profile-public>section:last-child{grid-column:auto}}
+
+/* Dialoghi sociali compatti e griglie di scambio sempre presenti. */
+.hub-dialog-card.hub-dialog-compact{width:min(360px,calc(100vw - 32px));padding:20px}
+.hub-dialog-compact .hub-dialog-head{gap:12px;margin-bottom:12px;align-items:flex-start}
+.hub-dialog-compact .hub-dialog-head h2{font-size:24px;line-height:1.2}
+.hub-dialog-compact .hub-dialog-head .relic-button{padding:3px 9px;font-size:22px;line-height:1.2}
+.hub-dialog-compact>p{font-size:14px;line-height:1.5;margin:12px 0 16px}
+.hub-dialog-compact>.relic-button{padding:9px 18px;margin-right:8px}
+.hub-dialog-compact .hub-social-action{padding:10px;margin:8px 0 0}
+.trade-items{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:280px;margin:0 auto;max-height:44vh;align-content:start}
+.trade-cell{aspect-ratio:1;min-width:0;border:1px solid var(--relic-border);background:#0c0d1288;box-shadow:inset 0 0 0 2px #201b25;display:grid;place-items:center}
+.trade-cell .item-slot{width:100%;height:100%;margin:0;min-width:0}
+@media(max-width:650px){.trade-items{max-width:240px;max-height:none}.trade-cell .pixel-icon{width:38px;height:38px}}

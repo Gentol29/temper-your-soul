@@ -202,7 +202,7 @@ describe('formato di salvataggio', () => {
     expect(JSON.parse(text)).toMatchObject({ version: SAVE_VERSION, nextItemNumber: character.nextItemNumber });
     expect(Object.keys(JSON.parse(text)).sort()).toEqual([
       'bestiary', 'blessings', 'bodyType', 'characterClass', 'descents', 'embers', 'equipped', 'items', 'name', 'nextItemNumber',
-      'pilgrimage', 'records', 'starterPending', 'storagePositions', 'storedUids', 'totalXp', 'version',
+      'pilgrimage', 'records', 'starterPending', 'storagePositions', 'storedUids', 'totalXp', 'tradeReceipts', 'version',
     ]);
   });
 
@@ -382,7 +382,7 @@ describe('formato di salvataggio', () => {
     expect(character.inventory).toEqual(Character.createStarter().inventory);
     expect(character.loadout()).toMatchObject([...MAGE_SKILLS]);
     expect(character.recordFor('crypt').clears).toBe(2);
-    expect(deserializeCharacter(saveText({ items: [] }))!.loadout()).toMatchObject([...MAGE_SKILLS]);
+    expect(deserializeCharacter(saveText({ version:9,items: [] }))!.loadout()).toMatchObject([...MAGE_SKILLS]);
   });
 });
 

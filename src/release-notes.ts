@@ -158,6 +158,22 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
   };
 
 export const RELEASES: readonly ReleaseNotes[] = [
+{
+  "version": "0.7.0",
+  "date": "2026-11-02",
+  "changes": [
+    "Rifugio condiviso con presenza e movimento degli altri giocatori: fino a otto visitatori e quattro membri del party. Il widget Party è disponibile anche nell’HUB e si aggiorna dopo l’accettazione degli inviti.",
+    "Il leader seleziona dungeon e modalità dal portale e porta con sé tutti i membri del party; i visitatori restano nel rifugio. Servizi e deposito restano personali.",
+    "Interazione E vicino ai giocatori: profilo con statistiche ed equipaggiamento indossato, richiesta di scambio e invito al party. Il profilo remoto non mostra lo zaino.",
+    "Scambi con consenso iniziale Sì/No, offerte con sprite e almeno nove slot per lato, conferma finale obbligatoria di entrambi. Ogni modifica dell’offerta azzera le conferme; solo gli oggetti non equipaggiati nello zaino possono essere offerti.",
+    "Trasferimenti registrati sul server prima della consegna e ricevute salvate nel profilo locale: le consegne pendenti riprendono alla riconnessione senza duplicare gli oggetti. Conservare il registro server .tools/trade-ledger.json. I profili restano locali al browser, senza account cloud.",
+    "Inviti con indirizzo pubblico HTTPS, senza link localhost/LAN. Il comando npm.cmd run tunnel avvia Cloudflare e comunica automaticamente al server il link corrente; restano disponibili PUBLIC_URL e il riconoscimento degli accessi tramite tunnel.",
+    "Oro nell’HUB in alto a sinistra con moneta statica e cifra; zaino e impostazioni in alto a destra. Rimosso il conteggio degli oggetti nello zaino. Finestre di consenso e menu delle azioni dei giocatori compatti, nello stile Reliquiario.",
+    "Salvataggi v10 con migrazioni preservate e inventari legittimamente vuoti conservati; protocollo cooperativo 12. Riavviare il server e ricaricare tutti i client dopo l’aggiornamento. Nessuna modifica ai valori di combattimento.",
+    "Verifica automatica di tipi, test e build; controlli browser di hub condiviso, inviti Cloudflare, depositi privati, scambi e partenza comune. Prova manuale e resa su schermi piccoli ancora da confermare."
+  ],
+  "balanceChanges": []
+},
   {
   "version": "0.6.0",
   "date": "2026-11-02",

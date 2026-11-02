@@ -6,6 +6,7 @@ import type { DungeonDefinition } from '../dungeons/dungeon-definition';
 import { DUNGEONS, dungeonById } from '../dungeons/dungeons';
 import { minimumDungeonGearScore } from '../dungeons/dungeon-access';
 import { PartyClient } from '../network/party-client';
+import { publicInviteBase } from '../network/public-invite';
 import { NETWORK, type BattleSnapshot } from '../network/protocol';
 import { characterPixels } from '../presentation/character-art';
 import { renderBossArtwork } from './boss-artwork';
@@ -38,7 +39,7 @@ export class PartyPanel {
     if (this.profileId && id !== this.profileId) this.client.leave();
     this.profileId = id; this.character = id ? character : null; this.dungeon = dungeon; this.phase = phase;
     if (this.pendingInvite && this.character && !this.client.connecting && !this.client.state) {
-      const code = this.pendingInvite; this.pendingInvite = null; this.client.connect(this.character, code);
+      const code = this.pendingInvite; this.pendingInvite = null; this.client.connect(this.character, code,this.profileId??'default');
     }
     if (this.character) this.client.sync(this.character);
     this.renderWidget(); if (this.dialog?.open) this.renderDialog();
@@ -126,18 +127,19 @@ export class PartyPanel {
         button.addEventListener('click', () => this.client.send({ type: 'mode', mode: id, grade: 0 })); modes.append(button);
       }
       dialog.append(modes);
-      const link = el('input', 'party-link'); link.readOnly = true; link.value = this.inviteUrl(); link.setAttribute('aria-label', 'Link invito al party'); link.addEventListener('click', () => link.select()); dialog.append(link);
+      const link = el('input', 'party-link'); link.readOnly = true; link.value = this.inviteUrl();link.placeholder='Avvia il tunnel Cloudflare per generare il link pubblico'; link.setAttribute('aria-label', 'Link invito al party'); link.addEventListener('click', () => link.select()); dialog.append(link);
     }
+    if(state?.visitors?.length)dialog.append(el('p','party-preview-note','Visitatori nel rifugio: '+state.visitors.map(v=>v.name).join(', ')+'. Avvicinati e premi E per invitarli nel party.'));
     dialog.append(el('p', 'party-preview-note', this.note || (state ? 'Il mondo continua anche se apri il menu o cambi scheda. Uscire dal party abbandona il combattimento. I progressi restano in questo browser.' : 'Crea un party e condividi il link con i tuoi amici.')));
     const actions = el('div', 'party-lobby-actions');
     const prepare = el('button', 'secondary party-prepare', state ? 'Esci dal party' : this.client.connecting ? 'Connessione…' : 'Crea party');
     prepare.disabled = !this.character || this.client.connecting;
-    prepare.addEventListener('click', () => { this.note = ''; if (state) this.client.leave(); else if (this.character) this.client.connect(this.character); }); actions.append(prepare);
+    prepare.addEventListener('click', () => { this.note = ''; if (state) this.client.leave(); else if (this.character) this.client.connect(this.character,undefined,this.profileId??'default'); }); actions.append(prepare);
     if (state) {
       const me = state.members.find(m => m.id === this.client.playerId);
-      const ready = el('button', 'secondary party-ready', me?.ready ? 'Non sono pronto' : 'Sono pronto'); ready.disabled = state.playing;
+      const ready = el('button', 'secondary party-ready', me?.ready ? 'Non sono pronto' : 'Sono pronto'); ready.disabled = state.playing||!me;
       ready.addEventListener('click', () => this.client.send({ type: 'ready', ready: !me?.ready })); actions.append(ready);
-      const invite = el('button', 'secondary party-invite', 'Copia invito'); invite.addEventListener('click', () => {
+      const invite = el('button', 'secondary party-invite', 'Copia invito'); invite.disabled=!this.inviteUrl();invite.addEventListener('click', () => {
         void navigator.clipboard.writeText(this.inviteUrl()).then(() => { this.note = 'Link copiato.'; this.renderDialog(); }).catch(() => { this.note = 'Seleziona e copia il link qui sopra.'; this.renderDialog(); });
       }); actions.append(invite);
       if (leader) {
@@ -148,5 +150,5 @@ export class PartyPanel {
     }
     dialog.append(actions);
   }
-  private inviteUrl(): string { const url = new URL(this.client.inviteBase || location.href); url.search = ''; url.hash = ''; url.searchParams.set('party', this.client.state!.code); return url.href; }
+  private inviteUrl(): string { const base=publicInviteBase(this.client.inviteBase)||publicInviteBase(location.href);if(!base)return '';const url = new URL(base);url.searchParams.set('party', this.client.state!.code); return url.href; }
 }

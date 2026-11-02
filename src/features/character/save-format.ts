@@ -17,7 +17,7 @@ import { cleanItemLevel } from '../items/gear-score';
  * v9: posizioni persistenti nelle 20 caselle del deposito; v8: oro condiviso e deposito.
  * v7: braci, benedizioni dell'Altare, bestiario, record delle discese e del Pellegrinaggio (vuoti nei salvataggi vecchi).
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 /**
  * Tetto per i numeri degli `uid` (`i1`, `i2`, ...): lascia un ampio margine sotto 2^53, oltre cui gli interi non sono
@@ -32,6 +32,7 @@ export function serializeCharacter(character: Character): string {
     name: character.name,
     starterPending: character.starterPending,
     totalXp: character.totalXp,
+    tradeReceipts: character.tradeReceipts,
     bodyType: character.bodyType,
     characterClass: character.characterClass,
     storedUids: character.storage.map(item => item.uid),
@@ -81,6 +82,7 @@ export function deserializeCharacter(text: string): Character | null {
   character.bodyType = data.bodyType === 'male' || data.bodyType === 'female' ? data.bodyType : null;
   character.characterClass = isCharacterClass(data.characterClass) ? data.characterClass : null;
   character.totalXp = typeof data.totalXp === 'number' && Number.isSafeInteger(data.totalXp) && data.totalXp >= 0 ? Math.min(data.totalXp, 1000000000) : 0;
+  if(version>=10&&Array.isArray(data.tradeReceipts))character.tradeReceipts=[...new Set(data.tradeReceipts.filter((v):v is string=>typeof v==='string'&&v.length<=160))].slice(-256);
   const seen = new Set<string>();
   for (const raw of items) {
     if (!isObject(raw)) continue;
@@ -122,7 +124,7 @@ export function deserializeCharacter(text: string): Character | null {
     typeof nextItemNumber === 'number' && Number.isInteger(nextItemNumber) && nextItemNumber <= MAX_ITEM_NUMBER ? nextItemNumber : 1;
   character.nextItemNumber = Math.max(saved, highest + 1, 1);
 
-  if (character.inventory.length === 0) {
+  if (character.inventory.length === 0 && (version<10 || items.length>0)) {
     const starter = Character.createStarter(character.characterClass??'mage');
     character.inventory = starter.inventory;
     character.equipped = starter.equipped;

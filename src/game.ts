@@ -1,3 +1,5 @@
+import {applyTradeDelta} from './features/character/trade-transfer';
+import {serializeCharacter} from './features/character/save-format';
 import { HubScreen } from './features/ui/hub-screen';
 import { playerProfile } from './features/ui/player-profile';
 import { hideItemTooltip } from './features/ui/item-slot';
@@ -59,6 +61,7 @@ import type { AudioScreen } from './features/audio/audio-director';
 
 /** Passo fisso della simulazione: la logica gira a 60 Hz qualunque sia la frequenza di disegno. */
 const STEP = 1 / 60;
+const NETWORK_HUB_INPUT=1000/30;
 /** Tempo massimo simulato in un singolo fotogramma: dopo una pausa (scheda in background) non si recupera tutto. */
 const MAX_FRAME_TIME = 0.25;
 /** Secondi di pausa drammatica al passaggio in fase II (solo in partita singola: in cooperativa il server non si ferma). */
@@ -123,6 +126,8 @@ export class Game {
     if (this.networkBattleId) { this.networkBattleId = ''; this.showToast('Hai lasciato il combattimento cooperativo.'); this.showMenu(); }
   });
   private networkBattleId = '';
+  private hubSession='';
+  private lastHubInput=0;
   private networkView: NetworkView | null = null;
   /** Numero della discesa in singolo: una discesa nuova nella stessa stanza modello rifa' calare la grata. */
   private runSerial = 0;
@@ -191,6 +196,7 @@ export class Game {
     const loaded = this.saveStore.loadRoster();
     this.roster=loaded.roster;
     this.loadStatus = loaded.status;
+    this.party.client.tradeCommit=delta=>{const before=deserializeCharacter(serializeCharacter(this.character))!;applyTradeDelta(this.character,delta);if(this.persist())return serializeCharacter(this.character);Object.assign(this.character,before);return null;};
 
     this.hub = new HubScreen({portal:()=>this.openDungeons(),save:()=>{this.persist();},inventory:()=>this.openInventory(),menu:()=>this.showMenu()});
     this.menu = new MainMenu({
@@ -291,7 +297,7 @@ export class Game {
 
   private openHub(): void {
     if(!this.character.created){this.showMenu();return;}
-    if(this.networkBattleId)this.party.client.leave();
+    if(this.networkBattleId&&this.screen==='playing')this.party.client.leave();
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
     this.screen='hub';this.input.releaseAll();this.clearBattleFeedback();this.overlay.hide();this.screens.show(null);
     document.body.classList.add('in-menu');this.hub.show(this.character,this.roster);this.updateParty();
@@ -352,9 +358,8 @@ export class Game {
 
   private startDungeon(dungeon: DungeonDefinition, mode: Mode, _grade: number): void {
     if (this.party.client.state) {
-      this.party.client.send({ type: 'choose', dungeonId: dungeon.id });
-      this.party.client.send({ type: 'mode', mode, grade: 0 });
-      this.party.openDialog(); return;
+      if(this.party.client.state.leaderId!==this.party.client.playerId){this.showToast('Solo il leader può avviare il portale.');return;}
+      this.party.client.send({type:'portal_start',dungeonId:dungeon.id,mode});this.party.close();return;
     }
     this.dungeon = dungeon;
     this.mode = mode;
@@ -691,7 +696,7 @@ export class Game {
     if (snapshot.id !== this.networkBattleId) {
       const state = this.party.client.state, dungeon = dungeonById(snapshot.dungeonId);
       if (!state || !dungeon) return;
-      this.abandonRun();
+      this.hub.hide();this.party.close();this.abandonRun();
       // Una discesa: ogni stanza e' un incontro nuovo (`<id>:<stanza>`); la discesa e' la stessa finche' non cambia l'id.
       const runId = snapshot.id.split(':')[0]!;
       if (runId !== this.networkRunId) {
@@ -920,7 +925,10 @@ export class Game {
 
   private step(): void {
     const { match } = this;
-    if(this.screen==='hub')this.hub.step(STEP,this.input.getVector('move_left','move_right','move_up','move_down'));
+    if(this.screen==='hub'){
+      const move=this.input.getVector('move_left','move_right','move_up','move_down');this.hub.step(STEP,move);
+      if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.dialogOpen?Vec2.ZERO:move});}
+    }
     if (this.screen === 'playing' || this.screen === 'ended') {
       this.poses.update(STEP, match.player.moving);
       for (const [id, poses] of this.allyPoses) poses.update(STEP, match.players.get(id)?.moving ?? false);
@@ -957,6 +965,10 @@ export class Game {
   private frame(time: number): void {
     const frameStart = performance.now();
     this.party.client.flushSnapshot();
+    const partyState=this.party.client.state,hub=this.party.client.hub;
+    if(partyState&&this.hubSession!==partyState.code&&(!partyState.playing||!partyState.members.some(m=>m.id===this.party.client.playerId))){this.hubSession=partyState.code;this.party.close();this.openHub();}
+    if(!partyState)this.hubSession='';
+    this.hub.setOnline(hub&&partyState?{id:this.party.client.playerId,view:hub,busy:this.party.client.tradeSaving,send:m=>this.party.client.send(m)}:null);
     const delta = Math.min((time - this.lastTime) / 1000, MAX_FRAME_TIME);
     this.lastTime = time;
     this.clock += delta;

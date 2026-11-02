@@ -45,6 +45,7 @@ export class Character {
   /** Solo i personaggi nuovi ricevono il set di classe; le migrazioni conservano tutto. */
   starterPending = false;
   totalXp = 0;
+  tradeReceipts: string[] = [];
   bodyType: BodyType | null = null;
   characterClass: CharacterClass | null = null;
   chooseClass(value: CharacterClass): boolean {

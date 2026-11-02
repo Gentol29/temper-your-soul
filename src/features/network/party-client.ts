@@ -1,11 +1,17 @@
+import {browserStorage} from '../character/save-store';
+import type {HubView,TradeDelta} from './hub-protocol';
 import type { Character } from '../character/character';
-import { serializeCharacter } from '../character/save-format';
+import { serializeCharacter, deserializeCharacter } from '../character/save-format';
 import type { PlayerIntent } from '../match/match';
 import { NETWORK, type BattleSnapshot, type ClientMessage, type PartyState, type ServerMessage } from './protocol';
 import { SnapshotDecoder } from './snapshot-codec';
 
 export class PartyClient {
   state: PartyState | null = null;
+  hub:HubView|null=null;
+  tradeCommit:((delta:TradeDelta)=>string|null)|null=null;
+  tradeSaving=false;
+  tradeFailure=false;
   playerId = '';
   inviteBase = '';
   latency: number | null = null;
@@ -24,7 +30,7 @@ export class PartyClient {
   constructor(private readonly changed: (pingOnly?: boolean) => void, private readonly snapshot: (state: BattleSnapshot) => void,
     private readonly error: (message: string) => void, private readonly disconnected: () => void) {}
 
-  connect(character: Character, code?: string): void {
+  connect(character: Character, code?: string, profileId='default'): void {
     if (this.socket) return;
     if (location.protocol === 'file:') { this.error('Per giocare online apri il gioco tramite il server HTTP.'); return; }
     this.connecting = true; this.changed();
@@ -32,8 +38,10 @@ export class PartyClient {
     const url = new URL('/party', location.href); url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new WebSocket(url); this.socket = socket;
     socket.addEventListener('open', () => {
+      if(this.socket!==socket)return;
       this.serialized = serializeCharacter(character); this.lastReply = performance.now();
-      this.send({ type: 'enter', protocol: NETWORK.protocolVersion, character: this.serialized, ...(code ? { code } : {}) });
+      const key=`temper-your-soul:network-identity:${profileId}`,store=browserStorage();let identity=store?.getItem(key);if(!identity){identity=crypto.randomUUID();try{store?.setItem(key,identity);}catch{/* La sessione continua, senza ripresa dopo chiusura. */}}
+      this.send({ visitor:Boolean(code),identity, type: 'enter', protocol: NETWORK.protocolVersion, character: this.serialized, ...(code ? { code } : {}) });
       this.timer = window.setInterval(() => {
         if (performance.now() - this.lastReply > 12_000 || (this.state?.playing && performance.now() - this.lastSnapshot > 4000)) {
           this.error('Connessione interrotta: il server non risponde.'); this.leave(); return;
@@ -43,9 +51,30 @@ export class PartyClient {
       this.send({ type: 'ping', sent: performance.now() });
     });
     socket.addEventListener('message', event => {
+      if(this.socket!==socket)return;
       const text = String(event.data); this.receivedCharacters += text.length;
       const message = JSON.parse(text) as ServerMessage; this.lastReply = performance.now();
       switch (message.type) {
+        case 'hub': {
+          this.hub=message.state;
+          // La presenza periodica riallinea anche il widget dopo un invito accettato.
+          if(this.state&&!this.state.playing){
+            const members=message.state.players.filter(p=>p.member);
+            if(members.map(p=>p.id).join(',')!==this.state.members.map(p=>p.id).join(',')){
+              const previous=[...this.state.members,...(this.state.visitors??[])];
+              const view=(p:HubView['players'][number])=>({...p,ready:previous.find(m=>m.id===p.id)?.ready??false,gearScore:deserializeCharacter(p.character)?.gearScore??0});
+              this.state.members=members.map(view);this.state.visitors=message.state.players.filter(p=>!p.member).map(view);this.changed();
+            }
+          }
+          break;
+        }
+        case 'trade_committed': {
+          this.tradeSaving=true;const character=this.tradeCommit?.(message.delta);
+          if(character){this.serialized=character;this.send({type:'trade_ack',id:message.delta.id,character});}
+          else{this.tradeFailure=true;this.error('Salvataggio dello scambio non riuscito. Rientra con lo stesso personaggio: il trasferimento resta registrato sul server.');}
+          break;
+        }
+        case 'trade_saved': this.tradeSaving=false;break;
         case 'frame':
           this.receivedFrames++;
           try { this.receiveSnapshot(this.decoder.decode(message)); }
@@ -82,7 +111,7 @@ export class PartyClient {
   }
   sync(character: Character): void {
     const text = serializeCharacter(character);
-    if (this.state && !this.state.playing && text !== this.serialized) { this.serialized = text; this.send({ type: 'character', character: text }); }
+    if (this.state && (!this.state.playing||!this.state.members.some(m=>m.id===this.playerId)) && !this.tradeSaving && !this.hub?.requests?.some(r=>r.from===this.playerId||r.to===this.playerId) && !this.hub?.trades.some(t=>t.players.includes(this.playerId)) && text !== this.serialized) { this.serialized = text; this.send({ type: 'character', character: text }); }
   }
   send(message: ClientMessage): void { if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(message)); }
   input(intent: PlayerIntent): boolean {
@@ -92,7 +121,7 @@ export class PartyClient {
   leave(): void {
     const socket = this.socket; const hadConnection = this.state !== null;
     this.socket = null; this.pending = null; window.clearInterval(this.timer); socket?.close();
-    this.state = null; this.playerId = ''; this.inviteBase = ''; this.connecting = false; this.latency = null; this.changed();
+    this.state = null;this.hub=null;this.tradeSaving=false;this.tradeFailure=false; this.playerId = ''; this.inviteBase = ''; this.connecting = false; this.latency = null; this.changed();
     if (hadConnection) this.disconnected();
   }
 }
