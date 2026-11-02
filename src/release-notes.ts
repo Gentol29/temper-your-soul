@@ -159,6 +159,15 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.9.0', date: '2026-11-03',
+    changes: [
+      'Selezione dungeon: righe della griglia ad altezza automatica e margine di 24 px sotto Loot rate e Bestiario, per separarli realmente da Discesa e Duello.',
+      'Loot rate e Bestiario distribuiti ai due estremi della card con space-between. Pellegrinaggio e chiusura X allineati verticalmente, entrambi alti 48 px.',
+      'Controllo browser su viewport stretto eseguito; conferma manuale e confronto desktop ancora da completare.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.8.0', date: '2026-11-02',
     changes: [
       "Integrata la PR v0.07.03 con menu Admin conservato. Maggiore spazio fra Bestiario/Loot rate e i pulsanti Discesa/Duello nelle card. Incluso il piano sprite PixelLab già predisposto e rinviato: nessuna nuova generazione o sostituzione di asset.",

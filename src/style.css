@@ -1359,7 +1359,7 @@ body.room-fading .room-fade { opacity: 1; }
 .room-fade.hidden { display: block; }
 
 /* --- Schede dungeon: stanze e boss --- */
-.dungeon-card { height: auto; grid-template-rows: 20px 48px 160px 34px 28px 28px 30px 32px 1fr; }
+.dungeon-card { height: auto; grid-template-rows: 20px 48px 160px 34px 28px 28px 30px auto auto; }
 .dungeon-card .dungeon-buttons { align-self: end; }
 .screen-head-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 .dungeon-buttons { display: flex; gap: 6px; }
@@ -1560,7 +1560,7 @@ body.room-fading .room-fade { opacity: 1; }
 /* Navigazione al menu centralizzata nelle impostazioni. */
 #inventory-back,.hub-menu-button{display:none}
 
-.dungeon-references{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.dungeon-references{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-width:0;width:100%;margin-bottom:24px}
 .dungeon-bestiary{font-size:12px;padding:7px 12px}
 
 .dungeon-card.is-unavailable{opacity:.5}
@@ -1568,3 +1568,8 @@ body.room-fading .room-fade { opacity: 1; }
 .dungeon-close{width:42px;height:42px;display:grid;place-items:center;padding:0;font-size:26px;line-height:1}
 #fullscreen-button>svg{display:block;place-self:center;flex:none}
 .toast.toast-error{z-index:70;bottom:80px;color:#ff6b6b;background:#21131ef5;border-color:#c45262;font:16px/1.7 var(--relic-pixel);text-align:center}
+
+/* Stessa altezza e centratura per i due comandi della selezione dungeon. */
+#screen-dungeons .screen-head-buttons{align-items:center}
+#dungeons-pilgrimage,#dungeons-back{height:48px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin:0;line-height:1}
+#dungeons-back{flex:0 0 48px;width:48px;padding:0}

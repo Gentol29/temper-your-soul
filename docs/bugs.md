@@ -332,3 +332,7 @@ HUD nell’HUB: barra e tendine spostate fuori dal contesto di sovrapposizione d
 
 ### Audio delle anteprime · 2 novembre 2026
 Hover sulle card dungeon: l’anteprima caricava ripetutamente gli MP3 di ambiente del tema. La regia mantiene ora la sola musica menu fuori dalla partita; musica e ambiente del dungeon vengono selezionati all’ingresso. Test di regressione sui file richiesti. Bestiario usa ora la classe condivisa relic-button.
+
+
+### Spaziatura card dungeon · v0.09.00
+La riga Loot/Bestiario era vincolata a 32 px nella griglia: il margine precedente non separava realmente i pulsanti inferiori. Le ultime due righe ora sono automatiche, con 24 px di margine sotto i riferimenti e justify-content: space-between. Pellegrinaggio e X condividono altezza 48 px e centratura verticale. Controllo browser automatico riuscito sulla build servita da 4173, a viewport stretto: separazione reale fra le righe e comandi superiori allineati. Tipi, 808 test e build superati; conferma manuale dell’utente e confronto desktop ancora da fare.
