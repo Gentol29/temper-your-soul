@@ -159,8 +159,22 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.2', date: '2026-11-03',
+    changes: [
+      'Ramo feature/menu-rifugio allineato al main 0.11.1 con un merge. Nessuna novità rispetto alle voci sotto; le note dei due rami che avevano usato il numero 0.11.1 sono riunite in una sola voce.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.1', date: '2026-11-03',
     changes: [
+      'Da main, camera dinamica del mouse:',
+      'Camera degli incontri con offset dinamico verso il mouse: massimo provvisorio 100 unità di mondo e velocità di inseguimento 8 s⁻¹, regolabili in core/camera-offset.ts.',
+      'Inseguimento a ogni fotogramma con Lerp esponenziale basato sul delta in secondi, senza deriva con il cursore fermo. Rientro verso il giocatore riportando il mouse al centro; centratura immediata entrando in una stanza e al ridimensionamento.',
+      'Mira calcolata dalla vista effettiva e dalla posizione del giocatore visibile; scossa esclusa. In cooperativa la camera segue il giocatore interpolato e gli snapshot non la ricentrano durante lo stesso incontro. Pausa singola ferma la camera.',
+      'HUB con camera autonoma, cursori Reliquiario, ostacoli e attacchi Hi-bit conservati. Nessuna variazione ai formati di salvataggio o protocollo e ai valori del combattimento.',
+      'Versione v0.11.01 pubblicata direttamente in main per eccezione esplicita del proprietario alla convenzione abituale. Test di offset, conversione della mira e smorzamento a 30/60/144 Hz; prova giocata di fluidità, scatti e cooperativa ancora da confermare.',
+      'Da feature/menu-rifugio, menu e schermate prima della partita:',
       'Menu principale rifatto: il rifugio visto da lontano, con portale animato, fiamme, fumo e braci. Logo in alto, azioni in basso a sinistra, accessi in basso a destra; solo gli angoli si scuriscono e il centro resta libero.',
       'Sfondo modulare: cortile vuoto e sette strutture in file separati, posizionati da una tabella. Immagini generate con il modello locale a partire da una tavola dell’utente: da approvare prima dell’integrazione, l’eccezione in docs/vfx-pixellab.md copre solo effetti e icone.',
       'Comandi del menu: Continua, Nuovo personaggio, Impostazioni; Scegli dungeon, Personaggi, Inventario, Deposito, Forgia, Mercante, Cooperativa. Inventario e servizi aprono i pannelli esistenti del rifugio. Il pulsante Impostazioni aggiunto in 0.10.1 lascia il posto al comando del menu.',

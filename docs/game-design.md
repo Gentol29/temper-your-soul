@@ -43,7 +43,8 @@ Tutti i valori sono provvisori e modificabili: stanno in tabelle di dati con nom
 
 ### Impostazione e giocatore
 
-- Visuale dall'alto, camera centrata sul giocatore (zoom 1,5, nessun limite ai bordi). Movimento con WASD, mira con il mouse, si può lanciare mentre ci si muove. Vittoria: il boss arriva a 0 PV. Sconfitta: il giocatore arriva a 0 PV.
+- Visuale dall'alto, camera degli incontri con offset dinamico verso il mouse e inseguimento smorzato (zoom 1,5, nessun limite ai bordi). Prima taratura provvisoria: offset massimo 100 unità di mondo, velocità 8 s⁻¹ in `core/camera-offset.ts`. Movimento con WASD, mira con il mouse, si può lanciare mentre ci si muove. Vittoria: il boss arriva a 0 PV. Sconfitta: il giocatore arriva a 0 PV.
+- L'offset visuale si calcola dal puntatore rispetto a una vista centrata sul giocatore, per evitare retroazione della traslazione; la mira usa invece la vista effettiva. Camera aggiornata a ogni fotogramma con `1 - exp(-smoothSpeed × dt)`, ferma in pausa singola, ricentrata entrando in una stanza e al resize. In cooperativa segue il giocatore interpolato senza ricentrarsi a ogni snapshot. HUB con camera autonoma. Verifica tecnica desktop/390 px superata; taratura giocata ancora aperta.
 - Grafica: pixel art disegnata dal codice (matrici di caratteri), particelle e ambiente procedurali. Audio: motore a canali guidato dai dati con registrazioni vere a licenza libera (vedi "Audio" sotto), acceso per impostazione.
 - **Giocatore** (valori storici del prototipo, sostituiti dai profili di classe nell’ultima sezione): vita 100, velocità 177/s (in diagonale non aumenta), 0,65 s di invulnerabilità dopo un colpo. Raggio di colpo 9, corpo contro i pilastri 10 (`combat/collision.ts`).
 - Ambientazione e testi del prototipo ("Ordine della Brace", "cripta", "guardiano") sono provvisori.
@@ -147,7 +148,7 @@ Il porting della Fase 0 conservava regole e valori; restano queste differenze (t
 - Tutti i valori numerici (vita, danni, velocità, ricariche, pesi del bottino, scalatura delle rarità), da tarare con la prova manuale; equilibrio tra le famiglie e tra i dungeon.
 - Ambientazione e lore: nomi dei dungeon e dei boss, "Ordine della Brace", "Emberfall".
 - Raggi di collisione (oggi incoerenti di 1 tra proiettili e zone), perforazione e rimbalzo dei proiettili, pilastri distruttibili o che fermano anche le zone.
-- Camera: limiti ai bordi, smorzamento, interpolazione del disegno (su schermi a più di 60 Hz il movimento può sembrare lievemente a scatti).
+- Camera: taratura giocata di offset massimo e smorzamento (ora 100 unità / 8 s⁻¹), limiti ai bordi e interpolazione del disegno in singolo (su schermi a più di 60 Hz il movimento può sembrare lievemente a scatti).
 - Direzione artistica e audio definitivi; controlli (rimappatura, controller, touch/mobile); piattaforme e pubblicazione.
 
 ### Inventario a slot (2026-10-31)

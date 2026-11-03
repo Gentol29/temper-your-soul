@@ -34,6 +34,10 @@ I branch paralleli possono avere lo stesso numero (es. entrambi v0.03.01): il nu
 
 Per la release usare **la versione corrente di main + un incremento BB**, non il numero centrale del feature che potrebbe essere obsoleto. Preparare package, lockfile e note nel risultato dell’integrazione/commit su main e verificarli prima della pubblicazione. Non lasciare in main una versione con CC diverso da zero. Un clic su GitHub non modifica da solo questi file: l’agente deve predisporre l’integrazione con la versione corretta. Non aggiungere poi un secondo commit di release che incrementerebbe nuovamente BB.
 
+### Eccezione puntuale · camera v0.11.01
+
+Il 3 novembre 2026 il proprietario ha autorizzato esplicitamente commit e push della camera dinamica direttamente in main come **v0.11.01** (package `0.11.1`), mantenendo BB=11 e incrementando soltanto CC. Questa eccezione vale per tale incremento e non sostituisce la convenzione generale sopra.
+
 ## Procedura obbligatoria per gli agenti
 
 Prima di creare/aggiornare una PR o, quando autorizzato, committare direttamente a `main`:

@@ -31,9 +31,9 @@ export interface PlayerIntent {
   /** Direzione di movimento, lunghezza al massimo 1. */
   readonly move: Vec2;
   /**
-   * Dove punta il mouse, relativo al giocatore (la camera e' centrata su di lui, quindi il puntatore a schermo
-   * corrisponde a un offset fisso dal giocatore). La mira in coordinate del mondo si ricava DOPO il movimento e prima
-   * di ogni skill: cosi' mirino e lanci seguono il mouse anche mentre ci si muove o dopo uno scatto.
+   * Dove punta il mouse, relativo al giocatore. Il client converte il puntatore usando la posizione effettiva
+   * della camera, che può essere decentrata. La mira in coordinate del mondo si ricava DOPO il movimento e prima
+   * di ogni skill, conservando l'offset anche dopo uno scatto.
    */
   readonly aimOffset: Vec2;
   /** Per ogni slot di skill: vero se e' tenuto premuto o e' stato premuto dall'ultimo passo. */
