@@ -723,7 +723,8 @@ export class Game {
     const me = this.party.client.playerId;
     if(!this.party.client.isMember||snapshot.id.split(':')[0]===this.dismissedNetworkRun)return;
     if (this.completedBattles.has(snapshot.id) || !snapshot.players.some(p => p.id === me)) return;
-    if (snapshot.id !== this.networkBattleId) {
+    const enteringBattle = snapshot.id !== this.networkBattleId;
+    if (enteringBattle) {
       const state = this.party.client.state, dungeon = dungeonById(snapshot.dungeonId);
       if (!state || !dungeon) return;
       this.hub.hide();this.party.close();this.abandonRun();
@@ -769,7 +770,7 @@ export class Game {
       if (!event.playerId || event.playerId === me) this.poses.handle(event);
       if (event.playerId) this.allyPoses.get(event.playerId)?.handle(event);
     }
-    this.camera.follow(this.match.player.position);
+    if (enteringBattle) this.camera.follow(this.match.player.position);
     if (snapshot.run !== null) this.saveNetworkRunProgress(snapshot.run);
     if (snapshot.status !== 'playing') {
       this.completedBattles.add(snapshot.id);
@@ -947,9 +948,13 @@ export class Game {
   // --- Ciclo -----------------------------------------------------------------------------------------------------
 
   private readIntent(): PlayerIntent {
+    const playerPosition = this.networkBattleId && this.networkView
+      ? this.networkView.match.player.position
+      : this.match.player.position;
     return {
       move: this.input.getVector('move_left', 'move_right', 'move_up', 'move_down'),
-      aimOffset: this.camera.pointerOffset(this.input.pointer),
+      // La vista può essere decentrata: l'offset parte dal giocatore visibile, non dal centro dello schermo.
+      aimOffset: this.camera.pointerOffset(this.input.pointer, playerPosition),
       skills: SKILL_ACTIONS.map((action) => this.input.isActionActive(action)),
     };
   }
@@ -974,11 +979,7 @@ export class Game {
       } else {
         match.step(STEP, this.readIntent()); this.saveRunProgress(); this.input.takeLatched();
       }
-    } else if (IDLE_SCREENS.includes(this.screen)) {
-      // Dietro i menu la mira segue comunque il mouse, cosi' e' gia' al suo posto appena si entra.
-      match.player.aim = match.player.position.add(this.camera.pointerOffset(this.input.pointer));
     }
-    this.camera.follow(match.player.position);
   }
 
   /** Le viste della discesa in corso: dalla partita singola o dal server (cooperativa). */
@@ -1033,8 +1034,14 @@ export class Game {
     this.camera.shakeOffset =
       this.screen === 'playing' || this.screen === 'ended' ? this.effects.shakeOffset() : Vec2.ZERO;
     const renderedMatch = view?.match ?? this.match;
-    this.camera.follow(renderedMatch.player.position);
-    if (view) renderedMatch.player.aim = renderedMatch.player.position.add(this.camera.pointerOffset(this.input.pointer));
+    if (this.screen === 'playing' || this.screen === 'ended') {
+      this.camera.update(renderedMatch.player.position, this.input.pointer, delta);
+    } else if (IDLE_SCREENS.includes(this.screen)) {
+      this.camera.follow(renderedMatch.player.position);
+    }
+    // Aggiornamento visuale dopo lo spostamento della camera: il mirino resta sotto il cursore,
+    // anche nei fotogrammi senza passi di simulazione. La scossa resta esclusa dalla mira.
+    renderedMatch.player.aim = this.camera.pointerToWorld(this.input.pointer);
     this.hud.update(this.match, levelProgress(this.character.totalXp));
     document.body.classList.toggle('initial-menu',this.screen==='menu');
     document.body.classList.toggle('aiming',this.screen==='playing');

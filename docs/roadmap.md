@@ -2,6 +2,10 @@
 
 ## Priorità corrente e TODO
 
+- [x] Camera degli incontri con offset del mouse limitato e smorzamento esponenziale a ogni fotogramma, separato dal passo fisso. Mira dalla vista decentrata; gli snapshot cooperativi ricentrano soltanto entrando in una stanza. Dieci nuovi test, verifica completa della v0.11.01: 872 test in 79 file, tipi e build.
+- [x] Controllo tecnico nel browser della camera a desktop e 390 px: limite, cursore fermo senza deriva, movimento, mira, pausa/ripresa e resize; nessuna eccezione. Non costituisce conferma giocata.
+- [ ] Prova giocata della camera: tarare massimo 100 unità / velocità 8 s⁻¹, provare rientro al centro, movimento/scatti, pausa, finestre strette e cooperativa. HUB con camera autonoma invariato; limiti ai bordi degli incontri ancora aperti.
+
 - [x] Versione nel menu e changelog dell’ultimo aggiornamento, con storico nel codice e procedura obbligatoria per gli agenti su PR/commit main. Valori di bilanciamento prima → dopo.
 - [ ] Conferma utente di posizione, leggibilità e apertura del changelog nel menu, anche su finestre strette. Nessuna prova visiva automatizzata eseguita.
 

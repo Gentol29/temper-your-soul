@@ -159,6 +159,17 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.1', date: '2026-11-03',
+    changes: [
+      'Camera degli incontri con offset dinamico verso il mouse: massimo provvisorio 100 unità di mondo e velocità di inseguimento 8 s⁻¹, regolabili in core/camera-offset.ts.',
+      'Inseguimento a ogni fotogramma con Lerp esponenziale basato sul delta in secondi, senza deriva con il cursore fermo. Rientro verso il giocatore riportando il mouse al centro; centratura immediata entrando in una stanza e al ridimensionamento.',
+      'Mira calcolata dalla vista effettiva e dalla posizione del giocatore visibile; scossa esclusa. In cooperativa la camera segue il giocatore interpolato e gli snapshot non la ricentrano durante lo stesso incontro. Pausa singola ferma la camera.',
+      'HUB con camera autonoma, cursori Reliquiario, ostacoli e attacchi Hi-bit conservati. Nessuna variazione ai formati di salvataggio o protocollo e ai valori del combattimento.',
+      'Versione v0.11.01 pubblicata direttamente in main per eccezione esplicita del proprietario alla convenzione abituale. Test di offset, conversione della mira e smorzamento a 30/60/144 Hz; prova giocata di fluidità, scatti e cooperativa ancora da confermare.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.0', date: '2026-11-03',
     changes: [
       'Attacchi base delle tre classi senza particelle casuali al lancio o in volo, incluso lo sbuffo della provocazione del Guerriero. Sangue, impatti, uccisioni, buff, altri stati, secondarie e proiettili nemici conservano i propri effetti.',
