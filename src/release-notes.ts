@@ -159,6 +159,15 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.10.3', date: '2026-11-03',
+    changes: [
+      'Gli ostacoli della cripta sono ora in pixel art Hi-bit: ogni ostacolo è disegnato una volta in uno sprite a bassa risoluzione (1 pixel = 2 unità di mondo, come le piastrelle), ridotto a una palette fissa con cinque toni per colore, luce dall’alto a sinistra, dithering ordinato, contorno colorato e ombra a scacchi.',
+      'Candele e luce dell’altare restano animate dal vivo sopra lo sprite. Teschi più grandi e in numero minore, linee più spesse, perché si leggano a bassa risoluzione.',
+      'Solo aspetto: posizioni, ingombro e regole degli ostacoli sono quelli della versione precedente. Aspetto da confermare giocando.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.10.2', date: '2026-11-03',
     changes: [
       'La cripta, prima senza ostacoli, ha sei ostacoli scenografici: cumuli di teschi, sarcofagi scoperchiati, altari rituali con stella runica viola e candele, gabbie di ferro con scheletro e lapidi su un tumulo di terra. Servono da riparo ai proiettili e come punti di riferimento.',
