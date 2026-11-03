@@ -159,6 +159,15 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.10.2', date: '2026-11-03',
+    changes: [
+      'La cripta, prima senza ostacoli, ha sei ostacoli scenografici: cumuli di teschi, sarcofagi scoperchiati, altari rituali con stella runica viola e candele, gabbie di ferro con scheletro e lapidi su un tumulo di terra. Servono da riparo ai proiettili e come punti di riferimento.',
+      'Ogni ostacolo sceglie variante e disposizione in base alla posizione, quindi resta identico a ogni fotogramma; nuovo disegno nel tema cripta, gli altri temi non cambiano. Descrizione del dungeon aggiornata.',
+      'Posizioni e aspetto sono provvisori e da provare giocando. Nessuna variazione a salvataggi, protocollo cooperativo o oggetti.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.10.1', date: '2026-11-03',
     changes: [
       'Cursori pixel art del tema Reliquiario al posto di quelli di sistema: freccia, mano sui comandi cliccabili e mano che afferra per il trascinamento dello zaino e del deposito. Il cursore di divieto e quello di testo restano di sistema.',

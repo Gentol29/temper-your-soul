@@ -190,25 +190,304 @@ function drawTorch(ctx: CanvasRenderingContext2D, x: number, y: number, clock: n
   ctx.fillRect(x - 2, y - 19 + Math.sin(clock * 8 + x) * 2, 4, 7);
 }
 
-/** Colonna di pietra (la cripta del prototipo non ne ha: serve se una mappa con tema cripta ne usa). */
-function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera): void {
-  if (!camera.isVisible(pillar.position, pillar.radius + 20)) return;
-  const { x, y } = pillar.position;
-  ctx.fillStyle = '#10151e80';
+/** Colori della colonna d'ossa: nucleo di pietra scura, ossa chiare, ombre delle orbite. */
+const CRYPT_BONE_PILLAR = {
+  core: '#2c2a30',
+  rim: '#4a4538',
+  bone: '#d8d0b8',
+  boneShade: '#a89f86',
+  socket: '#17141a',
+};
+
+/** Un teschio visto dall'alto, orientato verso l'esterno (`angle`) e largo `size`. */
+function drawSkull(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, size: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  // Mandibola, cranio, poi le due orbite e il naso.
+  ctx.fillStyle = CRYPT_BONE_PILLAR.boneShade;
+  ctx.fillRect(size * 0.1, -size * 0.28, size * 0.45, size * 0.56);
+  ctx.fillStyle = CRYPT_BONE_PILLAR.bone;
   ctx.beginPath();
-  ctx.ellipse(x + 4, y + pillar.radius * 0.5, pillar.radius * 1.05, pillar.radius * 0.5, 0, 0, TAU);
+  ctx.arc(0, 0, size * 0.5, 0, TAU);
   ctx.fill();
-  ctx.fillStyle = '#4a4f5c';
+  ctx.fillStyle = CRYPT_BONE_PILLAR.socket;
   ctx.beginPath();
-  ctx.arc(x, y, pillar.radius, 0, TAU);
+  ctx.arc(size * 0.12, -size * 0.2, size * 0.13, 0, TAU);
+  ctx.arc(size * 0.12, size * 0.2, size * 0.13, 0, TAU);
+  ctx.fill();
+  ctx.fillRect(size * 0.3, -size * 0.04, size * 0.12, size * 0.08);
+  ctx.restore();
+}
+
+/** Un osso lungo con le due teste arrotondate, centrato in (x, y) e ruotato di `angle`. */
+function drawBone(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, length: number, thickness: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.fillStyle = CRYPT_BONE_PILLAR.bone;
+  ctx.fillRect(-length / 2, -thickness / 2, length, thickness);
+  for (const end of [-length / 2, length / 2]) {
+    ctx.beginPath();
+    ctx.arc(end, -thickness * 0.5, thickness * 0.7, 0, TAU);
+    ctx.arc(end, thickness * 0.5, thickness * 0.7, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Generatore pseudocasuale legato alla posizione: stessa scena a ogni fotogramma, scene diverse fra ostacoli diversi. */
+function seededRandom(x: number, y: number): () => number {
+  let s = Math.floor(hash(x, y) * 4294967296) >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type Random = () => number;
+
+/** Punto casuale in un disco di raggio `radius` attorno a (cx, cy), uniforme sull'area. */
+function pointInDisc(rng: Random, cx: number, cy: number, radius: number): Vec2 {
+  const a = rng() * TAU;
+  const d = Math.sqrt(rng()) * radius;
+  return new Vec2(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
+}
+
+/** Scheggia di pietra irregolare. */
+function drawChunk(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, size: number, fill: string, light: string): void {
+  const sides = 5 + Math.floor(rng() * 2);
+  const start = rng() * TAU;
+  const points: Vec2[] = [];
+  for (let i = 0; i < sides; i++) {
+    const a = start + (i * TAU) / sides;
+    const d = size * (0.6 + rng() * 0.4);
+    points.push(new Vec2(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.8));
+  }
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = light;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+/** Cumulo di teschi: un tumulo scuro, qualche osso e i teschi impilati, quelli piu' in basso davanti. */
+function drawSkullPile(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, r: number): void {
+  ctx.fillStyle = CRYPT_BONE_PILLAR.core;
+  ctx.beginPath();
+  ctx.ellipse(x, y + r * 0.1, r, r * 0.85, 0, 0, TAU);
+  ctx.fill();
+  for (let i = 0; i < 4; i++) {
+    const p = pointInDisc(rng, x, y, r * 0.55);
+    drawBone(ctx, p.x, p.y, rng() * Math.PI, r * 0.9, Math.max(3, r * 0.1));
+  }
+  const skulls = Array.from({ length: 10 + Math.floor(rng() * 5) }, () => {
+    const p = pointInDisc(rng, x, y, r * 0.68);
+    return { p, angle: rng() * TAU, size: r * (0.26 + rng() * 0.1) };
+  }).sort((a, b) => a.p.y - b.p.y);
+  for (const skull of skulls) drawSkull(ctx, skull.p.x, skull.p.y, skull.angle, Math.max(10, skull.size));
+}
+
+/** Una candela consumata con la sua fiammella e un alone di luce che tremola. */
+function drawCandle(ctx: CanvasRenderingContext2D, x: number, y: number, clock: number): void {
+  const flicker = Math.sin(clock * 9 + x * 0.7) * 0.5 + Math.sin(clock * 14 + y) * 0.3;
+  drawLight(ctx, x, y - 6, '#ffb066', 48 + flicker * 3, 0.5);
+  ctx.fillStyle = '#d9d2a8';
+  ctx.fillRect(x - 2, y - 5, 4, 7);
+  ctx.fillStyle = '#ffe4a0';
+  ctx.fillRect(x - 1, y - 9 + flicker, 2, 4);
+}
+
+/** Sarcofago scoperchiato: cassa di pietra, interno buio con uno scheletro e il coperchio scivolato di lato. */
+function drawSarcophagus(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, r: number): void {
+  const l = r * 0.85;
+  const w = r * 0.5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rng() * TAU);
+  ctx.fillStyle = '#3a3e4a';
+  ctx.fillRect(-l, -w, l * 2, w * 2);
+  ctx.strokeStyle = '#6b7080';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-l, -w, l * 2, w * 2);
+  ctx.fillStyle = '#0f1116';
+  ctx.fillRect(-l * 0.82, -w * 0.66, l * 1.64, w * 1.32);
+  // Lo scheletro: teschio a un capo, costole e un femore.
+  drawSkull(ctx, -l * 0.55, 0, Math.PI, Math.max(10, r * 0.3));
+  ctx.strokeStyle = CRYPT_BONE_PILLAR.boneShade;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(-l * 0.2 + i * l * 0.18, -w * 0.5);
+    ctx.lineTo(-l * 0.2 + i * l * 0.18, w * 0.5);
+    ctx.stroke();
+  }
+  drawBone(ctx, l * 0.45, w * 0.1, 0.2, l * 0.5, Math.max(3, r * 0.08));
+  // Il coperchio, spostato e inclinato: copre solo un tratto della cassa.
+  ctx.save();
+  ctx.translate(l * 0.5, w * 0.55);
+  ctx.rotate(0.22);
+  ctx.fillStyle = '#5c6270';
+  ctx.fillRect(-l * 0.55, -w * 0.75, l * 1.1, w * 1.5);
+  ctx.strokeStyle = '#767c8c';
+  ctx.strokeRect(-l * 0.55, -w * 0.75, l * 1.1, w * 1.5);
+  ctx.fillStyle = '#3f434f';
+  ctx.fillRect(-l * 0.4, -1, l * 0.8, 3);
+  ctx.fillRect(-1, -w * 0.5, 3, w * 1.0);
+  ctx.restore();
+  ctx.restore();
+  for (let i = 0; i < 3; i++) {
+    const p = pointInDisc(rng, x, y, r * 0.95);
+    drawChunk(ctx, rng, p.x, p.y, r * (0.05 + rng() * 0.05), '#5c6270', '#767c8c');
+  }
+}
+
+/** Altare rituale: lastra tonda con una stella runica viola che pulsa, quattro candele e un teschio al centro. */
+function drawRitualAltar(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, r: number, clock: number): void {
+  ctx.fillStyle = '#3a3e4a';
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.92, 0, TAU);
   ctx.fill();
   ctx.strokeStyle = '#6b7080';
   ctx.lineWidth = 2;
   ctx.stroke();
-  ctx.fillStyle = '#5c6270';
+  const pulse = 0.5 + 0.5 * Math.sin(clock * 1.6 + x);
+  drawLight(ctx, x, y, '#8b6bd4', r * 1.9, 0.28 + 0.12 * pulse);
+  ctx.strokeStyle = pulse > 0.5 ? '#a888e8' : '#8b6bd4';
+  ctx.lineWidth = 2;
+  for (const ring of [0.74, 0.6]) {
+    ctx.beginPath();
+    ctx.arc(x, y, r * ring, 0, TAU);
+    ctx.stroke();
+  }
+  // Stella a cinque punte, con una rotazione di partenza diversa da un altare all'altro.
+  const start = rng() * TAU;
   ctx.beginPath();
-  ctx.arc(x - pillar.radius * 0.25, y - pillar.radius * 0.25, pillar.radius * 0.55, 0, TAU);
+  for (let i = 0; i < 6; i++) {
+    const a = start + ((i * 2) % 5) * (TAU / 5);
+    const px = x + Math.cos(a) * r * 0.6;
+    const py = y + Math.sin(a) * r * 0.6;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  drawSkull(ctx, x, y, rng() * TAU, Math.max(10, r * 0.3));
+  for (let i = 0; i < 4; i++) {
+    const a = start + (i * TAU) / 4 + TAU / 8;
+    drawCandle(ctx, x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8, clock);
+  }
+}
+
+/** Gabbia di ferro con uno scheletro rimasto dentro: anelli in alto e in basso, sbarre, porta storta. */
+function drawIronCage(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, r: number): void {
+  const rx = r * 0.68;
+  const ry = r * 0.3;
+  const baseY = y + r * 0.35;
+  const topY = y - r * 0.4;
+  ctx.fillStyle = '#1d1a20';
+  ctx.beginPath();
+  ctx.ellipse(x, baseY, rx * 1.1, ry * 1.2, 0, 0, TAU);
   ctx.fill();
+  ctx.fillStyle = '#14121a';
+  ctx.fillRect(x - rx, topY, rx * 2, baseY - topY);
+  ctx.beginPath();
+  ctx.ellipse(x, baseY, rx, ry, 0, 0, TAU);
+  ctx.fill();
+  // Lo scheletro accasciato.
+  drawBone(ctx, x - rx * 0.2, baseY - ry * 0.2, 0.3 + rng() * 0.4, r * 0.7, Math.max(3, r * 0.08));
+  drawBone(ctx, x + rx * 0.2, baseY - ry * 0.4, -0.5 - rng() * 0.3, r * 0.6, Math.max(3, r * 0.08));
+  drawSkull(ctx, x + (rng() - 0.5) * rx * 0.6, baseY - r * 0.28, rng() * TAU, Math.max(10, r * 0.3));
+  // Sbarre e anelli.
+  ctx.strokeStyle = '#4b4d5a';
+  ctx.lineWidth = 3;
+  const bars = 7;
+  const broken = Math.floor(rng() * bars);
+  for (let i = 0; i < bars; i++) {
+    const px = x - rx + (i * 2 * rx) / (bars - 1);
+    const sag = Math.sin((i / (bars - 1)) * Math.PI) * ry;
+    ctx.beginPath();
+    ctx.moveTo(px, topY + sag * 0.8);
+    ctx.lineTo(px, i === broken ? baseY + sag * 0.3 - r * 0.28 : baseY + sag);
+    ctx.stroke();
+  }
+  for (const cy of [topY, baseY]) {
+    ctx.strokeStyle = '#5d5f6e';
+    ctx.beginPath();
+    ctx.ellipse(x, cy, rx, ry, 0, 0, TAU);
+    ctx.stroke();
+  }
+  // Catena e gancio da cui pendeva.
+  ctx.strokeStyle = '#4b4d5a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, topY - ry);
+  ctx.lineTo(x, topY - ry - r * 0.18);
+  ctx.stroke();
+}
+
+/** Lapidi inclinate su un tumulo di terra smossa, con un poco di muschio e un teschio affiorato. */
+function drawGraves(ctx: CanvasRenderingContext2D, rng: Random, x: number, y: number, r: number): void {
+  ctx.fillStyle = '#2a261f';
+  ctx.beginPath();
+  ctx.ellipse(x, y + r * 0.1, r * 0.95, r * 0.8, 0, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#3a3328';
+  ctx.beginPath();
+  ctx.ellipse(x - r * 0.1, y + r * 0.2, r * 0.6, r * 0.35, 0.2, 0, TAU);
+  ctx.fill();
+  drawSkull(ctx, x + r * 0.3, y + r * 0.4, rng() * TAU, Math.max(10, r * 0.26));
+  const stones = [-0.5, 0, 0.5].map((offset) => ({ x: x + offset * r, y: y - r * 0.05 + Math.abs(offset) * r * 0.25, tilt: (rng() - 0.5) * 0.45, h: r * (0.55 + rng() * 0.25) }));
+  for (const stone of stones) {
+    ctx.save();
+    ctx.translate(stone.x, stone.y);
+    ctx.rotate(stone.tilt);
+    ctx.fillStyle = '#10151e60';
+    ctx.fillRect(-r * 0.12, -stone.h * 0.4, r * 0.34, stone.h);
+    ctx.fillStyle = '#6b7080';
+    ctx.fillRect(-r * 0.2, -stone.h * 0.5, r * 0.4, stone.h);
+    ctx.beginPath();
+    ctx.arc(0, -stone.h * 0.5, r * 0.2, Math.PI, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#4a4f5c';
+    ctx.fillRect(-1.5, -stone.h * 0.55, 3, stone.h * 0.35);
+    ctx.fillRect(-r * 0.09, -stone.h * 0.45, r * 0.18, 3);
+    ctx.fillStyle = '#3d4a3a99';
+    ctx.fillRect(-r * 0.2, stone.h * 0.25, r * 0.4, stone.h * 0.25);
+    ctx.restore();
+  }
+  for (let i = 0; i < 3; i++) {
+    const p = pointInDisc(rng, x, y, r * 0.9);
+    drawChunk(ctx, rng, p.x, p.y, r * (0.05 + rng() * 0.04), '#5c6270', '#767c8c');
+  }
+}
+
+/**
+ * Ostacolo scenografico della cripta (solo aspetto): al posto delle colonne, cumuli di teschi, sarcofagi scoperchiati,
+ * altari rituali, gabbie di ferro e lapidi. La variante e la disposizione derivano dalla posizione, quindi non cambiano
+ * da un fotogramma all'altro; l'ingombro resta il cerchio della colonna.
+ */
+function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera, clock: number): void {
+  if (!camera.isVisible(pillar.position, pillar.radius + 20)) return;
+  const { x, y } = pillar.position;
+  const r = pillar.radius;
+  const rng = seededRandom(x, y);
+  ctx.fillStyle = '#10151e80';
+  ctx.beginPath();
+  ctx.ellipse(x + 4, y + r * 0.5, r * 1.05, r * 0.5, 0, 0, TAU);
+  ctx.fill();
+  const variant = Math.floor(rng() * 5);
+  if (variant === 0) drawSkullPile(ctx, rng, x, y, r);
+  else if (variant === 1) drawSarcophagus(ctx, rng, x, y, r);
+  else if (variant === 2) drawRitualAltar(ctx, rng, x, y, r, clock);
+  else if (variant === 3) drawIronCage(ctx, rng, x, y, r);
+  else drawGraves(ctx, rng, x, y, r);
 }
 
 export const cryptTheme: ArenaTheme = {
