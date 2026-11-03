@@ -1,5 +1,6 @@
 import type { CharacterAppearance } from '../character/appearance';
-import { characterPixels, DEFAULT_APPEARANCE, type CharacterPixels } from './character-art';
+import { CHARACTER_ART, characterPixels, DEFAULT_APPEARANCE, type CharacterPixels } from './character-art';
+import { SHADOW_ANIMATION } from './shadow-motion';
 import { Vec2 } from '../../core/vec2';
 import type { Boss } from '../boss/boss';
 import type { Minion } from '../minions/minion';
@@ -9,13 +10,14 @@ import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
 import { sheetImage, sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
 import type { ActorPoses } from './poses';
-import { PLAYER_CAST_POSE } from './poses';
+import { playerCastFrame } from './poses';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
 import { canvasFont } from './fonts';
 
 /** Un raster per fotogramma/equipaggiamento, liberato insieme all'art dalla cache.
  * Evita migliaia di cambi di colore/fillRect per ogni giocatore e fotogramma. */
 const rasterFrames = new WeakMap<CharacterPixels, HTMLCanvasElement>();
+const previousPositions=new WeakMap<Player,{x:number;direction:1|-1}>();
 function rasterOf(art: CharacterPixels): HTMLCanvasElement {
   let raster = rasterFrames.get(art); if (raster) return raster;
   raster = document.createElement('canvas'); raster.width = art.width; raster.height = art.height;
@@ -49,17 +51,25 @@ export function drawPlayer(
   drawShadow(ctx, player.position.x, player.position.y + 14, 14, 5, '#080b1480');
   if (!visible) return;
   const slots = ['primary_hand','secondary_hand','armor','boots'] as const;
-  const attackSlot=slots[player.skillBar.skills.findIndex(skill=>skill?.id===poses.playerSkillId)] ?? 'primary_hand';
-  const motion = poses.playerCast > 0
-    ? {state: 'cast' as const, attackSlot, frame: Math.min(7,Math.floor((1-poses.playerCast/PLAYER_CAST_POSE)*8))}
-    : player.moving ? {state:'walk' as const,frame:Math.floor(poses.walkPhase)%8}
-    : {state:'idle' as const,frame:Math.floor(time*4)%8};
+  const slotIndex=player.skillBar.skills.findIndex(skill=>skill?.id===poses.playerSkillId);
+  const attackSlot=slots[slotIndex] ?? 'primary_hand',skill=player.skillBar.skillAt(slotIndex);
+  const cadence=skill?skill.cooldown/(slotIndex===0?1+player.buffValue('attackSpeed'):1):undefined;
+  const castFrame=playerCastFrame(poses.playerCast,cadence);
   const facing = player.aim.x < player.position.x ? -1 : 1;
+  const previous=previousPositions.get(player),dx=previous?player.position.x-previous.x:0;
+  const walkDirection:1|-1=Math.abs(dx)>.01?(dx*facing<0?-1:1):previous?.direction??1;
+  previousPositions.set(player,{x:player.position.x,direction:walkDirection});
+  const count=SHADOW_ANIMATION.frames;
+  const motion = castFrame!==null
+    ? {state: 'cast' as const, attackSlot, frame: castFrame}
+    : player.moving ? {state:'walk' as const,frame:Math.floor(poses.walkPhase)%count,walkDirection}
+    : {state:'idle' as const,frame:Math.floor(time*SHADOW_ANIMATION.fps.idle)%count};
   ctx.save();
   ctx.translate(Math.round(player.position.x), Math.round(player.position.y));
   ctx.scale(facing, 1);
   const art=characterPixels(appearance,'game',0,false,motion);
-  ctx.drawImage(rasterOf(art), -art.width / 2, -art.height + 15);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(rasterOf(art), -CHARACTER_ART.feetX, 14-CHARACTER_ART.feetY);
   ctx.restore();
 }
 

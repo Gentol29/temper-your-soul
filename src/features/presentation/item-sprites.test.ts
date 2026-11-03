@@ -8,15 +8,17 @@ describe('sprite degli oggetti', () => {
     const drawings = ITEM_FAMILIES.map((family) => JSON.stringify(ITEM_SPRITES[family.id].pixels));
     expect(new Set(drawings).size).toBe(ITEM_FAMILIES.length);
   });
-  it('zaino e oggetti hanno matrici 16×16 valide e tavolozze complete', () => {
+  it('zaino e oggetti hanno matrici valide e tavolozze complete, con oggetti Hi-bit a 32 px', () => {
     for (const sprite of [BACKPACK_SPRITE, ...Object.values(ITEM_SPRITES)]) {
-      expect(sprite.pixels).toHaveLength(16);
+      const size=sprite.size??16;
+      expect(sprite.pixels).toHaveLength(size);
       for (const row of sprite.pixels) {
-        expect(row).toHaveLength(16);
+        expect(row).toHaveLength(size);
         for (const pixel of row) {
           if (pixel !== '.') expect(sprite.palette[pixel]).toMatch(/^#[0-9a-f]{6}$/i);
         }
       }
     }
+    for(const sprite of Object.values(ITEM_SPRITES)){expect(sprite.size).toBe(32);expect(sprite.image).toBeUndefined();}
   });
 });

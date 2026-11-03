@@ -11,8 +11,8 @@ describe('corpi e strati equipaggiamento', () => {
       const male=characterPixels({body:'male',equipment:{}},resolution);
       const female=characterPixels({body:'female',equipment:{}},resolution);
       expect(male.pixels).not.toEqual(female.pixels);
-      expect(male.width).toBe(resolution==='game'?48:128);
-      expect(male.height).toBe(resolution==='game'?48:128);
+      expect(male.width).toBe(resolution==='game'?64:128);
+      expect(male.height).toBe(resolution==='game'?64:128);
     }
   });
   it('la base femminile ha una sagoma propria: coda alta, vita stretta e fianchi', () => {
@@ -69,9 +69,9 @@ describe('corpi e strati equipaggiamento', () => {
     for(const body of ['male','female'] as const) {
       const c=Character.createStarter();c.bodyType=body;
       for(const state of ['idle','walk','cast'] as const) {
-        const frames=Array.from({length:8},(_,frame)=>characterPixels(c.appearance(),'game',0,false,{state,frame}));
+        const frames=Array.from({length:12},(_,frame)=>characterPixels(c.appearance(),'game',0,false,{state,frame}));
         expect(new Set(frames.map(art=>JSON.stringify(art.pixels))).size,state).toBeGreaterThanOrEqual(state==='idle'?2:4);
-        for(const art of frames){expect(art.width).toBe(48);expect(art.height).toBe(48);}
+        for(const art of frames){expect(art.width).toBe(64);expect(art.height).toBe(64);}
       }
     }
   });

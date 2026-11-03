@@ -1,7 +1,7 @@
 import type { BodyType } from '../character/appearance';
 import { PixelPainter } from './pixel-painter';
 
-export interface CharacterMotion { readonly state: 'idle' | 'walk' | 'cast'; readonly frame: number; readonly attackSlot?: 'primary_hand' | 'secondary_hand' | 'armor' | 'boots' }
+export interface CharacterMotion { readonly state: 'idle' | 'walk' | 'cast'; readonly frame: number; readonly attackSlot?: 'primary_hand' | 'secondary_hand' | 'armor' | 'boots'; readonly walkDirection?: 1 | -1 }
 export interface HandAnchor { readonly x: number; readonly y: number; readonly rotation: number }
 export interface BodyAnchors { readonly body: BodyType; readonly bob: number; readonly stride: number; readonly leftFoot: number; readonly rightFoot: number; readonly hand: number; readonly sway: number; readonly primary: HandAnchor; readonly secondary: HandAnchor }
 /** Larghezza della versione femminile: viso, collo, spalle, vita, bacino e gambe hanno proporzioni proprie. */

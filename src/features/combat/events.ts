@@ -93,7 +93,7 @@ export type GameEvent = (
   | { type: 'cover_hit'; position: Vec2; cover: number; left: number }
   /** Un riparo si e' rotto: non ferma piu' corpi e colpi. */
   | { type: 'cover_broken'; position: Vec2; cover: number }
-  /** Un giocatore ha preso un premio della stanza (`reward`: tipo del premio). */
+  /** Un giocatore ha ottenuto un premio (`reward`: tipo; `xp` dopo un'uccisione, `amount` è l'XP assegnato). */
   | { type: 'reward_taken'; position: Vec2; reward: string; amount?: number }
   /** Un giocatore ha scelto una tempra. */
   | { type: 'temper_chosen'; temperId: string; slot: number; grade: number }

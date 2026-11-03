@@ -336,3 +336,22 @@ Hover sulle card dungeon: l’anteprima caricava ripetutamente gli MP3 di ambien
 
 ### Spaziatura card dungeon · v0.09.00
 La riga Loot/Bestiario era vincolata a 32 px nella griglia: il margine precedente non separava realmente i pulsanti inferiori. Le ultime due righe ora sono automatiche, con 24 px di margine sotto i riferimenti e justify-content: space-between. Pellegrinaggio e X condividono altezza 48 px e centratura verticale. Controllo browser automatico riuscito sulla build servita da 4173, a viewport stretto: separazione reale fra le righe e comandi superiori allineati. Tipi, 808 test e build superati; conferma manuale dell’utente e confronto desktop ancora da fare.
+
+### Particelle soppresse dagli sprite delle skill · corretto localmente, 3 novembre 2026
+
+Segnalazione dell’utente: pochi effetti a colpi/uccisioni e buff limitati all’aura. Riscontrato in `Effects.handle`: il ritorno anticipato di `replacesLegacy` escludeva anche le particelle del lancio/impatto quando l’atlante era pronto. Il nuovo percorso `CombatVfx` riceve sempre gli eventi prima di quel filtro; il filtro continua a evitare i vecchi cerchi/archi duplicati. Sangue solo sul danno effettivo, emissioni persistenti lette dallo stato attuale, budget e scadenze coperti dai test. Mutazione che toglie l’inoltro rilevata dal test, poi ripristinata.
+
+Controllo nel browser di questo incremento non completato: localhost in timeout nel browser integrato e Computer Use interrotto per impossibilità di verificare l’URL di Edge. Fotogrammi raster delle skill ispezionati; fluidità, resa durante il combattimento e prestazioni con quattro giocatori ancora da provare. [Dettagli](vfx-pixellab.md#revisione-hi-bit--incremento-locale-3-novembre-2026).
+
+### Lupo inattivo senza marchio · corretto localmente, 3 novembre 2026
+
+Segnalazione dell’utente riprodotta nei test: il ternario `pet.target !== null ? nearby : undefined` impediva l’acquisizione quando il bersaglio era nullo. Il compagno restava accanto al proprietario dopo l’evocazione o una pausa fra ondate. Ora acquisisce autonomamente il vicino, riparte quando arriva una nuova preda e conserva la priorità al marchio. Raggio di acquisizione separato dal salto: 480 unità provvisorie; salto 180, danni e cadenza invariati. Test su preda non marchiata fuori dalla vecchia portata, intervallo senza nemici e nuova acquisizione; ripristinare il vecchio ternario fa fallire il test. Conferma giocata ancora necessaria. [Dettagli](ricompense-lupo-prototipi.md).
+
+XP corretti su indicazione del proprietario: posizione sul personaggio e ancoraggio mobile per tutta la durata, invece del punto dell’uccisione. Il nuovo oro usa emissione e volo, non mucchi a terra. La revisione dei personaggi è solo una tavola di tre prototipi, autorizzata dall’utente e ancora da scegliere: nessuno sprite attivo è stato sostituito.
+
+
+## Camminata inversa dei prototipi · 3 novembre 2026
+
+Segnalazione dell’utente dopo la revisione dei micromovimenti: le figure sembravano camminare all’indietro. Lettura del ciclo conferma che il piede avanzava a terra e arretrava sollevato. Invertite le fasi di sollevamento, con rimbalzo del busto allineato al passaggio delle gambe. La versione C scelta è ora usata nel gioco; in combattimento il ciclo si inverte durante un arretramento rispetto alla mira. Test sulle fasi di appoggio/avanzamento e render con terreno in movimento; ritmo percepito ancora da confermare giocando.
+
+Durante il controllo dei nuovi equipaggiamenti, la testa del martello era troppo vicina al viso a riposo. Spostata la massa in avanti mantenendo identica la presa; controllo automatico sui pixel del viso in riposo/cammino per tutte le primarie. [Dettagli](sprite-c-equipaggiamento.md).

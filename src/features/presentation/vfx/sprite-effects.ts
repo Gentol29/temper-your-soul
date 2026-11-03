@@ -79,7 +79,7 @@ export class SpriteEffects {
         ctx.arc(position.x, position.y, shape.range, burst.angle - shape.arc / 2, burst.angle + shape.arc / 2);
         ctx.closePath(); ctx.clip();
       }
-      drawVfx(ctx, burst.id, position.x, position.y, burst.width, burst.age, burst.angle, 0.9, burst.duration);
+      drawVfx(ctx, burst.id, position.x, position.y, burst.width, burst.age, burst.angle, 0.95 * Math.min(1, (burst.duration - burst.age) / 0.12), burst.duration);
       ctx.restore();
     }
   }

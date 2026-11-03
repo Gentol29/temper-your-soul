@@ -159,7 +159,7 @@ export function drawFloatingTexts(ctx: CanvasRenderingContext2D, effects: Effect
     const pop = age < TEXT_POP ? 1 + 0.45 * (1 - age / TEXT_POP) : 1;
     ctx.globalAlpha = clamp(t.remaining / (t.total / 3), 0, 1);
     // I numeri in Silkscreen come l'HUD; nomi degli attacchi e scritte nel carattere di sistema, piu' leggibile.
-    ctx.font = canvasFont(Math.round(t.size * pop), NUMERIC.test(t.text) ? 'pixel' : 'text', 'bold');
+    ctx.font = canvasFont(Math.round(t.size * pop), t.pixel || NUMERIC.test(t.text) ? 'pixel' : 'text', 'bold');
     if (t.outline) {
       ctx.strokeStyle = '#120d16';
       ctx.lineWidth = 3;

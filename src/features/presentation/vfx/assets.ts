@@ -1,4 +1,5 @@
 import manifest from '../../../assets/vfx/pixellab/manifest.json';
+import { drawHiBitVfx, hiBitAvailable, prewarmHiBitVfx } from './hi-bit-atlas';
 
 export const VFX_IDS = ['warrior-cleave', 'warrior-guard', 'warrior-fortify', 'warrior-rush',
   'mage-fireball', 'mage-water-orb', 'mage-earth-wisp', 'mage-wind-orb', 'mage-fire-explosion',
@@ -45,6 +46,7 @@ export function frameIndex(count: number, time: number, fps: number, loop: boole
 
 export function drawVfx(ctx: CanvasRenderingContext2D, id: VfxId, x: number, y: number,
   width: number, time: number, angle = 0, alpha = 1, duration?: number): boolean {
+  if (drawHiBitVfx(ctx, id, x, y, width, time, angle, alpha, duration)) return true;
   const asset = PIXELLAB_MANIFEST.effects[id]; if (!asset) return false;
   const image = loadedImage(id, asset); if (!image) return false;
   const fps = duration ? asset.frames.length / duration : asset.fps;
@@ -57,11 +59,10 @@ export function drawVfx(ctx: CanvasRenderingContext2D, id: VfxId, x: number, y: 
   ctx.restore(); return true;
 }
 
-/** Precarica gli atlanti locali prima del primo lancio, senza richieste al provider. */
-if (typeof Image !== 'undefined') for (const id of VFX_IDS) {
-  const asset = PIXELLAB_MANIFEST.effects[id]; if (asset) loadedImage(id, asset);
-}
+/** Prepara i nuovi raster durante le pause del browser; i vecchi PNG restano un ripiego su richiesta. */
+prewarmHiBitVfx(VFX_IDS);
 
 export function isVfxReady(id: VfxId): boolean {
+  if (hiBitAvailable()) return true;
   const asset = PIXELLAB_MANIFEST.effects[id]; return !!asset && !!loadedImage(id, asset);
 }

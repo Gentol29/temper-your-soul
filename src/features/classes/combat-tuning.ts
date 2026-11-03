@@ -4,6 +4,8 @@ export const CLASS_COMBAT = {
   exposedMultiplier: 1.2,
   rushHitMargin: 18,
   petHitMargin: 22,
+  /** Acquisizione autonoma; distinta dal salto fra prede, che conserva il suo raggio. */
+  petAcquireRadius: 480,
 } as const;
 export const BOSS_SPECIAL = {
   firstDelay: 10, interval: 12, windup: 1.1,

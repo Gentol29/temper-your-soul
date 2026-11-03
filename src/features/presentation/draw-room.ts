@@ -1,5 +1,6 @@
 import type { Camera } from '../../core/camera';
-import { TAU, type Vec2 } from '../../core/vec2';
+import { TAU, Vec2 } from '../../core/vec2';
+import { drawFlyingGold } from './gold-flight';
 import type { ArenaDefinition, ArenaThemeId } from '../arena/arena';
 import type { Minion } from '../minions/minion';
 import type { PickupKind, RoomView } from '../run/encounter';
@@ -56,6 +57,8 @@ export interface RoomLook {
   readonly mood?: MoodFrame;
   /** La vena di servitori dietro le porte ("Catacombe"), se la discesa ne usa piu' d'una. */
   readonly nextVein?: string;
+  /** Il destinatario vivo: l'oro vola verso di lui e non richiede prossimità. */
+  readonly collector?: Vec2;
 }
 
 function pickupHidden(view: RoomView, pickup: RoomView['pickups'][number], localId: string): boolean {
@@ -99,7 +102,7 @@ export function drawRoomFloor(ctx: CanvasRenderingContext2D, look: RoomLook, clo
     }
   }
   for (const pickup of view.pickups) {
-    if (!pickupHidden(view, pickup, look.localId)) drawLight(ctx, pickup.x, pickup.y, '#ffe9a0', 120, 0.7);
+    if (pickup.kind !== 'gold' && !pickupHidden(view, pickup, look.localId)) drawLight(ctx, pickup.x, pickup.y, '#ffe9a0', 120, 0.7);
   }
 }
 
@@ -140,6 +143,10 @@ export function drawRoomPickups(ctx: CanvasRenderingContext2D, look: RoomLook, c
   const { view } = look;
   for (const pickup of view.pickups) {
     if (pickupHidden(view, pickup, look.localId)) continue;
+    if (pickup.kind === 'gold') {
+      if (look.collector) drawFlyingGold(ctx, new Vec2(pickup.x, pickup.y), look.collector, pickup.age ?? 0, pickup.id);
+      continue;
+    }
     const icon = PICKUP_ICONS[pickup.kind];
     const bob = Math.sin(clock * 3 + pickup.id) * 3;
     ctx.save();
@@ -234,7 +241,7 @@ export function drawRoomLabels(ctx: CanvasRenderingContext2D, look: RoomLook): v
     ctx.restore();
   });
   for (const pickup of view.pickups) {
-    if (pickupHidden(view, pickup, look.localId)) continue;
+    if (pickup.kind === 'gold' || pickupHidden(view, pickup, look.localId)) continue;
     ctx.save();
     ctx.font = canvasFont(9, 'text');
     ctx.textAlign = 'center';

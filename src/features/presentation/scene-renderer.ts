@@ -1,4 +1,5 @@
 import { drawPersistentVfx } from './vfx/sprite-effects';
+import { drawBloodStains, drawCombatMotes, drawMinionDeaths } from './vfx/combat-vfx';
 import { drawClassCombat } from './draw-class-combat';
 import type { CharacterAppearance } from '../character/appearance';
 import type { Camera } from '../../core/camera';
@@ -98,6 +99,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   lightMap.dropCovered(match.arena.solids);
   lightMap.dropCovered(match.arena.chasms);
   drawDecals(ctx, effects, camera);
+  drawBloodStains(ctx, effects.combatVfx, camera);
   drawHazards(ctx, match.arena, match.covers, camera, clock, effects.coverFlashes);
   collectActorLights(ctx, scene);
   const ambient = scene.mood === undefined ? theme.ambient : moodAmbient(theme.ambient, scene.mood);
@@ -145,6 +147,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   }
   figures.sort((a, b) => a.y - b.y);
   for (const figure of figures) figure.draw();
+  drawMinionDeaths(ctx, effects.combatVfx);
   // Il muro in basso e l'ingresso stanno davanti alle figure.
   theme.drawForeground?.(ctx, match.arena, camera, clock, ambient);
   scene.drawRoom?.(ctx, 'front');
@@ -168,6 +171,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   }
   effects.spriteVfx.draw(ctx, match);
   drawParticles(ctx, effects);
+  drawCombatMotes(ctx, effects.combatVfx);
   for (const projectile of match.projectiles) {
     if (projectile.team === 'enemy') drawProjectile(ctx, projectile, effects.trailOf(projectile), camera, match.time, theme.projectileRim);
   }

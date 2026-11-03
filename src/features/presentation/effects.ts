@@ -1,4 +1,5 @@
 import { SpriteEffects, replacesLegacy } from './vfx/sprite-effects';
+import { CombatVfx } from './vfx/combat-vfx';
 import type { Camera } from '../../core/camera';
 import { cosmeticRng, type Rng } from '../../core/rng';
 import { TAU, Vec2 } from '../../core/vec2';
@@ -100,7 +101,13 @@ export interface FloatingText {
   /** Deriva orizzontale, perche' i numeri vicini non si sovrappongano. */
   readonly vx: number;
   readonly outline: boolean;
+  /** Le etichette XP usano lo stesso carattere pixel dei numeri, pur contenendo lettere. */
+  readonly pixel?: boolean;
+  /** Gli XP restano sopra il destinatario anche mentre cammina. */
+  readonly attachment?: { readonly owner: string; readonly offsetY: number };
 }
+
+export const XP_FEEDBACK = { life: 1.2, size: 8, color: '#efc0a1', offsetY: 46, stackGap: 12, maxTexts: 48 } as const;
 
 /** Scintilla d'impatto: stella a quattro punte che si allarga e svanisce in un lampo. */
 export interface Spark {
@@ -190,6 +197,7 @@ const SPARK_LIFE = 0.14;
  */
 export class Effects {
   readonly spriteVfx = new SpriteEffects();
+  readonly combatVfx: CombatVfx;
   particles: Particle[] = [];
   waves: Wave[] = [];
   texts: FloatingText[] = [];
@@ -227,10 +235,11 @@ export class Effects {
   /** Particelle d'ambiente del boss "in debito" (frazioni accumulate fra un passo e l'altro). */
   private ambientDebt = 0;
 
-  constructor(private readonly rng: Rng = cosmeticRng) {}
+  constructor(private readonly rng: Rng = cosmeticRng) { this.combatVfx = new CombatVfx(rng); }
 
   clear(): void {
     this.spriteVfx.clear();
+    this.combatVfx.clear();
     this.particles = [];
     this.waves = [];
     this.texts = [];
@@ -265,6 +274,8 @@ export class Effects {
    */
   handle(event: GameEvent, localPlayerId?: string): void {
     this.spriteVfx.handle(event);
+    // Gli atlanti sostituiscono la vecchia sagoma, mai sangue, frammenti e particelle aggiuntive.
+    this.combatVfx.handle(event);
     if (replacesLegacy(event)) return;
     switch (event.type) {
       case 'status_applied':
@@ -398,6 +409,22 @@ export class Effects {
         for (const [radius, life] of [[120, 0.5], [220, 0.8]] as const) this.wave(event.position, radius, '#ffe3a6', life);
         break;
       case 'reward_taken':
+        if (event.reward === 'xp') {
+          const mine = event.playerId === undefined || event.playerId === (localPlayerId ?? 'local');
+          if (mine && event.amount !== undefined && event.amount > 0) {
+            if (this.texts.filter(text => text.pixel).length >= XP_FEEDBACK.maxTexts) {
+              const oldest = this.texts.findIndex(text => text.pixel);
+              this.texts.splice(oldest, 1);
+            }
+            const owner = event.playerId ?? localPlayerId ?? 'local';
+            const nearby = this.texts.filter(text => text.attachment?.owner === owner).length;
+            const offsetY = XP_FEEDBACK.offsetY + nearby % 4 * XP_FEEDBACK.stackGap;
+            this.texts.push({ x: event.position.x, y: event.position.y - offsetY,
+              text: `+${event.amount} XP`, color: XP_FEEDBACK.color, remaining: XP_FEEDBACK.life, total: XP_FEEDBACK.life,
+              size: XP_FEEDBACK.size, vx: 0, outline: true, pixel: true, attachment: { owner, offsetY } });
+          }
+          break;
+        }
         this.burst(event.position, '#ffd889', 30);
         this.wave(event.position, 60, '#fff1ce', 0.5);
         break;
@@ -416,6 +443,7 @@ export class Effects {
   /** Avanza gli effetti di `dt` secondi e genera quelli che dipendono dallo stato (scie, carica, aure del boss). */
   update(dt: number, match: Match, camera: Camera): void {
     this.spriteVfx.update(dt);
+    this.combatVfx.update(dt, match, camera);
     this.updateTrails(dt, match.projectiles, camera);
     const { boss } = match;
     if (boss !== null) {
@@ -442,9 +470,13 @@ export class Effects {
     for (const w of this.waves) w.remaining -= dt;
     this.waves = this.waves.filter((w) => w.remaining > 0);
     for (const t of this.texts) {
-      t.y -= 25 * dt;
-      t.x += t.vx * dt;
       t.remaining -= dt;
+      if (t.attachment) {
+        const player = match.players.get(t.attachment.owner);
+        if (!player) { t.remaining = 0; continue; }
+        t.x = player.position.x;
+        t.y = player.position.y - t.attachment.offsetY - (t.total - t.remaining) * 25;
+      } else { t.y -= 25 * dt; t.x += t.vx * dt; }
     }
     this.texts = this.texts.filter((t) => t.remaining > 0);
     for (const flash of this.flashes) flash.remaining -= dt;

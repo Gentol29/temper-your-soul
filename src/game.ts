@@ -1066,6 +1066,7 @@ export class Game {
       arena: this.match.arena,
       nextOptions: views.next,
       localId: views.localId,
+      ...(renderedMatch.player.health.isDead ? {} : { collector: renderedMatch.player.position }),
       ...(mood === undefined ? {} : { mood }),
       ...(nextVein === undefined ? {} : { nextVein: veinName(views.run.dungeonId, nextVein) }),
     };

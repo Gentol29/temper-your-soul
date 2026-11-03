@@ -288,6 +288,7 @@ export class DescentRun {
     const match = this.match;
     const encounter = this.encounter;
     this.seconds += match.time;
+    if (match.status !== 'playing') encounter.settleGold(match);
     this.syncProgress();
     this.collect(match, encounter);
     if (match.status === 'lost') {

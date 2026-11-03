@@ -330,21 +330,21 @@ describe('risposta ai colpi e momenti chiave', () => {
 });
 
 describe('pose', () => {
-  it('il lancio dura 0,16 s e la posa del boss la durata dell\'evento', () => {
+  it('il lancio dura 0,3 s e la posa del boss la durata dell\'evento', () => {
     const poses = new ActorPoses();
     poses.handle({ type: 'skill_cast', skillId: 'arcane_bolt', visual: 'arcane_bolt', kind: 'projectile', origin: Vec2.ZERO, destination: Vec2.ZERO, angle: 0 });
     poses.handle({ type: 'boss_pose', seconds: 0.5 });
-    expect(poses.playerCast).toBeCloseTo(0.16, 10);
+    expect(poses.playerCast).toBeCloseTo(0.3, 10);
     expect(poses.bossCast).toBe(0.5);
-    poses.update(0.2, false);
+    poses.update(0.31, false);
     expect(poses.playerCast).toBe(0);
-    expect(poses.bossCast).toBeCloseTo(0.3, 10);
+    expect(poses.bossCast).toBeCloseTo(0.19, 10);
   });
 
   it('la camminata avanza solo mentre ci si muove e si azzera da fermi', () => {
     const poses = new ActorPoses();
     poses.update(1, true);
-    expect(poses.walkPhase).toBeCloseTo(9, 10);
+    expect(poses.walkPhase).toBeCloseTo(14, 10);
     poses.update(0.1, false);
     expect(poses.walkPhase).toBe(0);
   });

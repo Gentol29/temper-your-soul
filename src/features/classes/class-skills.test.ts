@@ -213,6 +213,21 @@ describe('Arciere: compagno, sanguinamento e mobilità', () => {
     expect(pet.position).toEqual(next.position);
   });
 
+  it('il lupo acquisisce un nemico senza marchio e riparte quando arriva un nuovo bersaglio', () => {
+    const match = fixture('archer'); match.boss!.health.current = 0;
+    const definition = Object.values(MINIONS).find(minion => !minion.dormant && !minion.burrow && !minion.flying)!;
+    cast(match, 'archer', 2);
+    const pet = match.classCombat.pets.get('archer')!;
+    match.classCombat.step(STEP); expect(pet.target).toBeNull();
+    const first = match.spawnMinion(definition, pet.position.add(new Vec2(320, 0)), { maxHealth: 1000 });
+    for (let i = 0; i < 120 && first.health.current === first.health.max; i++) match.classCombat.step(STEP);
+    expect(pet.target).toBe(`minion:${first.id}`); expect(first.health.current).toBeLessThan(first.health.max);
+    first.health.current = 0; match.classCombat.step(STEP); expect(pet.target).toBeNull();
+    const next = match.spawnMinion(definition, pet.position.add(new Vec2(70, 0)), { maxHealth: 1000 });
+    for (let i = 0; i < 120 && next.health.current === next.health.max; i++) match.classCombat.step(STEP);
+    expect(pet.target).toBe(`minion:${next.id}`); expect(next.health.current).toBeLessThan(next.health.max);
+  });
+
   it('nelle stanze con i massicci il lupo non salta attraverso un blocco', () => {
     const match = new Match({ dungeon: CRYPT, rng: { next: () => 0 }, members: [member('archer')], loadout: [],
       arena: { ...CRYPT.arena, pillars: [], solids: [{ x: 570, y: 380, width: 30, height: 240 }], playerSpawn: new Vec2(500, 700), bossSpawn: new Vec2(700, 900) },

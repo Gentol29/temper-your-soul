@@ -32,7 +32,8 @@ describe('ritratti illustrati e profondita', () => {
   it('la figura femminile e piu esile anche sotto il collo, senza contare capelli o viso', () => {
     const male=characterPixels({body:'male',equipment:{}},'game');
     const female=characterPixels({body:'female',equipment:{}},'game');
-    const area=(pixels:typeof male.pixels)=>pixels.slice(20,32).flat().filter(Boolean).length;
+    // Corpo nativo 48 con margine di 8: busto/vita nelle righe 28–39, sotto la testa.
+    const area=(pixels:typeof male.pixels)=>pixels.slice(28,40).flat().filter(Boolean).length;
     expect(area(female.pixels)).toBeLessThan(area(male.pixels));
   });
   it('arma lunga separata in parti dietro e davanti, mentre spada e futuro scudo restano davanti', () => {

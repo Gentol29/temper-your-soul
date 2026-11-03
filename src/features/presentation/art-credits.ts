@@ -37,8 +37,8 @@ export const ART_CREDITS: Readonly<Record<string, ArtCredit>> = {
   'pixellab-vfx-items': {
     title: 'VFX delle classi e icone equipaggiamento', author: 'Temper your soul · generato con PixelLab',
     source: 'https://www.pixellab.ai/termsofservice', license: 'PixelLab-output', retrieved: '2026-11-01',
-    use: 'animazioni delle skill e icone oggetto locali',
-    changes: 'prompt originali, selezione degli atlanti, ottimizzazione PNG e composizione con particelle WebGL',
+    use: 'atlanti storici delle skill come ripiego; icone archiviate dopo la revisione Hi-bit C',
+    changes: 'prompt originali, selezione degli atlanti e ottimizzazione PNG; rendering corrente Hi-bit e icone oggetto ridisegnati nel codice il 3 novembre 2026',
   },
   'oga-animated-statue': {
     title: 'Animated Statue',

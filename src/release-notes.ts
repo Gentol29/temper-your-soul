@@ -159,6 +159,29 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.10.0', date: '2026-11-03',
+    changes: [
+      'VFX Hi-bit più marcati per attacchi base e abilità delle tre classi: sedici effetti raster a dodici fotogrammi, con scie, nuclei, impatti, esplosioni e rune distinti. Nessuna nuova generazione a pagamento.',
+      'Colpi e uccisioni con getti di sangue, gravità e macchie temporanee; ossa e costrutti perdono schegge, gli spiriti energia. Servitori abbattuti con lampo, cedimento e dissolvenza. Il sangue nasce dal danno effettivo, senza falsi colpi.',
+      'Particelle continue su buff, parate, canalizzazioni, scatti e stati. Budget massimo complessivo delle particelle 1.400 → 3.800, più 180 macchie e 48 morti animate; valori estetici regolabili, con proiettili nemici ancora in primo piano.',
+      'Gli XP dei mob e luogotenenti compaiono in Silkscreen sopra il giocatore e lo seguono mentre si muove. In cooperativa si vede il proprio premio. Quantità T1/T2/T3/T4 ancora 4/7/10/14 XP; XP e riepilogo del boss invariati.',
+      'Oro emesso progressivamente dal corpo del nemico: dispersione per 0,5 s, poi volo di 0,4 s verso il giocatore e accredito automatico. Raccolta entro 30 unità → nessun vincolo di distanza; spariscono mucchi, etichette e icone a terra. Probabilità 70% e quantità T1/T2/T3/T4 3/6/9/12 oro invariate.',
+      'Ogni superstite riceve una sola quota personale di oro; le consegne in viaggio si chiudono al cambio stanza. Nessun nuovo premio da KO, autoesplosioni, rimozioni o resurrezioni dei servitori.',
+      'Corretto il lupo dell’Arciere che restava fermo senza marchio o dopo un’ondata: acquisisce autonomamente un nemico e abbandona gli id non più validi. Marchio e preda precedente restano prioritari. Raggio di ricerca del vicino 180 → 480 unità; salto dopo l’uccisione ancora 180 unità. Danno, cadenza, durata e ostacoli invariati.',
+      'HUB nella palette carbone, cenere, grigio e rosso fuoco. Portale rifatto con arco gotico, contorni in pietra e ferro, rune, bracieri e vortice rosso verso un centro nero: 32 fotogrammi a 16 FPS. Collisioni e servizi conservati.',
+      'Integrata la proposta scelta C · Cacciatore d’ombre, maschile e femminile, per Guerriero, Arciere e Mago in HUB, incontri e anteprime. Corpo su griglia 48 px in frame 64×64 con margine per le armi, senza ingrandire la figura nel mondo.',
+      'Camminata corretta: piede che avanza sollevato e arretra in appoggio, braccia contrapposte e mantelli articolati. Arretrare rispetto alla mira inverte il ciclo. Attacchi distinti per classe e per i quattro slot, con posa visiva massima 0,16 → 0,30 s adattata alle primarie rapide; tempi e danni delle skill invariati.',
+      'Ridisegnati gli sprite indossati delle 25 famiglie: armi, scudo, faretra, armature e stivali modulari, con prese e gesti comuni per classe/slot. Cambiare o rimuovere un pezzo modifica il personaggio. Nuove icone Hi-bit 32×32 derivate dagli stessi disegni, materiali scuri e piccoli accenti di rarità; ritratti illustrati conservati.',
+      'Anteprime di sviluppo aggiornate: confronto A/B/C, equipaggiamenti effettivi con entrambe le versioni, direzioni, rarità, pausa e cursore dei frame; pagina VFX con sangue, morte, schegge e buff in movimento. Nessuna modifica ai salvataggi da queste anteprime.',
+      'Salvataggio v10 invariato. Protocollo cooperativo 13 → 14 per sincronizzare l’età dell’oro: riavviare il server e ricaricare tutti i client. Id di oggetti e abilità conservati.',
+      'Verifica completa: 840 test, tipi client/server e build. Controlli tecnici browser su anteprime, HUB, movimento e attacchi nelle tre classi; valutazione giocata di ritmo, leggibilità e prestazioni, soprattutto in cooperativa, ancora da confermare.',
+    ],
+    balanceChanges: [
+      { label: 'Arciere · Evoca il lupo · tutte le rarità/livelli · raggio di ricerca del vicino (prima subordinato a un bersaglio precedente)', before: 180, after: 480, unit: 'unità' },
+      { label: 'Oro da mob/luogotenenti T1–T4 · ritardo configurato di accredito per un giocatore già entro le precedenti 30 unità', before: 0, after: 0.9, unit: 's' },
+    ],
+  },
+  {
     version: '0.9.0', date: '2026-11-03',
     changes: [
       'Selezione dungeon: righe della griglia ad altezza automatica e margine di 24 px sotto Loot rate e Bestiario, per separarli realmente da Discesa e Duello.',

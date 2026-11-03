@@ -18,7 +18,7 @@ const spec = { team: 'enemy' as const, speed: 100, damage: 13, radius: 4, lifeti
 
 describe('servitori in cooperativa (protocollo 8)', () => {
   it('il protocollo è alla versione 8: i servitori nascono una volta, poi viaggiano come posizione, stato e segnali', () => {
-    expect(NETWORK.protocolVersion).toBe(13);
+    expect(NETWORK.protocolVersion).toBe(14);
     const match = create(), encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder();
     const minion = new Minion(7, SPORELING, new Vec2(120.123, 340.456), { elite: 'robust', maxHealth: 20 }); minion.health.current = 42; match.minions.push(minion);
     const first = encoder.encode(snapshotOf(match, 'a', [], {}));

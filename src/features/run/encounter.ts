@@ -32,6 +32,8 @@ export interface RoomPickup {
   readonly shared: boolean;
   /** Premi alternativi (fonte o incudine del santuario): prenderne uno toglie gli altri dello stesso gruppo. */
   readonly group?: string;
+  /** Tempo dall'uscita dell'oro dal corpo: emissione, poi volo e assorbimento. */
+  age?: number;
 }
 
 /** Un giocatore nella stanza: le skill dell'equipaggiamento, le tempre gia' scelte, quante offerte vede. */
@@ -90,7 +92,7 @@ export interface RoomView {
   readonly trialFailed: boolean;
   readonly doors: readonly { readonly x: number; readonly y: number; readonly progress: number }[];
   readonly doorsOpen: boolean;
-  readonly pickups: readonly { readonly id: number; readonly kind: PickupKind; readonly x: number; readonly y: number; readonly takenBy: readonly string[] }[];
+  readonly pickups: readonly { readonly id: number; readonly kind: PickupKind; readonly x: number; readonly y: number; readonly takenBy: readonly string[]; readonly age?: number }[];
   /** Offerte di tempra in attesa, per giocatore. */
   readonly offers: Readonly<Record<string, readonly TemperPick[]>>;
   /** Giocatori a cui il forziere propone un patto. */
@@ -224,11 +226,10 @@ export class RoomEncounter implements Encounter {
   }
 
   step(dt: number, match: Match): void {
-    for (const pickup of this.pickups) for (const [id, player] of match.players) {
-      if (pickup.kind !== 'gold' || player.health.isDead || pickup.takenBy.includes(id)) continue;
-      if (player.position.sub(pickup.position).length() > MOB_REWARDS.pickupRadius) continue;
-      pickup.takenBy.push(id);
-      this.grants.gold.set(id, (this.grants.gold.get(id) ?? 0) + pickup.amount);
+    for (const pickup of this.pickups) {
+      if (pickup.kind !== 'gold') continue;
+      pickup.age = Math.min(MOB_REWARDS.emergeSeconds + MOB_REWARDS.flightSeconds, (pickup.age ?? 0) + Math.max(0, dt));
+      if (pickup.age + 1e-9 >= MOB_REWARDS.emergeSeconds + MOB_REWARDS.flightSeconds) this.absorbGold(match, pickup);
     }
     if (!this.grants.cleared) {
       this.director?.step(dt, match);
@@ -251,6 +252,19 @@ export class RoomEncounter implements Encounter {
       return;
     }
     this.walkDoors(dt, match);
+  }
+
+  private absorbGold(match: Match, pickup: RoomPickup): void {
+    for (const [id, player] of match.players) {
+      if (player.health.isDead || pickup.takenBy.includes(id)) continue;
+      pickup.takenBy.push(id);
+      this.grants.gold.set(id, (this.grants.gold.get(id) ?? 0) + pickup.amount);
+    }
+  }
+
+  /** Il cambio stanza non perde l'oro già emesso che stava volando verso i superstiti. */
+  settleGold(match: Match): void {
+    for (const pickup of this.pickups) if (pickup.kind === 'gold') this.absorbGold(match, pickup);
   }
 
   /** Prova: senza un graffio (nessun danno subito) o contro il tempo. */
@@ -286,9 +300,10 @@ export class RoomEncounter implements Encounter {
     for (const [id, player] of match.players) {
       this.grants.xp.set(id, (this.grants.xp.get(id) ?? 0) + reward.xp);
       player.setExperience(player.totalXp + reward.xp);
+      match.events.emit({ type: 'reward_taken', reward: 'xp', amount: reward.xp, position: player.position, playerId: id });
     }
     if (match.rng.next() < MOB_REWARDS.chance) this.pickups.push({
-      id: this.pickups.length + 1, kind: 'gold', position, amount: reward.gold, takenBy: [], shared: false,
+      id: this.pickups.length + 1, kind: 'gold', position, amount: reward.gold, takenBy: [], shared: false, age: 0,
     });
   }
 
@@ -350,7 +365,7 @@ export class RoomEncounter implements Encounter {
       trialFailed: this.trialFailed,
       doors: this.doors.map((door) => ({ x: door.position.x, y: door.position.y, progress: this.doorProgress[door.index]! })),
       doorsOpen: this.grants.cleared,
-      pickups: this.pickups.map((pickup) => ({ id: pickup.id, kind: pickup.kind, x: pickup.position.x, y: pickup.position.y, takenBy: [...pickup.takenBy] })),
+      pickups: this.pickups.map((pickup) => ({ id: pickup.id, kind: pickup.kind, x: pickup.position.x, y: pickup.position.y, takenBy: [...pickup.takenBy], ...(pickup.age === undefined ? {} : { age: pickup.age }) })),
       offers: Object.fromEntries(this.offers),
       pacts: [...this.pendingPacts],
       preyId: this.prey !== null && !this.prey.isDead ? this.prey.id : null,

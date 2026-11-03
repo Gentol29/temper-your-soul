@@ -50,3 +50,8 @@ Un'area che non compare in tabella non ha un referente: chi vuole lavorarci può
 - `src/features/ui/illustrated-portrait.ts` e `.css`, `dungeon-portrait-layers.ts`
 
 **Non comprende** boss, servitori, icone degli oggetti e temi delle mappe.
+
+
+### Autorizzazione puntuale · sprite C, 3 novembre 2026
+
+Dopo la segnalazione dell’assegnazione a simonragaz87-sudo, l’utente aveva autorizzato soltanto tre coppie di prototipi separati. Successivamente ha scelto esplicitamente **C · Cacciatore d’ombre**, chiedendo di usarlo nel gioco, correggere il passo e rifare gli sprite di armi/equipaggiamento mantenendoli modulari. Questa decisione autorizza il relativo incremento locale sul ramo `codex/vfx-hi-bit`: compositore di gioco, oggetti indossati, icone e anteprima. Ritratti illustrati/PNG, inventario e regole di equipaggiamento restano nell’ambito precedente del referente. Non costituisce approvazione delle altre fasi del piano ritratti. [Incremento](sprite-c-equipaggiamento.md).

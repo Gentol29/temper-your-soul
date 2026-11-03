@@ -25,10 +25,10 @@ import type { Loadout } from '../skills/skill-definition';
 import type { SnapshotFrame } from './snapshot-codec';
 
 /**
- * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 7: skill e stati di classe; classe nel setup; la discesa (stanze, porte, premi,
- * tempre) e i servitori compatti (tipo alla nascita, poi posizione e stato).
+ * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 14: età dell'oro emesso,
+ * volo e assorbimento automatico; conserva classi, discesa e servitori compatti.
  */
-export const NETWORK = { protocolVersion: 13, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 14, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';

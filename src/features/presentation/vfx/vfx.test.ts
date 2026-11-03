@@ -46,7 +46,9 @@ describe('atlanti delle skill', () => {
     }
     for (const [id, icon] of Object.entries(PIXELLAB_MANIFEST.icons)) {
       expect(ITEM_FAMILIES.some(family => family.id === id), id).toBe(true);
-      expect(ITEM_SPRITES[id].image, id).toBeDefined();
+      // Le vecchie icone restano archiviate; gli oggetti attivi usano il nuovo disegno Hi-bit.
+      expect(ITEM_SPRITES[id].size, id).toBe(32);
+      expect(ITEM_SPRITES[id].image, id).toBeUndefined();
       expect(fs.readFileSync(new URL('../../../assets/vfx/pixellab/' + icon.file, import.meta.url)).length).toBeGreaterThan(100);
     }
     expect(Object.keys(PIXELLAB_MANIFEST.effects).length + Object.keys(PIXELLAB_MANIFEST.icons).length).toBeLessThanOrEqual(39);

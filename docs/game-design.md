@@ -565,6 +565,12 @@ Regole nuove, proposte a Jabbaz: valgono solo in otto stanze nuove, due per dung
 
 PixelLab scelto dal proprietario per effetti e icone: guerriero oro/rame, mago colori elementali, arciere salvia con artigli cremisi. Particelle additive WebGL con fallback Canvas 2D. Resta aperta la taratura estetica di opacità/dimensioni nelle stanze affollate; nessuna variazione delle regole di combattimento. [Dettagli](vfx-pixellab.md).
 
+### Revisione VFX Hi-bit · 3 novembre 2026
+
+Richiesta del proprietario: più particelle, sangue dopo i colpi subiti, morte dei nemici animata, buff continui e sprite delle skill più incisivi. Nuovi atlanti raster locali nel codice per le sedici animazioni delle tre classi; nessuna generazione consumata. Sangue cremisi con gravità e macchie per creature/giocatori, schegge per ossa/costrutti, energia per spiriti; nessun sangue per un impatto senza danno. Morti dei servitori tramite sagoma esistente, lampo/cedimento/dissolvenza; le resurrezioni non duplicano il corpo. Buff, scatti e stati emettono dalla posizione autorevole attuale anche in cooperativa, con frequenza indipendente dagli FPS.
+
+Budget estetico provvisorio: massimo 3.800 particelle complessive, 180 macchie e 48 morti animate. Raggi e settore del fendente continuano a provenire dalla simulazione; danni, ricariche, salvataggi e protocollo invariati. Direzione Reliquiario conservata. Restano aperte intensità e prestazioni con sciami/party, leggibilità nei quattro dungeon e qualità percepita: fotogrammi raster controllati, prova nel browser e conferma giocata ancora necessarie. [Valori, verifica e limiti](vfx-pixellab.md#revisione-hi-bit--incremento-locale-3-novembre-2026).
+
 ## Seconda taratura delle classi e impostazioni (incremento 0.5.1, 1 novembre 2026)
 
 Decisione del proprietario dopo la prova giocata: primaria del Mago gratuita a ogni rarità; le spell restano a mana. Per compensare la minore mobilità rispetto all’Arciere, +35% danno diretto alle skill del Mago e +50% velocità ai proiettili. La durata in volo si divide per 1,5: la gittata resta invariata. Nessuna modifica al danno periodico elementale o alla mobilità innata. Arciere: ricarica base di entrambe le primarie moltiplicata per 1,15, compreso l’Arco di rovi. Rarità e bonus di frequenza continuano ad applicarsi dopo questa base.
@@ -672,3 +678,22 @@ Le anteprime dei dungeon sono solo visive: nessun caricamento di musica o ambien
 
 ### Accesso dungeon nella UI · 2 novembre 2026
 Le card senza GS sufficiente sono opacizzate. Discesa conserva il nome e aria-disabled; il tentativo con mouse, tocco o tastiera mostra per 2 secondi «Punteggio gear score non sufficiente, gear score richiesto X.» in rosso e Silkscreen. Non avvia la partita. Soglie 100/200 GS invariate. Duello usa lo stile Reliquiario; X chiude la scelta e torna all’HUB. Verifica visiva e prova manuale ancora da confermare.
+
+### Etichette XP e HUB rosso · 3 novembre 2026
+
+Richiesta del proprietario: `+N XP` in Silkscreen sopra ogni mob/luogotenente che assegna esperienza, con quantità effettiva e solo il proprio premio in cooperativa. Tarature XP invariate; nessun premio aggiuntivo per autoesplosioni, rimozioni o resurrezioni. Il boss finale conserva il riepilogo già previsto. Etichette a 8 pixel interni, 1,2 s di durata e contorno scuro.
+
+HUB nella palette carbone, cenere, ferro e rosso fuoco ispirata all’immagine fornita: vetrate e tendaggi cremisi, strutture e tetti scuri, luci rosse. Portale Hi-bit con arco a sesto acuto definito, rune, bracieri e vortice rosso verso un centro nero; 32 frame a 16 FPS. Nessuna risorsa generata/importata, revisione dei personaggi o modifica a collisioni/servizi. [Valori, verifiche e conferma giocata ancora necessaria](hub-rosso-xp.md).
+
+### Ricompense e compagno · revisione 3 novembre 2026
+
+Indicazione esplicita del proprietario: XP **sopra il personaggio**, con ancoraggio alla sua posizione durante il movimento. Oro non più a terra: emissione dal corpo del nemico, attrazione dopo 0,5 s e volo provvisorio di 0,4 s, poi accredito autorevole per ciascun destinatario vivo. Requisito 30 unità di prossimità → nessuna distanza richiesta; probabilità 70% e quantità T1/T2/T3/T4 3/6/9/12 invariate. Consegne in viaggio chiuse al cambio stanza, senza doppioni né nuovi premi per KO/autoesplosioni/despawn. Protocollo 13 → 14, salvataggi invariati.
+
+Lupo: corretta la mancata acquisizione con bersaglio nullo. Caccia autonoma nel raggio provvisorio di 480 unità; marchio e preda precedente prioritari, salto dopo l’uccisione ancora 180 unità. Danno, cadenza, durata e movimento su ostacoli invariati. Prototipi A/B/C del personaggio, maschile/femminile per tre classi, autorizzati solo come anteprima separata; scelta e integrazione da fare. [Specifiche e verifiche](ricompense-lupo-prototipi.md).
+
+
+### Scelta sprite C e modularità · decisione 3 novembre 2026
+
+L’utente sceglie **C · Cacciatore d’ombre** nelle due versioni e autorizza l’uso nel gioco, correggendo la camminata inversa. Corpo carbone/cuoio/cenere, sciarpa e spallaccio asimmetrico; i tre profili di classe mantengono tratti propri. Ogni pezzo equipaggiato cambia visibilmente il personaggio: i 25 id e slot esistenti restano stabili, con armi e secondarie ridisegnate, scudo e faretra coerenti con le classi attuali, armature adattate al busto e stivali ai piedi articolati. Per ogni classe/slot, le famiglie condividono gesto e presa; varia il disegno dell’oggetto. Rimuovere il pezzo mostra la base, senza armi fittizie. Le icone Hi-bit 32×32 derivano dagli stessi disegni indossati.
+
+Cammino a dodici frame con piede sollevato in avanzamento e appoggio in arretramento. La mira continua a scegliere il lato; indietreggiare inverte solo il ciclo estetico. Tarature estetiche provvisorie: corpo 48 px, frame 64×64 con margine 8 px, 14 FPS di cammino, posa visiva di attacco **0,16 → 0,30 s**, cache **256 → 512 frame**. Non cambia alcun tempo/danno di combattimento, equipaggiamento, ricompensa, salvataggio o protocollo. Ritratti illustrati ancora secondo la direzione precedente; la richiesta riguarda gli sprite. Conferma giocata di ritmo, prese e leggibilità da ricevere. [Specifica](sprite-c-equipaggiamento.md).

@@ -145,10 +145,11 @@ export class ClassCombat {
       const enemies = this.ctx.enemies().filter(enemy => !enemy.health.isDead);
       const marked = enemies.find(enemy => enemy.id === this.marks.get(owner));
       const previous = enemies.find(enemy => enemy.id === pet.target);
-      const nearby = enemies.filter(enemy => enemy.position.distanceTo(pet.position) < pet.spec.leapRange)
+      const nearby = enemies.filter(enemy => enemy.position.distanceTo(pet.position) < CLASS_COMBAT.petAcquireRadius)
         .sort((a, b) => a.position.distanceTo(pet.position) - b.position.distanceTo(pet.position))[0];
-      const target = marked ?? previous ?? (pet.target !== null ? nearby : undefined);
-      if (target) pet.target = target.id;
+      // Può iniziare a cacciare anche senza marchio, e ripartire dopo un'ondata senza bersagli.
+      const target = marked ?? previous ?? nearby;
+      pet.target = target?.id ?? null;
       // La meta sta sempre sul pavimento: un pipistrello sopra un pozzo si aspetta sulla riva.
       const destination = this.petGround(target?.position ?? player.position.add(new Vec2(-32, 24)));
       // Nelle stanze con i massicci il lupo li aggira da un angolo all'altro, come i servitori a terra.

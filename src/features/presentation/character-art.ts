@@ -3,9 +3,11 @@ import { bodyAnchors, bodyWidth, drawAdventurer, drawArms, drawHands, drawHeroin
 import { drawWearable, drawWearableBack } from './wearable-draw';
 import type { CharacterAppearance, BodyType } from '../character/appearance';
 import type { EquipmentSlot } from '../items/equipment-slot';
+import { shadowCharacterPixels } from './shadow-character';
+import { SHADOW_ANIMATION } from './shadow-motion';
 
 export interface WearableArt { readonly slot: EquipmentSlot; readonly shape: string; readonly color: string; readonly light: string }
-/** Aspetti indossati distinti dalle icone dello zaino. Entrambe le risoluzioni usano gli stessi punti di attacco. */
+/** Registro storico dei ritratti; il corpo C e le icone condividono SHADOW_EQUIPMENT. */
 export const WEARABLES: Readonly<Record<string, WearableArt>> = {
   ossuary_lantern:{slot:'secondary_hand',shape:'lantern',color:'#778d76',light:'#d5edba'},
   grave_boots:{slot:'boots',shape:'grave',color:'#706e64',light:'#ded7b8'},
@@ -36,18 +38,25 @@ export const WEARABLES: Readonly<Record<string, WearableArt>> = {
 export interface CharacterPixels { readonly width: number; readonly height: number; readonly pixels: readonly (readonly string[])[] }
 type Resolution = 'game' | 'portrait';
 const cache = new Map<string, CharacterPixels>();
-// Quattro equipaggiamenti × otto frame × (idle, cammino e quattro attacchi), più le anteprime.
-export const CHARACTER_ART = { gameWidth: 48, gameHeight: 48, portraitWidth: 128, portraitHeight: 128, cacheLimit: 256 } as const;
+// Quattro equipaggiamenti × dodici frame × (idle, cammino e quattro attacchi), più le anteprime.
+export const CHARACTER_ART = { gameWidth: 64, gameHeight: 64, feetX:32, feetY:53, portraitWidth: 128, portraitHeight: 128, cacheLimit: 512 } as const;
 
-/** Compositore A: corpo, mantelli posteriori, armatura, stivali e oggetti, con articolazioni condivise. */
+/** Sprite di gioco C modulare; il ramo portrait conserva i disegni storici. */
 export function characterPixels(appearance: CharacterAppearance, resolution: Resolution, pose = 0, casting = false, motion?: CharacterMotion): CharacterPixels {
   const animation = motion ?? {state: casting ? 'cast' : pose ? 'walk' : 'idle', frame: pose};
-  const frame = ((Math.floor(animation.frame) % 8) + 8) % 8;
+  const frames=resolution==='game'?SHADOW_ANIMATION.frames:8;
+  const direction=resolution==='game'&&animation.state==='walk'?(animation.walkDirection??1):1;
+  const frame = ((Math.floor(animation.frame)*direction % frames) + frames) % frames;
   const slots = ['armor','boots','secondary_hand','primary_hand'] as const;
-  const key = JSON.stringify([appearance.body,resolution,animation.state,animation.attackSlot,frame,slots.map(slot=> {
+  const key = JSON.stringify([appearance.body,appearance.characterClass,resolution,animation.state,animation.attackSlot,frame,slots.map(slot=> {
     const item=appearance.equipment[slot];return item ? [item.familyId,item.rarity] : null;
   })]);
   const cached = cache.get(key); if(cached) return cached;
+  if(resolution==='game'){
+    const result=shadowCharacterPixels(appearance,{...animation,frame});
+    if(cache.size>=CHARACTER_ART.cacheLimit)cache.delete(cache.keys().next().value!);
+    cache.set(key,result);return result;
+  }
   const painter = new PixelPainter(64,64,resolution==='portrait'?2:1,12,4);
   const anchors = bodyAnchors({...animation,frame},appearance.body);
   const fitted=(draw:(layer:PixelPainter)=>void):void=>{

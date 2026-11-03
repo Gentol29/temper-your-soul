@@ -4,6 +4,7 @@ import { HUB_MAP, HUB_STATIONS, HUB_TORCHES, type HubState } from '../character/
 import type { CharacterAppearance } from '../character/appearance';
 import { drawTownGround, drawHubStation, drawTownLights, drawTorch, HUB_STRUCTURES } from './hub-art';
 import { drawGameCharacter } from './game-character-preview';
+import { HUB_COLORS } from './hub-palette';
 /** Mappa a schermo intero, raster a pixel interi; nessuna regola di movimento qui. */
 export class HubRenderer {
  private readonly ground=document.createElement('canvas');
@@ -30,9 +31,9 @@ export class HubRenderer {
    ...this.structures.map(s=>({y:s.base,draw:()=>c.drawImage(s.image,s.x,s.y)})),
    ...HUB_TORCHES.map(t=>({y:t.y,draw:()=>drawTorch(c,t,time)})),
    ...HUB_STATIONS.map(station=>({y:station.y,draw:()=>drawHubStation(c,station,time)})),
-   {y:state.position.y,draw:()=>{c.fillStyle='#11161a99';c.fillRect(Math.round(state.position.x-12),Math.round(state.position.y+10),24,5);drawGameCharacter(c,appearance,state.position.x,state.position.y,time,state.moving,state.facing);}},
+   {y:state.position.y,draw:()=>{c.fillStyle=HUB_COLORS.shadow+'99';c.fillRect(Math.round(state.position.x-12),Math.round(state.position.y+10),24,5);drawGameCharacter(c,appearance,state.position.x,state.position.y,time,state.moving,state.facing);}},
   ];
-  for(const peer of peers)actors.push({y:peer.y,draw:()=>{c.fillStyle='#11161a99';c.fillRect(Math.round(peer.x-12),Math.round(peer.y+10),24,5);drawGameCharacter(c,peer.appearance,peer.x,peer.y,time,peer.moving,peer.facing);c.font=canvasFont(8,'pixel');c.textAlign='center';c.fillStyle='#e6d2ad';c.fillText(peer.name,Math.round(peer.x),Math.round(peer.y-38));}});
+  for(const peer of peers)actors.push({y:peer.y,draw:()=>{c.fillStyle=HUB_COLORS.shadow+'99';c.fillRect(Math.round(peer.x-12),Math.round(peer.y+10),24,5);drawGameCharacter(c,peer.appearance,peer.x,peer.y,time,peer.moving,peer.facing);c.font=canvasFont(8,'pixel');c.textAlign='center';c.fillStyle=HUB_COLORS.text;c.fillText(peer.name,Math.round(peer.x),Math.round(peer.y-38));}});
   actors.sort((a,b)=>a.y-b.y);for(const actor of actors)actor.draw();drawTownLights(c,time);c.restore();
  }
  screenPoint(x:number,y:number):{x:number;y:number}{return {x:(x-this.camera.x)*this.scale,y:(y-this.camera.y)*this.scale};}

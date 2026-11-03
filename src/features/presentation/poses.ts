@@ -1,9 +1,18 @@
 import type { GameEvent } from '../combat/events';
+import { SHADOW_ANIMATION } from './shadow-motion';
 
-/** Secondi di posa di lancio del mago dopo una skill. */
-export const PLAYER_CAST_POSE = 0.16;
+/** Secondi della sola posa visiva dopo una skill, per tutte le classi. */
+export const PLAYER_CAST_POSE = 0.3;
 /** Velocita' dell'animazione di camminata, in fotogrammi al secondo. */
-const WALK_RATE = 9;
+const WALK_RATE = SHADOW_ANIMATION.fps.walk;
+
+/** Le primarie rapide completano il gesto entro la propria cadenza, senza riavviare sempre il caricamento. */
+export function playerCastFrame(remaining:number,cadence=PLAYER_CAST_POSE):number|null {
+  if(remaining<=0)return null;
+  const duration=Math.max(1/60,Math.min(PLAYER_CAST_POSE,cadence));
+  const age=Math.max(0,PLAYER_CAST_POSE-remaining);
+  return age>=duration?null:Math.min(SHADOW_ANIMATION.frames-1,Math.floor(age/duration*SHADOW_ANIMATION.frames));
+}
 
 /**
  * Pose di animazione dei personaggi (camminata, lancio): stato di sola rappresentazione, ricavato dagli eventi

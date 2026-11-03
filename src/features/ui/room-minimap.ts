@@ -207,7 +207,7 @@ function drawMinimap(ctx: CanvasRenderingContext2D, width: number, height: numbe
     }
     ctx.fillStyle = colors.pickup;
     for (const pickup of room.pickups) {
-      if (pickup.takenBy.includes(localId)) continue;
+      if (pickup.kind === 'gold' || pickup.takenBy.includes(localId)) continue;
       ctx.fillRect(Math.round(X(pickup.x)) - 1.5, Math.round(Y(pickup.y)) - 1.5, 3, 3);
     }
   }

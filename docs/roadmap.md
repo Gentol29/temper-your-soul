@@ -423,3 +423,41 @@ Verifica della correzione: 800 test in 70 file, tipi e build superati. Server lo
 
 ### Menu e Bestiario · 2 novembre 2026
 Da confermare a mano: HUD nell’HUB, menu iniziale senza zaino, Bestiario delle quattro card con profilo nuovo e profilo con uccisioni, ritorno ai dungeon.
+
+### VFX Hi-bit · incremento locale 3 novembre 2026
+
+Implementati atlanti raster nel codice per sedici effetti delle tre classi, particelle aggiuntive anche con sprite pronti, sangue balistico e macchie dopo danno, schegge/energia per materiali, morti animate dai servitori esistenti, buff/rush/stati con emettitori continui. Budget finiti e cache degli atlanti preparata per singolo fotogramma nei tempi liberi del browser. Nessuna variazione di combattimento, salvataggi o protocollo, nessuna generazione a pagamento.
+
+Test automatici su instradamento con sprite pronti, materia/sangue dopo danno, scadenze e capacità, morti/resurrezioni, buff e stati remoti mobili, equivalenza 30/144 FPS, sagome e palette raster. Mutazione del percorso di emissione rilevata e ripristinata. Ispezionati fotogrammi delle sedici animazioni; controllo nel browser impedito da timeout localhost e arresto Computer Use per URL non verificabile. Nessuna prova giocata dichiarata.
+
+Prossimo passo: aprire `/vfx-preview.html` con Vite, poi provare primarie e tre skill di ogni classe nei quattro dungeon, buff in movimento, sangue/schegge, uccisioni in massa e party da quattro. Confermare intensità Hi-bit, lettura degli attacchi nemici, prima emissione e fluidità su schermi piccoli. [Dettagli e tarature provvisorie](vfx-pixellab.md#revisione-hi-bit--incremento-locale-3-novembre-2026). Nessun commit/push.
+
+### XP visibili e HUB rosso · incremento locale 3 novembre 2026
+
+Implementati `+N XP` dal premio effettivo di mob/luogotenenti, filtro del destinatario in party e Silkscreen con contorno. Portale gotico Hi-bit rosso, vortice/braci/rune a 32 fotogrammi; palette dell’HUB spostata su carbone/grigi/cremisi/fuoco. Ricompense, collisioni, servizi, salvataggi e schema del protocollo invariati; nessun credito di generazione.
+
+Verifica completa: 821 test in 72 file, tipi e build. Mutazioni del premio XP e dell’animazione rilevate e ripristinate. Controllo con Edge headless a desktop e 390 px, font caricato, fotogrammi animati distinti e nessuna eccezione JS. Prossima prova dell’utente: etichette con sciami/party, intensità e leggibilità del portale e delle postazioni, passaggio davanti/dietro. [Dettagli](hub-rosso-xp.md). Nessuna conferma giocata, commit o push.
+
+### Ricompense, lupo e scelta del personaggio · 3 novembre 2026
+
+XP spostati sopra lo sprite del giocatore, che viene seguito durante il movimento. Oro senza prossimità: uscita progressiva dal corpo, attrazione dopo 0,5 s e volo di 0,4 s verso il destinatario; quote e probabilità invariate. Corretto il lupo inattivo senza marchio: acquisizione autonoma e raggio distinto dal salto. Protocollo 14, riavvio server e ricarica client richiesti.
+
+Su autorizzazione esplicita del proprietario, tre coppie maschile/femminile isolate in `/sprite-prototypes.html`, ciascuna con tre classi, scala reale e pose animate. Nessuna modifica al compositore dei personaggi assegnato all’altro referente, nessuna generazione. Prossimo passo: scelta A/B/C, poi coordinamento e integrazione; prova giocata di lupo, oro e XP ancora necessaria. Verifica automatica: 828 test in 74 file, tipi e build; controlli tecnici nel browser e tre mutazioni rilevate/ripristinate. [Dettagli](ricompense-lupo-prototipi.md). Nessun commit/push.
+
+### Revisione delle animazioni dei prototipi · 3 novembre 2026
+
+Dopo il feedback sui micromovimenti: falcate e ginocchia articolate, braccia contrapposte, busto inclinato, mantelli con ritardo e attacchi distinti per classe con preparazione/slancio/recupero. Dodici frame in margine 64×64 attorno al corpo su griglia 48 pixel; cammino iniziale, pausa sul frame corrente e cursore dei fotogrammi nella pagina di confronto. Nessuna modifica allo sprite attivo o alle regole.
+
+831 test, tipi e build; controlli tecnici nel browser su pose, pausa e viewport 390 px; regressioni di falcata e rotazione rilevate e ripristinate. Resta la valutazione visiva dell’utente sul ritmo e la scelta A/B/C, entrambe le versioni, prima dell’integrazione. [Dettagli](ricompense-lupo-prototipi.md#animazioni-più-ampie--revisione-successiva-3-novembre-2026). Nessun commit/push.
+
+
+### Integrazione C ed equipaggiamento · 3 novembre 2026
+
+Scelta esplicita ricevuta: terza proposta Cacciatore d’ombre, maschile/femminile. Integrata nel compositore usato da HUB e incontri; corrette le fasi della camminata e l’arretramento rispetto alla mira. Ridisegnati i 25 oggetti indossati e le icone 32×32, con presa/gesto condivisi per slot e classe e parti che seguono le articolazioni. `/character-animation.html` mostra gli oggetti di produzione, con cambio slot, direzione, rarità e cursore dei frame. Ritratti e regole invariati.
+
+Verifiche e prova tecnica del browser in [sprite-c-equipaggiamento.md](sprite-c-equipaggiamento.md). Prossimo passo: prova giocata dell’utente della camminata, degli attacchi e del cambio dei quattro slot su entrambe le versioni, anche in cooperativa. Nessun commit/push.
+
+
+### Release v0.10.00 · integrazione autorizzata in main, 3 novembre 2026
+
+Su richiesta esplicita dell’utente, l’incremento raccoglie tutti i lavori locali della chat: VFX/particelle Hi-bit, sangue e morti, buff e skill, HUB rosso/portale, XP ancorati al giocatore, oro emesso e assorbito, ricerca autonoma del lupo e sprite C con 25 famiglie modulari e icone. `package.json`, lockfile e nuova prima voce del changelog allineati a **0.10.0**, conservando lo storico. Note numeriche: ricerca lupo 180 → 480 unità; vecchio vincolo di raccolta entro 30 unità rimosso, emissione 0,5 s + volo 0,4 s. Protocollo 14 e salvataggio v10. Verifica richiesta prima della pubblicazione: `npm run verify`; conferme giocate ancora necessarie come sopra.

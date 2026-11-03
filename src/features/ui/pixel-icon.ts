@@ -4,7 +4,8 @@ import type { ItemSprite } from '../presentation/item-sprites';
 export function renderPixelIcon(sprite: ItemSprite): SVGSVGElement {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
+  const size=sprite.size??16;
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
   svg.setAttribute('class', 'pixel-icon');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('shape-rendering', 'crispEdges');
@@ -23,7 +24,7 @@ export function renderPixelIcon(sprite: ItemSprite): SVGSVGElement {
   if (sprite.image) {
     const image = document.createElementNS(ns, 'image');
     image.setAttribute('href', sprite.image);
-    image.setAttribute('width', '16'); image.setAttribute('height', '16');
+    image.setAttribute('width', String(size)); image.setAttribute('height', String(size));
     image.style.imageRendering = 'pixelated';
     image.addEventListener('load', () => fallback.setAttribute('display', 'none'));
     image.addEventListener('error', () => image.remove());

@@ -1,11 +1,12 @@
 import { HUB_HOUSES, HUB_CRATES, HUB_CATHEDRAL, HUB_WALLS, HUB_STATIONS, HUB_TORCHES, type HubObstacle, type HubStation } from '../character/hub-state';
 import { drawLight } from './lights';
-import { TORCH_LIGHT } from './themes/crypt';
+import { HUB_COLORS, hubColor } from './hub-palette';
+import { drawHubPortal } from './hub-portal';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
 import { PixelPainter } from './pixel-painter';
 import type { CharacterPixels } from './character-art';
 const hash=(x:number,y:number)=>{let n=Math.imul(x+11,374761393)^Math.imul(y+17,668265263);n=Math.imul(n^(n>>>13),1274126177);return (n^(n>>>16))>>>0;};
-function rect(c:CanvasRenderingContext2D,color:string,x:number,y:number,w:number,h:number):void {c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),w,h);}
+function rect(c:CanvasRenderingContext2D,color:string,x:number,y:number,w:number,h:number):void {c.fillStyle=hubColor(color);c.fillRect(Math.round(x),Math.round(y),w,h);}
 /**
  * Edifici, muri e casse dell'hub: ciascuno si disegna nel proprio riquadro e il renderer lo ordina con
  * personaggi e postazioni secondo `base`, il bordo inferiore dell'impronta solida. Così chi passa dietro
@@ -38,7 +39,7 @@ export function drawTownGround(c:CanvasRenderingContext2D):void {
  for(let x=128;x<832;x+=18){rect(c,'#666054',x,152,16,5);rect(c,'#1e2225',x,157,16,2);rect(c,'#625b4e',x,548,16,5);}
  for(let y=164;y<548;y+=18){rect(c,'#666054',135,y,5,16);rect(c,'#625b4e',820,y,5,16);}
  for(let i=0;i<170;i++){const x=145+hash(i,3)%670,y=160+hash(i,5)%380;if(hash(i,4)%3===0)rect(c,'#202728',x,y,3,2);}
- // Dallage ancien sous le portail, mosaïque octogonale en pixels.
+ // Mosaico ottagonale in pietra scura sotto il portale.
  for(let y=-48;y<=48;y+=4)for(let x=-72;x<=72;x+=4){const d=Math.abs(x)/1.5+Math.abs(y);if(d>76)continue;
   rect(c,d>65?'#766b54':d>60?'#282b30':((x+y)%12===0?'#54504a':'#454440'),480+x,265+y,4,4);
  }
@@ -211,22 +212,16 @@ const smithRasters=new Map<number,HTMLCanvasElement>();
 function smithRaster(frame:number):HTMLCanvasElement {
  let raster=smithRasters.get(frame);
  if(!raster){const art=smithPixels(frame);raster=document.createElement('canvas');raster.width=art.width;raster.height=art.height;const g=raster.getContext('2d')!;
-  art.pixels.forEach((row,py)=>row.forEach((color,px)=>{if(color){g.fillStyle=color;g.fillRect(px,py,1,1);}}));smithRasters.set(frame,raster);}
+  art.pixels.forEach((row,py)=>row.forEach((color,px)=>{if(color){g.fillStyle=hubColor(color);g.fillRect(px,py,1,1);}}));smithRasters.set(frame,raster);}
  return raster;
 }
 const SMITH_PALETTE:Palette={a:'#22242a',b:'#433329',c:'#b58b67',d:'#27202a',e:'#614333',f:'#706b62',g:'#3b3130',h:'#76503b',i:'#3b4149'};
-const MERCHANT_PALETTE:Palette={...SMITH_PALETTE,b:'#4a3938',f:'#675c4b',g:'#313a37',h:'#4b6258',i:'#303b3d'};
+const MERCHANT_PALETTE:Palette=Object.fromEntries(Object.entries({...SMITH_PALETTE,b:'#4a3938',f:'#675c4b',g:'#313a37',h:'#4b6258',i:'#303b3d'}).map(([key,color])=>[key,hubColor(color)]));
 export function drawHubStation(c:CanvasRenderingContext2D,s:HubStation,time:number):void {
  const x=s.x,y=s.y,frame=Math.floor(time*4)%4;
  rect(c,'#10161b99',x-s.width/2-4,y+5,s.width+8,10);
  if(s.id==='portal'){
-  // Anello spezzato di pietra, rune e vortice in quattro fasi.
-  for(let yy=-70;yy<8;yy+=3)for(let xx=-34;xx<=34;xx+=3){const d=(xx*xx)/(31*31)+((yy+32)*(yy+32))/(41*41);
-   if(d<1.15&&d>.75)rect(c,(hash(xx,yy)%3===0?'#9f947a':'#625f60'),x+xx,y+yy,3,3);
-   else if(d<=.75)rect(c,['#232333','#383244','#51465a','#716270'][(Math.floor((xx+yy)/9)+frame+100)%4]!,x+xx,y+yy,3,3);
-  }
-  for(let i=0;i<12;i++){const a=i*Math.PI/6+time*.65;rect(c,i%3?'#d3b783':'#f1e1b6',x+Math.cos(a)*25,y-32+Math.sin(a)*33,2,3);}
-  rect(c,'#93836a',x-40,y+7,80,5);rect(c,'#4e4b48',x-45,y+12,90,5);
+  drawHubPortal(c,x,y,time);
  }else if(s.id==='storage'){
   drawCrate(c,{x:x-21,y:y-6,width:42,height:22});rect(c,'#49342a',x-23,y-22,46,17);rect(c,'#a47e43',x-23,y-23,46,3);rect(c,'#b38f4f',x-20,y-23,4,37);rect(c,'#b38f4f',x+16,y-23,4,37);rect(c,'#d2af62',x-4,y-8,8,9);if(frame===0)rect(c,'#fff1b2',x-2,y-8,2,2);
  }else if(s.id==='forge'){
@@ -257,13 +252,16 @@ export function drawTorch(c:CanvasRenderingContext2D,t:{readonly x:number;readon
  rect(c,'#252328',t.x-3,t.y-21,6,23);rect(c,'#b48a51',t.x-5,t.y-26,10,8);
  drawFlame(c,t.x,t.y-14,time,t.x);
 }
-/** Luce delle torce e della fucina: stesso sfarfallio delle torce della cripta, disegnata sopra a tutto. */
+/** Fuoco rosso del portale, delle torce e della fucina; il pavimento resta grigio leggibile. */
 export function drawTownLights(c:CanvasRenderingContext2D,time:number):void {
  for(const {x,y} of HUB_TORCHES){
   const base=y-14,flicker=Math.sin(time*8+x)*.5+Math.sin(time*13+base)*.5;
-  drawLight(c,x,base-12,TORCH_LIGHT.color,TORCH_LIGHT.radius+flicker*4,.85+flicker*.1);
+  drawLight(c,x,base-12,HUB_COLORS.fire,64+flicker*4,.7+flicker*.1);
  }
  // La fucina proietta la stessa luce delle torce.
  const forge=HUB_STATIONS.find(s=>s.id==='forge')!,fl=Math.sin(time*8+forge.x)*.5+Math.sin(time*13+forge.y)*.5;
- drawLight(c,forge.x,forge.y-14,TORCH_LIGHT.color,TORCH_LIGHT.radius+fl*4,.85+fl*.1);
+ drawLight(c,forge.x,forge.y-14,HUB_COLORS.fire,74+fl*4,.8+fl*.1);
+ const portal=HUB_STATIONS.find(s=>s.id==='portal')!;
+ drawLight(c,portal.x,portal.y-36,HUB_COLORS.scarlet,100,.5+Math.sin(time*3)*.06);
+ drawLight(c,portal.x,portal.y+8,HUB_COLORS.fire,72,.35+Math.sin(time*4)*.04);
 }
