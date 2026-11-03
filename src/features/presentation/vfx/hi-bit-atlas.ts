@@ -1,4 +1,5 @@
 import type { VfxId } from './assets';
+import { isBasicAttackArt, rasterBasicAttack } from './basic-attack-art';
 
 /** Atlanti raster locali: palette a sei toni, pixel interi, nessun filtro o risorsa remota. */
 export const HI_BIT = { size: 96, frames: 12, fps: 24 } as const;
@@ -30,45 +31,6 @@ const noise = (x: number, y: number): number => {
 function field(id: VfxId, x: number, y: number, t: number): number {
   const r = Math.hypot(x, y), a = Math.atan2(y, x), phase = t * TAU;
   switch (id) {
-    case 'mage-fireball': {
-      const core = 14 - Math.hypot(x - 5, y * 1.1);
-      let tail = -10;
-      for (let i = -1; i <= 1; i++) {
-        const center = Math.sin(x * 0.19 - phase + i * 1.9) * (4 - x * 0.12) + i * 5;
-        if (x < 5 && x > -39 + i * 3) tail = Math.max(tail, (x + 40) * 0.14 + 2 - Math.abs(y - center));
-      }
-      return Math.max(core, tail);
-    }
-    case 'mage-water-orb': {
-      const orb = 14 - r;
-      const crescent = 2.5 - Math.abs(r - 20 - Math.sin(a * 3 - phase) * 2);
-      return Math.max(orb, crescent > 0 && Math.sin(a * 2 - phase) > -0.25 ? crescent + 1 : -5);
-    }
-    case 'mage-earth-wisp': {
-      const gem = 14 - Math.abs(x) * 0.85 - Math.abs(y) * 1.25;
-      let orbit = -5;
-      for (let i = 0; i < 3; i++) {
-        const rotation = phase + i * TAU / 3;
-        orbit = Math.max(orbit, 4 - Math.abs(x - Math.cos(rotation) * 25) - Math.abs(y - Math.sin(rotation) * 18));
-      }
-      return Math.max(gem, orbit, Math.sin(a * 3 - phase) > 0.3 ? (1.2 - Math.abs(Math.hypot(x, y * 1.4) - 27)) * 2 : -5);
-    }
-    case 'mage-wind-orb': {
-      const spiral = Math.sin(a * 3 + r * 0.22 - phase);
-      return r < 30 && r > 6 ? (spiral - 0.45) * 7 * (1 - r / 34) : 7 - r;
-    }
-    case 'archer-arrow': {
-      const shaft = x > -26 && x < 16 ? 1.3 - Math.abs(y) : -5;
-      const tip = x > 9 && x < 27 ? (27 - x) * 0.5 - Math.abs(y) : -5;
-      const feather = x > -29 && x < -15 ? 5 - Math.abs(y) - Math.abs(x + 22) * 0.4 : -5;
-      return Math.max(shaft * 3, tip, feather);
-    }
-    case 'warrior-cleave': {
-      const sweep = -1.7 + t * 3.4;
-      if (a > sweep + 0.16 || a < sweep - 1.15) return -5;
-      const blade = Math.min(48 - r, r - (30 + (a - sweep + 1.15) * 6));
-      return blade * (0.8 + (a - sweep + 1.15) * 0.5);
-    }
     case 'warrior-guard': {
       const shield = Math.max(Math.abs(x) / 24, (Math.abs(y + 8) + Math.abs(x) * 0.28) / 33);
       const rim = (1 - shield) * 20;
@@ -134,10 +96,12 @@ function field(id: VfxId, x: number, y: number, t: number): number {
       return Math.max(core, lobes, wave > 0 && Math.sin(a * 5 + t) > 0.15 ? wave * 1.8 : -5);
     }
   }
+  return -5;
 }
 
 export function rasterVfx(id: VfxId, frame: number): Uint8ClampedArray {
-  const size = id === 'warrior-cleave' ? 128 : HI_BIT.size;
+  if(isBasicAttackArt(id))return rasterBasicAttack(id,frame);
+  const size = HI_BIT.size;
   const pixels = new Uint8ClampedArray(size * size * 4);
   const colors = palette(id).map(hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)));
   const t = Math.min(HI_BIT.frames - 1, Math.max(0, frame)) / HI_BIT.frames;

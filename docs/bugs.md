@@ -355,3 +355,8 @@ XP corretti su indicazione del proprietario: posizione sul personaggio e ancorag
 Segnalazione dell’utente dopo la revisione dei micromovimenti: le figure sembravano camminare all’indietro. Lettura del ciclo conferma che il piede avanzava a terra e arretrava sollevato. Invertite le fasi di sollevamento, con rimbalzo del busto allineato al passaggio delle gambe. La versione C scelta è ora usata nel gioco; in combattimento il ciclo si inverte durante un arretramento rispetto alla mira. Test sulle fasi di appoggio/avanzamento e render con terreno in movimento; ritmo percepito ancora da confermare giocando.
 
 Durante il controllo dei nuovi equipaggiamenti, la testa del martello era troppo vicina al viso a riposo. Spostata la massa in avanti mantenendo identica la presa; controllo automatico sui pixel del viso in riposo/cammino per tutte le primarie. [Dettagli](sprite-c-equipaggiamento.md).
+
+
+## Primarie troppo cariche e premi poco leggibili · 3 novembre 2026
+
+Segnalazione dell’utente: particelle durante l’attacco base non desiderate e testi XP/oro piccoli. Esclusi i soli emettitori di lancio/scia delle primarie, inclusi i ripieghi; impatti, sangue, morti, buff e secondarie conservati. XP da 8 a 16 px, stesso Silkscreen; testo oro da 16 px sull’accredito. La riga di comparsa considera gli XP già saliti per evitare la sovrapposizione dell’oro tardivo. Nuovi sprite animati di fendente/freccia/elementi del Mago verificati automaticamente e nel browser; conferma giocata ancora necessaria. [Incremento](attacchi-base-hi-bit.md).

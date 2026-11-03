@@ -62,3 +62,8 @@ Da confermare con l’utente: intensità, numero di particelle percepito, direzi
 ### Icone degli oggetti · revisione C del 3 novembre 2026
 
 Con la scelta del corpo C e il rifacimento dell’equipaggiamento richiesti dall’utente, le icone attive dei 25 oggetti sono matrici Hi-bit 32×32 derivate dagli stessi disegni indossati. I PNG PixelLab e la provenienza restano archiviati; non sostituiscono più le icone attive. Nessuna nuova generazione o credito consumato. [Dettagli](sprite-c-equipaggiamento.md).
+
+
+### Primarie · revisione successiva 3 novembre 2026
+
+L’utente richiede di togliere soltanto le particelle durante le primarie: filtrati scoppio di lancio e scia, mantenendo impatti, sangue, uccisioni, buff, stati e altre abilità. Nuovo disegno locale Hi-bit a dodici pose per fendente, freccia, onda del tiro e fuoco/acqua/terra/vento del Mago; nessuna generazione. Gli altri atlanti conservati. AGENTS.md/CLAUDE.md ora esplicitano il requisito Hi-bit e la palette approvata. [Specifica e verifica](attacchi-base-hi-bit.md).

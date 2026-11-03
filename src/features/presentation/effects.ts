@@ -1,5 +1,6 @@
 import { SpriteEffects, replacesLegacy } from './vfx/sprite-effects';
 import { CombatVfx } from './vfx/combat-vfx';
+import { isBasicAttackCast, isBasicAttackVisual } from './vfx/basic-attack-visuals';
 import type { Camera } from '../../core/camera';
 import { cosmeticRng, type Rng } from '../../core/rng';
 import { TAU, Vec2 } from '../../core/vec2';
@@ -107,7 +108,8 @@ export interface FloatingText {
   readonly attachment?: { readonly owner: string; readonly offsetY: number };
 }
 
-export const XP_FEEDBACK = { life: 1.2, size: 8, color: '#efc0a1', offsetY: 46, stackGap: 12, maxTexts: 48 } as const;
+export const XP_FEEDBACK = { life: 1.2, size: 16, color: '#efc0a1', offsetY: 46, stackGap: 24, maxTexts: 48 } as const;
+export const GOLD_FEEDBACK = { ...XP_FEEDBACK, color:'#f5d58b' } as const;
 
 /** Scintilla d'impatto: stella a quattro punte che si allarga e svanisce in un lampo. */
 export interface Spark {
@@ -409,7 +411,7 @@ export class Effects {
         for (const [radius, life] of [[120, 0.5], [220, 0.8]] as const) this.wave(event.position, radius, '#ffe3a6', life);
         break;
       case 'reward_taken':
-        if (event.reward === 'xp') {
+        if (event.reward === 'xp'||event.reward==='gold') {
           const mine = event.playerId === undefined || event.playerId === (localPlayerId ?? 'local');
           if (mine && event.amount !== undefined && event.amount > 0) {
             if (this.texts.filter(text => text.pixel).length >= XP_FEEDBACK.maxTexts) {
@@ -417,10 +419,17 @@ export class Effects {
               this.texts.splice(oldest, 1);
             }
             const owner = event.playerId ?? localPlayerId ?? 'local';
-            const nearby = this.texts.filter(text => text.attachment?.owner === owner).length;
-            const offsetY = XP_FEEDBACK.offsetY + nearby % 4 * XP_FEEDBACK.stackGap;
+            const nearby = this.texts.filter(text => text.attachment?.owner === owner);
+            let offsetY:number=XP_FEEDBACK.offsetY,bestGap=-1;
+            // L'oro arriva dopo gli XP: scegliere la riga libera evita di sovrapporlo al testo già salito.
+            for(let lane=0;lane<4;lane++){
+              const offset=XP_FEEDBACK.offsetY+lane*XP_FEEDBACK.stackGap;
+              const gap=Math.min(...nearby.map(text=>Math.abs(event.position.y-offset-text.y)));
+              if(gap>bestGap){offsetY=offset;bestGap=gap;}
+              if(gap>=XP_FEEDBACK.stackGap)break;
+            }
             this.texts.push({ x: event.position.x, y: event.position.y - offsetY,
-              text: `+${event.amount} XP`, color: XP_FEEDBACK.color, remaining: XP_FEEDBACK.life, total: XP_FEEDBACK.life,
+              text: `+${event.amount} ${event.reward==='gold'?'oro':'XP'}`, color: event.reward==='gold'?GOLD_FEEDBACK.color:XP_FEEDBACK.color, remaining: XP_FEEDBACK.life, total: XP_FEEDBACK.life,
               size: XP_FEEDBACK.size, vx: 0, outline: true, pixel: true, attachment: { owner, offsetY } });
           }
           break;
@@ -607,6 +616,7 @@ export class Effects {
 
   private onSkillCast(event: Extract<GameEvent, { type: 'skill_cast' }>): void {
     const { origin, destination } = event;
+    const basic=isBasicAttackCast(event);
     switch (event.kind) {
       case 'buff':
         this.wave(origin, 45, event.visual.startsWith('warrior') ? '#eecb8d' : '#a9dfb8', 0.5);
@@ -618,7 +628,7 @@ export class Effects {
         break;
       case 'projectile': {
         const color = CAST_COLORS[event.visual] ?? projectileLook(event.visual).color;
-        this.burst(origin.add(Vec2.fromAngle(event.angle, 14)), color, 8);
+        if(!basic)this.burst(origin.add(Vec2.fromAngle(event.angle, 14)), color, 8);
         this.wave(origin, 16, color, 0.18);
         break;
       }
@@ -659,7 +669,7 @@ export class Effects {
           remaining: SLASH_LIFE,
           total: SLASH_LIFE,
         });
-        this.burst(origin.add(Vec2.fromAngle(event.angle, range * 0.8)), color, 6);
+        if(!basic)this.burst(origin.add(Vec2.fromAngle(event.angle, range * 0.8)), color, 6);
         break;
       }
     }
@@ -714,6 +724,7 @@ export class Effects {
         trail.emit -= TRAIL_INTERVAL;
         trail.points.push(projectile.position);
         if (trail.points.length > TRAIL_LENGTH) trail.points.shift();
+        if (projectile.team==='player'&&isBasicAttackVisual(projectile.spec.visual)) continue;
         if (dense && trail.emitted++ % 2 === 1) continue;
         if (camera.isVisible(projectile.position, 50)) {
           const r = projectile.radius;

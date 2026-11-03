@@ -5,6 +5,7 @@ import type { GameEvent } from '../../combat/events';
 import type { Match } from '../../match/match';
 import { minionArt } from '../minion-art';
 import { drawSprite } from '../sprites';
+import { isBasicAttackCast } from './basic-attack-visuals';
 
 /** Taratura estetica provvisoria; budget indipendente dal numero di nemici o giocatori. */
 export const COMBAT_VFX = {
@@ -82,6 +83,7 @@ export class CombatVfx {
         break;
       case 'guard_blocked': this.spray(event.position, 'glow', '#ffe5ad', 70, 0, TAU); break;
       case 'skill_cast': {
+        if (isBasicAttackCast(event)) break;
         const color = /warrior/.test(event.visual) ? BUFF_COLORS.warrior : /archer|hunter|wind_dash/.test(event.visual) ? BUFF_COLORS.archer
           : /fire|cinder|ember/.test(event.visual) ? '#ffb267' : /water|frost|rime|mirror/.test(event.visual) ? '#a3e3eb' : BUFF_COLORS.mage;
         if (event.kind === 'melee_arc') {
@@ -109,6 +111,8 @@ export class CombatVfx {
         this.spray(event.position, 'smoke', '#6b596c', 24, 0, TAU);
         break;
       case 'status_applied':
+        // La provocazione è emessa a ogni fendente: il suo sbuffo appartiene alla primaria.
+        if(event.status==='taunted')break;
         this.spray(event.position, 'glow', event.status === 'burning' ? '#ffad64' : event.status === 'bleeding' ? '#bf5260' : '#c3dcb5', 22, 0, TAU);
         break;
     }

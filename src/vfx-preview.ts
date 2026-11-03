@@ -1,8 +1,13 @@
 import { familyById } from './features/items/item-families';
-import { drawCanvasParticles } from './features/presentation/draw-effects';
-import { VFX_IDS, PIXELLAB_MANIFEST, GENERATED_ITEM_ICONS, drawVfx } from './features/presentation/vfx/assets';
+import { drawCanvasParticles, drawFloatingTexts } from './features/presentation/draw-effects';
+import { VFX_IDS, PIXELLAB_MANIFEST, drawVfx } from './features/presentation/vfx/assets';
 import { drawWebGLParticles } from './features/presentation/vfx/particle-webgl';
-import type { Particle } from './features/presentation/effects';
+import { Effects, type Particle } from './features/presentation/effects';
+import { ITEM_SPRITES } from './features/presentation/item-sprites';
+import { renderPixelIcon } from './features/ui/pixel-icon';
+import { drawGameCharacter } from './features/presentation/game-character-preview';
+import { drawFlyingGold } from './features/presentation/gold-flight';
+import { preloadFonts } from './features/presentation/fonts';
 import { Camera } from './core/camera';
 import { SeededRng } from './core/rng';
 import { Vec2 } from './core/vec2';
@@ -22,17 +27,22 @@ const labels: Record<typeof VFX_IDS[number], string> = {
   'warrior-cleave':'Fendente provocatorio', 'warrior-guard':'Parata del baluardo', 'warrior-fortify':'Secondo fiato', 'warrior-rush':'Carica del guerriero',
   'mage-fireball':'Dardo di fuoco', 'mage-water-orb':'Globo d’acqua', 'mage-earth-wisp':'Luci della terra', 'mage-wind-orb':'Dardo del vento',
   'mage-fire-explosion':'Esplosione di fuoco', 'mage-water-explosion':'Marea gelida', 'mage-earth-aura':'Patto della terra', 'mage-blink':'Traslazione esplosiva',
-  'archer-arrow':'Freccia del cacciatore', 'archer-predator':'Istinto predatorio', 'archer-summon':'Evocazione del lupo', 'archer-dash':'Passo del cacciatore',
+  'archer-arrow':'Freccia del cacciatore', 'archer-predator':'Istinto predatorio', 'archer-summon':'Evocazione del lupo', 'archer-dash':'Passo del cacciatore', 'archer-release':'Onda del tiro',
 };
 const previews = VFX_IDS.map(id => {
   const card = document.createElement('article'), title = document.createElement('h2'), canvas = document.createElement('canvas');
   title.textContent = labels[id]; canvas.width = canvas.height = 192; card.append(title, canvas); root.append(card);
   return { id, ctx: canvas.getContext('2d')! };
 });
-for (const [id, url] of Object.entries(GENERATED_ITEM_ICONS)) {
-  const figure = document.createElement('figure'), image = document.createElement('img'), caption = document.createElement('figcaption');
-  image.src = url; image.alt = familyById(id)?.name ?? id; caption.textContent = image.alt; figure.append(image, caption); document.querySelector('#items')!.append(figure);
+for (const [id, sprite] of Object.entries(ITEM_SPRITES)) {
+  const figure = document.createElement('figure'), caption = document.createElement('figcaption');
+  caption.textContent = familyById(id)?.name ?? id; figure.append(renderPixelIcon(sprite), caption); document.querySelector('#items')!.append(figure);
 }
+preloadFonts();
+const rewardCanvas=document.createElement('canvas');rewardCanvas.width=320;rewardCanvas.height=200;rewardCanvas.className='combat-canvas';document.querySelector('#rewards')!.append(rewardCanvas);
+const rewardCtx=rewardCanvas.getContext('2d')!,rewardFx=new Effects(new SeededRng(44)),rewardCharacter=Character.createStarter('archer');
+const rewardMatch=new Match({rng:new SeededRng(99),dungeon:CRYPT,loadout:[],characterClass:'archer'});rewardMatch.boss!.health.current=0;
+let rewardCycle=-1,rewardGold=false;
 const particles: Particle[] = Array.from({length: 28}, () => ({x:0,y:0,vx:0,vy:0,remaining:1,total:1,color:'#f6ca83',size:0.8,gravity:0}));
 const demoMatch = new Match({ rng: new SeededRng(5), dungeon: CRYPT, loadout: Character.createStarter('archer').loadout(), characterClass: 'archer' });
 demoMatch.boss!.health.current = 0;
@@ -55,7 +65,7 @@ function frame(now: number): void {
     const duration = asset ? asset.frames.length / asset.fps : 0.5;
     drawVfx(ctx, id, 96, 96, 176, asset?.loop ? time : time % (duration + 0.35));
     // Un solo contesto GPU per lo studio; le restanti carte mostrano gli atlanti puri.
-    if (id === 'warrior-cleave') {
+    if (id === 'warrior-fortify') {
       particles.forEach((p, i) => { const age = (time + i / 28) % 1; const a = i * 2.4; p.x=96+Math.cos(a)*age*78; p.y=96+Math.sin(a)*age*78; p.remaining=1-age; });
       const webgl = gpu.checked && drawWebGLParticles(ctx, particles);
       if (!webgl) drawCanvasParticles(ctx, particles);
@@ -87,6 +97,15 @@ function frame(now: number): void {
     drawMinionDeaths(ctx,fx); drawCombatMotes(ctx,fx);
     count.textContent = `${fx.particles.length} particelle · ${fx.stains.length} macchie`;
   });
+  const cycle=Math.floor(time/2.6),age=time%2.6,collector=new Vec2(180,155);
+  rewardMatch.player.position=collector;
+  if(rewardCycle!==cycle){rewardCycle=cycle;rewardGold=false;rewardFx.clear();rewardFx.handle({type:'reward_taken',reward:'xp',amount:14,position:collector,playerId:'local'});}
+  rewardFx.update(dt,rewardMatch,camera);
+  if(age>=.9&&!rewardGold){rewardGold=true;rewardFx.handle({type:'reward_taken',reward:'gold',amount:12,position:collector,playerId:'local'});}
+  rewardCtx.fillStyle='#27222b';rewardCtx.fillRect(0,0,320,200);
+  drawGameCharacter(rewardCtx,rewardCharacter.appearance(),collector.x,collector.y,time);
+  if(age<.9)drawFlyingGold(rewardCtx,new Vec2(65,150),collector,age,1);
+  drawFloatingTexts(rewardCtx,rewardFx);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

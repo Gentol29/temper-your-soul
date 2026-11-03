@@ -17,7 +17,7 @@ function fixture() {
 }
 
 describe('VFX Hi-bit di combattimento', () => {
-  it('gli sprite pronti conservano particelle del lancio, impatto e buff, senza vecchi cerchi', () => {
+  it('gli sprite pronti escludono particelle della primaria e conservano secondarie, impatto e buff', () => {
     const ready = vi.spyOn(assets, 'isVfxReady').mockReturnValue(true);
     try {
       const fx = new Effects(new SeededRng(1));
@@ -26,6 +26,8 @@ describe('VFX Hi-bit di combattimento', () => {
       expect(fx.waves).toHaveLength(0);
       fx.clear();
       fx.handle({ type: 'skill_cast', kind: 'projectile', skillId: 'bolt', visual: 'mage_fire_bolt', origin: at, destination: at, angle: 0 });
+      expect(fx.combatVfx.particles).toHaveLength(0);
+      fx.handle({ type: 'skill_cast', kind: 'projectile', skillId: 'cinder_orb', visual: 'mage_fire_cinder', origin: at, destination: at, angle: 0 });
       expect(fx.combatVfx.particles.length).toBeGreaterThan(15);
       fx.clear();
       fx.handle({ type: 'projectile_hit', team: 'player', visual: 'mage_fire_bolt', position: at, radius: 4, struck: 'minion' });

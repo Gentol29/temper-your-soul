@@ -70,7 +70,7 @@ export function cuesForEvent(event: GameEvent, localPlayerId?: string): Cue[] {
     case 'room_cleared':
       return [{ sound: 'level_up' }];
     case 'reward_taken':
-      return event.reward === 'xp' ? [] : [{ sound: 'loot' }];
+      return event.reward === 'xp'||event.reward==='gold' ? [] : [{ sound: 'loot' }];
     case 'temper_chosen':
       return [{ sound: 'loot' }];
     case 'room_exited':

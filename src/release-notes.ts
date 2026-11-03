@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.0', date: '2026-11-03',
+    changes: [
+      'Attacchi base delle tre classi senza particelle casuali al lancio o in volo, incluso lo sbuffo della provocazione del Guerriero. Sangue, impatti, uccisioni, buff, altri stati, secondarie e proiettili nemici conservano i propri effetti.',
+      'Nuove animazioni Hi-bit disegnate nel progetto: fendente con filo e scia continui, freccia con asta/punta/impennaggio animati e onda di rilascio attorno all’Arciere. Il fendente conserva raggio, direzione e settore della skill.',
+      'Mago con quattro sprite animati e sagome differenti per fuoco, acqua, terra e vento, su palette elementali scure con luci localizzate. Nessuna nuova generazione PixelLab.',
+      'Premi XP ingranditi da 8 a 16 px interni, righe da 12 a 24 unità e contorno scuro; nuovo testo +N oro da 16 px all’assorbimento. Stesso font Silkscreen, testi ancorati al destinatario, righe libere e quote personali in cooperativa.',
+      'AGENTS.md e CLAUDE.md allineati al requisito condiviso Hi-bit, palette carbone/cenere/grigi/cremisi e accenti elementali distinti, con conservazione dei font approvati. Anteprima aggiornata con diciassette effetti e testi premio.',
+      'Nessuna variazione a danni, cooldown, premi, tempi di assorbimento o formati di salvataggio/protocollo. Conservati cursori e ostacoli della cripta delle PR #12 e #13; prova giocata della versione combinata ancora da confermare.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.10.3', date: '2026-11-03',
     changes: [
       'Gli ostacoli della cripta sono ora in pixel art Hi-bit: ogni ostacolo è disegnato una volta in uno sprite a bassa risoluzione (1 pixel = 2 unità di mondo, come le piastrelle), ridotto a una palette fissa con cinque toni per colore, luce dall’alto a sinistra, dithering ordinato, contorno colorato e ombra a scacchi.',

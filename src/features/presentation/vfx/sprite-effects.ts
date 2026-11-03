@@ -5,7 +5,7 @@ import { drawVfx, isVfxReady, type VfxId } from './assets';
 
 export interface Burst { readonly attachment?: { readonly owner?: string; readonly offsetY?: number; readonly range?: number; readonly arc?: number }; readonly id: VfxId; readonly x: number; readonly y: number; readonly width: number; readonly angle: number; readonly duration: number; age: number }
 const MAX_BURSTS = 96;
-/** Misura dell’atlante: lama opaca entro 48 px dal pivot; scintille escluse dal settore colpibile. */
+/** Lama entro 48 px dal pivot; il clipping conserva il settore colpibile. */
 export const CLEAVE_ART = { canvasSize: 128, bladeRadius: 48, duration: 0.24 } as const;
 export const PROJECTILE_VFX: Readonly<Record<string, VfxId>> = {
   mage_fire_bolt: 'mage-fireball', mage_fire_cinder: 'mage-fireball', arcane_bolt: 'mage-fireball', cinder_fragment: 'mage-fireball',
@@ -36,6 +36,7 @@ export class SpriteEffects {
           this.add(id, event.origin.x, event.origin.y, event.travelSeconds ? 76 : 95, 0.4, event.angle);
           if (!event.travelSeconds) this.add('mage-blink', event.destination.x, event.destination.y, 125, 0.5);
         } else if (event.kind === 'summon') this.add('archer-summon', event.origin.x, event.origin.y, 100, 0.65, 0, { owner: event.playerId });
+        else if(event.kind==='projectile'&&PROJECTILE_VFX[event.visual]==='archer-arrow')this.add('archer-release',event.origin.x,event.origin.y,96,.24,0,{owner:event.playerId,offsetY:7});
 
         break;
       }

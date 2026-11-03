@@ -461,3 +461,10 @@ Verifiche e prova tecnica del browser in [sprite-c-equipaggiamento.md](sprite-c-
 ### Release v0.10.00 · integrazione autorizzata in main, 3 novembre 2026
 
 Su richiesta esplicita dell’utente, l’incremento raccoglie tutti i lavori locali della chat: VFX/particelle Hi-bit, sangue e morti, buff e skill, HUB rosso/portale, XP ancorati al giocatore, oro emesso e assorbito, ricerca autonoma del lupo e sprite C con 25 famiglie modulari e icone. `package.json`, lockfile e nuova prima voce del changelog allineati a **0.10.0**, conservando lo storico. Note numeriche: ricerca lupo 180 → 480 unità; vecchio vincolo di raccolta entro 30 unità rimosso, emissione 0,5 s + volo 0,4 s. Protocollo 14 e salvataggio v10. Verifica richiesta prima della pubblicazione: `npm run verify`; conferme giocate ancora necessarie come sopra.
+
+
+### Release v0.11.00 · revisione delle primarie, 3 novembre 2026
+
+Su feedback dell’utente, particelle casuali tolte soltanto al lancio e nella scia degli attacchi base; effetti su danno, morti, buff e altre abilità conservati. Animazioni Hi-bit proprie per fendente, freccia/onda del tiro e quattro elementi del Mago. Premi XP/oro a 16 px nello stesso Silkscreen, con riga libera rispetto ai testi già saliti. AGENTS.md e CLAUDE.md allineati alla direzione grafica obbligatoria.
+
+Sviluppo nella worktree `codex/vfx-attacchi-hi-bit`, riallineata alle PR #12 e #13; integrazione diretta in main autorizzata dall’utente come v0.11.00, con lavoro della camera preservato nella sua worktree. 862 test in 78 file e build/tipi; controllo tecnico browser e mutazioni rilevate/ripristinate. [Specifica](attacchi-base-hi-bit.md). Prossimo passo: prova giocata dell’utente di effetti, premi e cooperativa.

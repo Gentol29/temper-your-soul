@@ -7,7 +7,7 @@ import { Effects } from '../effects';
 import { createQuietMatch } from '../../../testing';
 import { describe, expect, it, vi } from 'vitest';
 import { Vec2 } from '../../../core/vec2';
-import { frameIndex, PIXELLAB_MANIFEST, VFX_IDS } from './assets';
+import { frameIndex, PIXELLAB_MANIFEST, VFX_IDS, NATIVE_ONLY_VFX } from './assets';
 import { SpriteEffects, PROJECTILE_VFX, burstPosition, buffVfx, replacesLegacy, drawPersistentVfx, CLEAVE_ART } from './sprite-effects';
 import { particleVertices, PARTICLE_STRIDE, drawWebGLParticles } from './particle-webgl';
 import type { Particle } from '../effects';
@@ -28,7 +28,7 @@ describe('atlanti delle skill', () => {
   });
   it('ogni asset ha frame dentro il PNG locale RGBA e un’origine documentata', async () => {
     const fs = await import(/* @vite-ignore */ NODE_FS) as FileSystem;
-    expect(Object.keys(PIXELLAB_MANIFEST.effects).sort()).toEqual([...VFX_IDS].sort());
+    expect(Object.keys(PIXELLAB_MANIFEST.effects).sort()).toEqual(VFX_IDS.filter(id=>!NATIVE_ONLY_VFX.includes(id)).sort());
     for (const asset of Object.values(PIXELLAB_MANIFEST.effects)) {
       const bytes = fs.readFileSync(new URL('../../../assets/vfx/pixellab/' + asset.file, import.meta.url));
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

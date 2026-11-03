@@ -25,6 +25,12 @@ describe('ricompense dei mob',()=>{
   expect(fx.texts.filter(t=>t.pixel)).toHaveLength(XP_FEEDBACK.maxTexts);
   expect(fx.texts.some(t=>t.text==='13')).toBe(true);
  });
+ it('il premio oro tardivo occupa una riga distante dagli XP già saliti',()=>{
+  const fx=new Effects(),r=run(),position=r.match.player.position;
+  fx.handle({type:'reward_taken',reward:'xp',amount:4,position,playerId:'a'},'a');fx.update(.9,r.match,new Camera());
+  fx.handle({type:'reward_taken',reward:'gold',amount:3,position,playerId:'a'},'a');
+  expect(Math.abs(fx.texts[0].y-fx.texts[1].y)).toBeGreaterThanOrEqual(XP_FEEDBACK.stackGap);
+ });
  it('il testo XP corrisponde al premio effettivo a ogni pericolo e passa nel codec per il solo destinatario',()=>{
   for(const dungeon of ['crypt','swamp','forge','glacier']){
    const r=run(dungeon),events:GameEvent[]=[];r.match.events.connect(e=>events.push(e));
@@ -37,7 +43,7 @@ describe('ricompense dei mob',()=>{
    for(const event of decoded.events)fx.handle(event,'a');
    const texts=fx.texts.filter(t=>t.pixel);
    expect(texts).toHaveLength(1);
-   expect(texts[0]).toMatchObject({text:`+${r.players.get('a')!.xp} XP`,x:r.match.player.position.x,y:r.match.player.position.y-XP_FEEDBACK.offsetY,size:8,outline:true});
+   expect(texts[0]).toMatchObject({text:`+${r.players.get('a')!.xp} XP`,x:r.match.player.position.x,y:r.match.player.position.y-XP_FEEDBACK.offsetY,size:16,outline:true});
    const moved=r.match.player.position.add(new Vec2(160,80));r.match.player.position=moved;
    fx.update(.1,r.match,new Camera());
    expect(texts[0].x).toBe(moved.x);expect(texts[0].y).toBeCloseTo(moved.y-XP_FEEDBACK.offsetY-2.5);
@@ -51,6 +57,20 @@ describe('ricompense dei mob',()=>{
  it('soglia esatta del 70%: 0,6999 genera oro, 0,7 non lo genera; XP in entrambi i casi',()=>{
   const r=run();kill(r,.6999);expect(r.encounter.pickups).toHaveLength(1);kill(r,.7);expect(r.encounter.pickups).toHaveLength(1);
   r.syncProgress();expect(r.players.get('a')!.xp).toBe(8);expect(r.players.get('b')!.xp).toBe(8);expect(r.players.get('a')!.gold).toBe(0);
+ });
+ it('oro assorbito: testo grande nello stesso font, una volta sola e solo per il destinatario',()=>{
+  const r=run(),events:GameEvent[]=[];r.match.events.connect(e=>events.push(e));kill(r,0);events.length=0;
+  r.encounter.step(.5,r.match);expect(events.filter(e=>e.type==='reward_taken'&&e.reward==='gold')).toHaveLength(0);
+  r.encounter.step(.4,r.match);r.encounter.step(1,r.match);
+  const gold=events.filter(e=>e.type==='reward_taken'&&e.reward==='gold');expect(gold).toHaveLength(2);
+  const fx=new Effects();for(const event of gold)fx.handle(event,'a');
+  expect(fx.texts).toHaveLength(1);expect(fx.texts[0]).toMatchObject({text:'+3 oro',size:16,pixel:true,outline:true,attachment:{owner:'a'}});
+  expect(fx.particles).toHaveLength(0);expect(fx.waves).toHaveLength(0);
+  for(const event of gold)expect(cuesForEvent(event,'a')).toEqual([]);
+  const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
+  const decoded=decoder.decode(JSON.parse(JSON.stringify(encoder.encode(snapshotOf(r.match,'gold-text',gold,{})))) as SnapshotFrame);
+  const remote=new Effects();for(const event of decoded.events)remote.handle(event,'b');expect(remote.texts[0].text).toBe('+3 oro');
+  r.match.players.get('a')!.position=new Vec2(700,600);fx.update(.1,r.match,new Camera());expect(fx.texts[0].x).toBe(700);
  });
  it('oro emesso per mezzo secondo e assorbito dopo il volo anche da lontano, senza doppioni',()=>{
   const r=run();kill(r,0);r.match.player.position=new Vec2(900,700);r.match.players.get('b')!.position=new Vec2(700,900);

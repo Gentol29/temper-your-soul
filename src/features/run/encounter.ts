@@ -259,6 +259,7 @@ export class RoomEncounter implements Encounter {
       if (player.health.isDead || pickup.takenBy.includes(id)) continue;
       pickup.takenBy.push(id);
       this.grants.gold.set(id, (this.grants.gold.get(id) ?? 0) + pickup.amount);
+      match.events.emit({type:'reward_taken',reward:'gold',amount:pickup.amount,position:player.position,playerId:id});
     }
   }
 

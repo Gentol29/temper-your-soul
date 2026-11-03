@@ -3,8 +3,10 @@ import { drawHiBitVfx, hiBitAvailable, prewarmHiBitVfx } from './hi-bit-atlas';
 
 export const VFX_IDS = ['warrior-cleave', 'warrior-guard', 'warrior-fortify', 'warrior-rush',
   'mage-fireball', 'mage-water-orb', 'mage-earth-wisp', 'mage-wind-orb', 'mage-fire-explosion',
-  'mage-water-explosion', 'mage-earth-aura', 'mage-blink', 'archer-arrow', 'archer-predator', 'archer-summon', 'archer-dash'] as const;
+  'mage-water-explosion', 'mage-earth-aura', 'mage-blink', 'archer-arrow', 'archer-predator', 'archer-summon', 'archer-dash', 'archer-release'] as const;
 export type VfxId = typeof VFX_IDS[number];
+/** Nuovi effetti interamente nel codice, senza un atlante PixelLab storico. */
+export const NATIVE_ONLY_VFX:readonly VfxId[]=['archer-release'];
 export interface VfxAsset {
   readonly file: string;
   readonly frames: readonly (readonly [number, number, number, number])[];
