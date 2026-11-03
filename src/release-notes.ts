@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.10.1', date: '2026-11-03',
+    changes: [
+      'Cursori pixel art del tema Reliquiario al posto di quelli di sistema: freccia, mano sui comandi cliccabili e mano che afferra per il trascinamento dello zaino e del deposito. Il cursore di divieto e quello di testo restano di sistema.',
+      'In partita il mirino rame è il cursore stesso e sostituisce sia la croce di sistema sia il mirino lilla disegnato nel mondo, che si sovrapponevano. Compare solo mentre si gioca; rifugio, pausa e menu usano la freccia.',
+      'Nuova scheda Cursore nelle Impostazioni: sette colori (Rame, Oro, Avorio, Rubino, Ghiaccio, Smeraldo, Ametista) con anteprima, applicati subito e ricordati dal browser. Rame resta il predefinito.',
+      'Colore personalizzato in RGB nella stessa scheda: tre cursori da 0 a 255 con il valore numerico. Luce e ombra si ricavano dal colore scelto; i colori molto scuri mostrano un avviso, perché sulle mappe scure si vedono poco.',
+      'Pulsante Impostazioni in basso a destra nel menu principale, dove prima le impostazioni non erano raggiungibili.',
+      'Nessuna variazione a mira, regole, salvataggi dei personaggi o protocollo cooperativo.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.10.0', date: '2026-11-03',
     changes: [
       'VFX Hi-bit più marcati per attacchi base e abilità delle tre classi: sedici effetti raster a dodici fotogrammi, con scie, nuclei, impatti, esplosioni e rune distinti. Nessuna nuova generazione a pagamento.',

@@ -975,7 +975,7 @@ export class Game {
         match.step(STEP, this.readIntent()); this.saveRunProgress(); this.input.takeLatched();
       }
     } else if (IDLE_SCREENS.includes(this.screen)) {
-      // Dietro i menu la mira segue comunque il mouse, cosi' il mirino e' al suo posto appena si entra.
+      // Dietro i menu la mira segue comunque il mouse, cosi' e' gia' al suo posto appena si entra.
       match.player.aim = match.player.position.add(this.camera.pointerOffset(this.input.pointer));
     }
     this.camera.follow(match.player.position);
@@ -1037,6 +1037,7 @@ export class Game {
     if (view) renderedMatch.player.aim = renderedMatch.player.position.add(this.camera.pointerOffset(this.input.pointer));
     this.hud.update(this.match, levelProgress(this.character.totalXp));
     document.body.classList.toggle('initial-menu',this.screen==='menu');
+    document.body.classList.toggle('aiming',this.screen==='playing');
     const balance=requireElement('global-gold'),goldLabel=this.roster.gold.toLocaleString('it-IT');
     if(balance.textContent!==goldLabel)balance.textContent=goldLabel;
     const views = this.descentViews();

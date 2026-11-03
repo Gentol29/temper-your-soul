@@ -398,3 +398,10 @@ Revisione dei prototipi: animazioni più ampie con falcate, ginocchia e braccia 
 ### Sprite C ed equipaggiamento Hi-bit · 3 novembre 2026
 
 L’utente ha scelto la terza proposta, Cacciatore d’ombre, e autorizzato l’integrazione e il rifacimento degli oggetti. Sprite C attivo in HUB, incontri e anteprime del personaggio. Passo con piede che avanza sollevato e arretra durante l’appoggio; ciclo invertito quando si arretra rispetto alla mira. Armi, armature e stivali delle 25 famiglie ridisegnati con prese comuni, articolazioni e profondità; icone 32×32 derivate dagli stessi disegni. Anteprima interattiva `/character-animation.html`, entrambi i corpi, tre classi e tutti gli slot/rarità. [Specifiche e verifiche](docs/sprite-c-equipaggiamento.md). Nessun commit/push.
+
+
+### Cursori del tema · v0.10.01
+
+Cursori pixel art rame e prugna al posto di quelli di sistema, generati da `tools/arte/genera-cursori.mjs` e dichiarati nelle variabili `--cursor-*` di `style.css`: freccia, mano, mano che afferra e mirino. Il mirino è il cursore del browser e compare solo sul canvas mentre si gioca (classe `aiming` sul body); rimosso il mirino disegnato nel mondo, che si sovrapponeva alla croce di sistema. Divieto e testo restano di sistema. Mira, regole, salvataggi dei personaggi e protocollo invariati.
+
+Scheda **Cursore** nelle Impostazioni: sette colori provvisori in `features/settings/cursor-colors.ts`, ottenuti ricolorando i PNG nel browser, più un colore personalizzato con cursori R, G e B da cui si ricavano luce e ombra. La scelta si salva per browser (`temper-your-soul:cursor-color:v1`), come le associazioni dei tasti. Il menu principale nasconde ancora i comandi globali, ma ha un proprio pulsante **Impostazioni**. I test `cursors.test.ts` e `cursor-colors.test.ts` controllano file, misure, punti attivi e ricolorazione, non la resa: leggibilità dei colori sulle mappe e sensazione di mira restano da confermare giocando.

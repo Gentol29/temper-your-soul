@@ -200,19 +200,6 @@ export function drawScreenEffects(ctx: CanvasRenderingContext2D, camera: Camera,
 /** Sotto questa frazione di vita la vignetta rossa pulsa. Provvisorio. */
 export const LOW_HEALTH = 0.3;
 
-/** Mirino nel punto del mondo mirato. */
-export function drawCrosshair(ctx: CanvasRenderingContext2D, aim: Vec2): void {
-  ctx.strokeStyle = '#d0bbef';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(aim.x, aim.y, 7, 0, 7);
-  ctx.moveTo(aim.x - 11, aim.y);
-  ctx.lineTo(aim.x + 11, aim.y);
-  ctx.moveTo(aim.x, aim.y - 11);
-  ctx.lineTo(aim.x, aim.y + 11);
-  ctx.stroke();
-}
-
 /**
  * Freccia ai bordi della vista che indica dov'e' il boss quando e' fuori schermo. In coordinate di vista (non di mondo).
  * I margini lasciano libere le zone coperte dall'interfaccia (barre in alto, skill in basso).

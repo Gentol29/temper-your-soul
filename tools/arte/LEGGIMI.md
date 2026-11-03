@@ -8,6 +8,7 @@ Requisiti: Python 3 e Pillow (`pip install --user pillow`). Si esegue con `pytho
 | --- | --- |
 | `prepara_boss.py <scaricati> <radice_progetto>` | Per ogni boss ritaglia le animazioni scelte, le ricolora con la tavolozza del gioco (calma e furia), aggiunge il contorno dove manca e scrive un PNG a celle uguali, una riga per animazione. Scrive poi `src/features/presentation/boss-art/boss-sheet-layout.ts` (cella, punto dei piedi, righe e fotogrammi): quel file non va modificato a mano |
 | `prepara_tile.py <scaricati> <radice_progetto>` | Per ogni dungeon ritaglia i tile scelti (pavimento, faccia del muro, cima dei massicci, pozzi, ponti, ripari), li riporta a 16 pixel e li ricolora con le rampe del tema. Scrive un PNG per tema in `src/assets/art/tiles/` e la geometria in `src/features/presentation/themes/tile-atlas.ts`, che non va modificato a mano. Cerca i file scaricati per nome in tutta la cartella: vedi `src/assets/art/tiles/LEGGIMI.md` |
+| `genera-cursori.mjs [anteprima.png]` | Solo Node, nessun file scaricato. Disegna da griglie di testo i cursori del tema in `src/assets/art/cursors/`; i punti attivi sono nelle variabili `--cursor-*` di `style.css`. L'argomento facoltativo scrive un foglio ingrandito su fondo scuro e chiaro |
 
 La cartella dei file scaricati deve contenere gli archivi estratti con i nomi originali:
 

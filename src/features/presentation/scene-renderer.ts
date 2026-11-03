@@ -9,7 +9,7 @@ import { drawArena } from './draw-arena';
 import { drawHazards } from './draw-hazards';
 import { drawChargeTelegraph, drawFallingSpell, drawPendingZone, drawProjectile, drawZoneFlash } from './draw-combat';
 import { drawTelegraphs } from './draw-telegraphs';
-import { drawBossIndicator, drawCrosshair, drawDecals, drawFloatingTexts, drawGlowEffects, drawParticles, drawScreenEffects } from './draw-effects';
+import { drawBossIndicator, drawDecals, drawFloatingTexts, drawGlowEffects, drawParticles, drawScreenEffects } from './draw-effects';
 import { FEEDBACK, type Effects } from './effects';
 import { drawLight, drawVignette, LIGHT, LightMap } from './lights';
 import { moodAmbient, ROOM_MOOD, type MoodFrame } from './room-mood';
@@ -181,7 +181,6 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   drawClassCombat(ctx, match, clock);
   drawGlowEffects(ctx, effects);
   drawFloatingTexts(ctx, effects);
-  drawCrosshair(ctx, player.aim);
   ctx.restore();
 
   drawVignette(ctx, camera, theme.vignette, LIGHT.vignetteAlpha + ROOM_MOOD.depthVignette * (scene.mood?.depth ?? 0));
