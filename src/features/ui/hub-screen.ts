@@ -2,7 +2,7 @@ import type {HubView,HubPlayer} from '../network/hub-protocol';
 import type {ClientMessage} from '../network/protocol';
 import {deserializeCharacter} from '../character/save-format';
 import {tradeWindow} from './trade-window';
-import { HubState, HUB_MAP } from '../character/hub-state';
+import { HubState, HUB_MAP, HUB_STATIONS, hubApproachPoint } from '../character/hub-state';
 import { Vec2 } from '../../core/vec2';
 import { el } from './dom';
 import type { Character } from '../character/character';
@@ -86,7 +86,13 @@ export class HubScreen {
     this.closeDialog();const veil=el('div','hub-dialog'),card=el('div','hub-dialog-card menu-card');if(compact)card.classList.add('hub-dialog-compact');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label',title);const close=el('button','relic-button secondary',compact?'×':'Chiudi · ESC');close.setAttribute('aria-label','Chiudi · ESC');close.onclick=()=>this.closeDialog();const header=el('header','hub-dialog-head');header.append(el('h2','',title),close);card.append(header);veil.append(card);this.root.append(veil);this.panel=veil;close.focus();return card;
   }
   openProfile():void{if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.openProfile();}}));}
-  private openService(id:string,name:string):void {
+  /** Dal menu: porta davanti alla postazione e la apre. In un rifugio condiviso la posizione la decide il server. */
+ openStation(id:'storage'|'forge'|'merchant'):void {
+  const station=HUB_STATIONS.find(s=>s.id===id)!;
+  if(!this.online)this.state.position=hubApproachPoint(id);
+  this.openService(station.id,station.name);
+ }
+ private openService(id:string,name:string):void {
     if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;
     const card=this.dialog(name),character=this.character;
     if(id==='storage'){

@@ -52,40 +52,87 @@
       <ul class="skills" id="skills"></ul>
 
       <!-- Schermate fuori dalla partita -->
-      <div class="screen" id="screen-menu">
-        <div class="screen-card menu-card">
-          <span class="eyebrow">DISCESA · BOSS · BOTTINO</span>
-          <h1 class="brand">Temper your soul</h1>
-          <p class="menu-text">Scendi nei dungeon tra orde di servitori e affronta il boss in fondo: ogni oggetto cambia le tue abilità.</p>
-          <div id="menu-profiles"></div>
-          <div id="menu-appearance"></div>
-          <div class="menu-buttons">
-            <button id="menu-dungeons" type="button">Entra nel rifugio →</button>
-          </div>
-          <details class="admin-menu hidden" id="admin-menu">
-            <summary>Admin · sviluppo</summary>
-            <div class="admin-menu-body">
-              <label for="admin-rarity">Rarità</label>
-              <select id="admin-rarity"></select>
-              <button id="admin-items" type="button" class="relic-button secondary">Tutti gli oggetti della classe</button>
-              <button id="admin-bestiary" type="button" class="relic-button secondary">Sblocca tutto il bestiario</button>
-            </div>
-          </details>
-          <small id="menu-note"></small>
-        </div>
+      <canvas id="menu-scene" class="menu-scene" aria-hidden="true"></canvas>
 
+      <div class="screen forge-screen" id="screen-menu">
+        <div class="menu-lintel" aria-hidden="true"></div>
+        <div class="menu-ledge" aria-hidden="true"></div>
+        <header class="menu-logo">
+          <span id="menu-emblem" class="menu-emblem" aria-hidden="true"></span>
+          <h1 class="brand">Temper Your Soul</h1>
+        </header>
+        <section id="menu-hero" class="menu-hero forge-panel" aria-label="Personaggio selezionato"></section>
+        <nav id="menu-primary" class="menu-primary forge-panel" aria-label="Menu principale"></nav>
+        <p id="menu-hint" class="menu-hint" aria-hidden="true"></p>
+        <nav id="menu-secondary" class="menu-secondary" aria-label="Accessi al rifugio"></nav>
       </div>
 
-      <footer class="menu-release-footer" aria-label="Versione e aggiornamenti">
+      <footer class="menu-release-footer" aria-label="Versione e stato del gioco">
         <details class="menu-changelog" id="menu-changelog">
           <summary id="menu-changelog-toggle">Changelog</summary>
           <section id="menu-changelog-content" aria-label="Cronologia del gioco"></section>
         </details>
         <small id="menu-version" class="menu-version" aria-label="Versione del gioco"></small>
-        <button id="menu-settings" class="menu-settings" type="button" aria-expanded="false" aria-controls="settings-panel">Impostazioni</button>
+        <div class="menu-status">
+          <span id="menu-save" class="menu-status-item" role="status"></span>
+          <span id="menu-connection" class="menu-status-item"></span>
+        </div>
       </footer>
 
-      <div class="screen hidden" id="screen-dungeons">
+      <div class="screen forge-screen forge-page hidden" id="screen-characters">
+        <div class="screen-card wide forge-panel">
+          <div class="screen-head">
+            <div>
+              <span class="eyebrow">IL RIFUGIO</span>
+              <h2 id="characters-title" tabindex="-1">Chi scende nel portale?</h2>
+            </div>
+            <button id="characters-back" type="button" class="secondary">← Menu</button>
+          </div>
+          <div class="characters-layout">
+            <div class="characters-rail">
+              <div id="menu-profiles"></div>
+              <details class="admin-menu hidden" id="admin-menu">
+                <summary>Admin · sviluppo</summary>
+                <div class="admin-menu-body">
+                  <label for="admin-rarity">Rarità</label>
+                  <select id="admin-rarity"></select>
+                  <button id="admin-items" type="button" class="relic-button secondary">Tutti gli oggetti della classe</button>
+                  <button id="admin-bestiary" type="button" class="relic-button secondary">Sblocca tutto il bestiario</button>
+                </div>
+              </details>
+            </div>
+            <div id="menu-appearance"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen forge-screen forge-page hidden" id="screen-coop">
+        <div class="screen-card wide forge-panel">
+          <div class="screen-head">
+            <div>
+              <span class="eyebrow">COOPERATIVA</span>
+              <h2 id="coop-title" tabindex="-1">Scendete insieme, fino a 4</h2>
+            </div>
+            <button id="coop-back" type="button" class="secondary">← Menu</button>
+          </div>
+          <div class="coop-layout">
+            <div id="coop-party-slot" class="coop-party"></div>
+            <div class="coop-side">
+              <form id="coop-join-form" class="coop-join">
+                <label for="coop-invite">Hai ricevuto un invito?</label>
+                <div class="coop-join-row">
+                  <input id="coop-invite" type="text" autocomplete="off" placeholder="Incolla il link dell’invito" />
+                  <button id="coop-join" type="submit" class="relic-button">Unisciti</button>
+                </div>
+                <p id="coop-invite-message" class="coop-invite-message" role="status"></p>
+              </form>
+              <ol id="coop-steps" class="coop-steps"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen forge-screen hidden" id="screen-dungeons">
         <div class="screen-card wide">
           <div class="screen-head">
             <div>
@@ -94,7 +141,7 @@
             </div>
             <div class="screen-head-buttons">
               <button id="dungeons-pilgrimage" type="button" class="secondary">Pellegrinaggio</button>
-              <button id="dungeons-back" type="button" class="secondary dungeon-close" aria-label="Chiudi e torna all’HUB" title="Torna all’HUB">×</button>
+              <button id="dungeons-back" type="button" class="secondary dungeon-close" aria-label="Chiudi la scelta del dungeon" title="Chiudi · ESC">×</button>
             </div>
           </div>
           <div class="dungeon-list" id="dungeon-list"></div>
@@ -153,6 +200,10 @@
       </div>
 
       <div class="toast hidden" id="toast" role="status"></div>
+      <div class="system-loading" id="system-loading" role="status">
+        <span class="system-loading-ember" aria-hidden="true"></span>
+        <span>Caricamento…</span>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

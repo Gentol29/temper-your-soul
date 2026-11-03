@@ -35,6 +35,11 @@ export function hubBlocked(position:Vec2):boolean {
  if(position.x<r||position.y<r||position.x>HUB_MAP.width-r||position.y>HUB_MAP.height-r)return true;
  return HUB_OBSTACLES.some(o=>{const x=Math.max(o.x,Math.min(o.x+o.width,position.x)),y=Math.max(o.y,Math.min(o.y+o.height,position.y));return position.distanceTo(new Vec2(x,y))<r;});
 }
+/** Dove stare per usare una postazione: davanti, entro il raggio d'interazione, su un punto libero. */
+export function hubApproachPoint(id:HubStation['id']):Vec2 {
+ const station=HUB_STATIONS.find(s=>s.id===id)!;
+ return new Vec2(station.x,station.y+station.height/2+HUB_MAP.playerRadius+2);
+}
 /** Stato puro, movimento a passo fisso e scorrimento lungo le superfici solide. */
 export class HubState {
  position=new Vec2(480,360);

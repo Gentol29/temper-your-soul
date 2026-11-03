@@ -702,3 +702,19 @@ Cammino a dodici frame con piede sollevato in avanzamento e appoggio in arretram
 ### Primarie senza particelle e testi premio · 3 novembre 2026
 
 Decisione esplicita: rimuovere soltanto particelle di lancio e scia delle primarie delle tre classi; conservare gli altri effetti. Fendente, freccia e dardi elementali ricevono animazioni Hi-bit locali; onda visiva di 0,24 s attorno all’Arciere durante il tiro. Nessun cambiamento a danno, settore, hitbox, gittata o cadenza. XP 8 → 16 px, distanza righe 12 → 24 unità, stesso Silkscreen; nuovo testo +N oro da 16 px all’accredito effettivo, sopra il destinatario. Regole economiche, salvataggio v10 e protocollo 14 invariati. Nuovi interventi grafici vincolati allo stile Hi-bit e alla palette cupa con accenti elementali: requisito in AGENTS.md/CLAUDE.md. [Dettagli e verifiche](attacchi-base-hi-bit.md).
+
+## Menu del rifugio · proposta del ramo `feature/menu-rifugio`, 3 novembre 2026
+
+Proposta da approvare. Lo sfondo del menu è il rifugio a pezzi: cortile vuoto più una struttura per file (cattedrale, deposito, fucina, mercante, cancello, due tratti di mura), posizionati da una tabella in `presentation/menu-layout.ts`. Portale, fiamme, fumo e luci si muovono nel codice (`presentation/menu-scene.ts`). I comandi stanno negli angoli in basso, azioni a sinistra e accessi a destra; il centro resta scena.
+
+**Immagini generate con l'IA, su richiesta dell'utente:** cortile e strutture vengono dal modello locale di pixel art, a partire da una tavola dell'utente. L'eccezione del proprietario in `docs/vfx-pixellab.md` copre solo effetti e icone: questi sfondi vanno approvati da Jabbaz prima di entrare nel gioco ufficiale. Provenienza in `src/assets/art/menu/LEGGIMI.md`.
+
+- **Comandi principali:** Continua, Nuovo personaggio, Impostazioni. **Accessi:** Scegli dungeon, Personaggi, Inventario, Deposito, Forgia, Mercante, Cooperativa. Il modello è in `ui/menu-model.ts`, senza DOM e coperto da test.
+- **Luoghi del rifugio:** Inventario, Deposito, Forgia e Mercante entrano nel rifugio e aprono il pannello esistente; da soli il giocatore sta davanti alla postazione, in un rifugio condiviso la posizione resta del server. Il Fabbro resta raggiungibile a piedi: il brief non lo elenca fra gli accessi.
+- **Stati:** nessun personaggio (restano Nuovo personaggio, Personaggi, Impostazioni), comandi non disponibili con il motivo, caricamento, salvataggio, connessione, disconnessione, gruppo incompleto. Il gruppo incompleto segue la regola del server: il leader non deve dichiararsi pronto e può partire se gli altri membri lo sono.
+- **Cooperativa:** nuova schermata con il riquadro del party esistente e l'ingresso incollando un invito, che porta nel rifugio come ospite; un link di un altro indirizzo viene aperto. Le regole di gruppo e scambi non cambiano.
+- **Impostazioni:** schede Audio, Schermo, Comandi, Cursore. I comandi restano quelli già rimappabili. Il pulsante Impostazioni aggiunto in 0.10.1 nel piè di pagina lascia il posto al comando del menu.
+- **Tastiera:** frecce fra i comandi, Invio per attivare, ESC per tornare; i comandi non disponibili restano raggiungibili per leggerne il motivo.
+- **Palette:** nelle schermate del menu carbone, ardesia, cremisi e rame sostituiscono il prugna del Reliquiario, come chiesto dal brief. Lo stesso vale per barra in alto, Impostazioni, avvisi, servizi del rifugio, party, scambi, profilo e Bestiario. Restano fuori inventario e schede degli oggetti, in carico a un altro referente. Decisione per il proprietario: approvare o no questa estensione.
+
+Nessun valore di bilanciamento, salvataggio o protocollo cambia. Punti aperti: prova giocata, gradimento della scena, estensione della palette, inserimento del Fabbro fra gli accessi.

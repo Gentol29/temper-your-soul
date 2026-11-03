@@ -17,6 +17,7 @@ async function fileSystem(): Promise<FileSystem> {
 
 const FONTS = new URL('../../assets/fonts/', import.meta.url);
 const STYLE = new URL('../../style.css', import.meta.url);
+const MENU_STYLE = new URL('./forge-menu.css', import.meta.url);
 const text = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 
 describe('caratteri dell\'interfaccia (stile unico)', () => {
@@ -51,7 +52,7 @@ describe('caratteri dell\'interfaccia (stile unico)', () => {
 
   it('nel CSS Silkscreen si usa solo a 8 o 16 pixel, le misure a cui resta nitido', async () => {
     const fs = await fileSystem();
-    const css = text(fs.readFileSync(STYLE));
+    const css = `${text(fs.readFileSync(STYLE))}\n${text(fs.readFileSync(MENU_STYLE))}`;
     const uses = css.split('\n').filter((line) => /font:[^;]*var\(--relic-pixel\)/.test(line));
     expect(uses.length).toBeGreaterThan(5);
     for (const line of uses) expect(line, line.trim()).toMatch(/font:\s*(?:bold\s+|700\s+)?(8|16)px[\s/]/);
@@ -81,6 +82,27 @@ describe('caratteri dell\'interfaccia (stile unico)', () => {
     expect(css.match(/Georgia/g)?.length).toBe(1);
     const monospace = css.split('\n').filter((line) => /\bmonospace\b/.test(line) && !line.includes('--relic-pixel:') && !line.includes('performance-'));
     expect(monospace).toEqual([]);
+  });
+
+  it('nel menu i testi hanno contrasto sufficiente sui loro fondi (almeno 4,5:1)', async () => {
+    const fs = await fileSystem();
+    const css = text(fs.readFileSync(MENU_STYLE));
+    const token = (name: string): string => css.match(new RegExp(`--forge-${name}:\\s*(#[0-9a-f]{6})`))![1]!;
+    const luminance = (hex: string): number => {
+      const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)) as [number, number, number];
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string): number => {
+      const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+      return (high + 0.05) / (low + 0.05);
+    };
+    for (const [foreground, background] of [['text', 'panel'], ['muted', 'panel'], ['disabled', 'panel'], ['text', 'crimson'], ['copper-light', 'panel'], ['amber', 'panel'], ['disabled', 'surface']] as const) {
+      expect(contrast(token(foreground), token(background)), `${foreground} su ${background}`).toBeGreaterThanOrEqual(4.5);
+    }
+    // La parte centrale delle placche, normale e selezionata.
+    expect(contrast(token('text'), '#2c282b')).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token('text'), '#3f393d')).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token('disabled'), '#231f23')).toBeGreaterThanOrEqual(4.5);
   });
 
   it('il canvas usa le stesse famiglie del CSS', () => {

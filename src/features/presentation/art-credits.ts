@@ -7,9 +7,9 @@ import { AUDIO_LICENSES } from '../audio/audio-credits';
  */
 
 /** Licenze ammesse per la grafica (stessi nomi di quelle dell'audio, per mostrarle allo stesso modo). */
-export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'PixelLab-output';
-export const VFX_CREDIT_IDS = ['pixellab-vfx-items'] as const;
-export const ART_LICENSES = { ...AUDIO_LICENSES, 'PixelLab-output': { name: 'Output PixelLab · termini del servizio', url: 'https://www.pixellab.ai/termsofservice', requiresAttribution: false } };
+export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'PixelLab-output' | 'Generato-locale';
+export const VFX_CREDIT_IDS = ['pixellab-vfx-items', 'menu-rifugio-ia'] as const;
+export const ART_LICENSES = { ...AUDIO_LICENSES, 'PixelLab-output': { name: 'Output PixelLab · termini del servizio', url: 'https://www.pixellab.ai/termsofservice', requiresAttribution: false }, 'Generato-locale': { name: 'Generato con IA in locale · da approvare', url: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', requiresAttribution: false } };
 
 export interface ArtCredit {
   /** Titolo come sulla pagina della fonte. */
@@ -39,6 +39,12 @@ export const ART_CREDITS: Readonly<Record<string, ArtCredit>> = {
     source: 'https://www.pixellab.ai/termsofservice', license: 'PixelLab-output', retrieved: '2026-11-01',
     use: 'atlanti storici delle skill come ripiego; icone archiviate dopo la revisione Hi-bit C',
     changes: 'prompt originali, selezione degli atlanti e ottimizzazione PNG; rendering corrente Hi-bit e icone oggetto ridisegnati nel codice il 3 novembre 2026',
+  },
+  'menu-rifugio-ia': {
+    title: 'Rifugio del menu principale', author: 'Temper your soul · generato in locale con SDXL e Pixel Art XL',
+    source: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', license: 'Generato-locale', retrieved: '2026-11-03',
+    use: 'cortile e strutture dello sfondo del menu; soglia della pagina Personaggi',
+    changes: 'ricreato da una tavola dell\'utente, strutture scontornate, palette comune e schiarita; vedi src/assets/art/menu/LEGGIMI.md',
   },
   'oga-animated-statue': {
     title: 'Animated Statue',

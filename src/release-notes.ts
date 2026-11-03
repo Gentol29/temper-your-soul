@@ -159,6 +159,21 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.1', date: '2026-11-03',
+    changes: [
+      'Menu principale rifatto: il rifugio visto da lontano, con portale animato, fiamme, fumo e braci. Logo in alto, azioni in basso a sinistra, accessi in basso a destra; solo gli angoli si scuriscono e il centro resta libero.',
+      'Sfondo modulare: cortile vuoto e sette strutture in file separati, posizionati da una tabella. Immagini generate con il modello locale a partire da una tavola dell’utente: da approvare prima dell’integrazione, l’eccezione in docs/vfx-pixellab.md copre solo effetti e icone.',
+      'Comandi del menu: Continua, Nuovo personaggio, Impostazioni; Scegli dungeon, Personaggi, Inventario, Deposito, Forgia, Mercante, Cooperativa. Inventario e servizi aprono i pannelli esistenti del rifugio. Il pulsante Impostazioni aggiunto in 0.10.1 lascia il posto al comando del menu.',
+      'Stati visibili: nessun personaggio, comando non disponibile con il motivo, caricamento, salvataggio, connessione e connessione persa. Selezione con le frecce e tooltip nello stesso punto per mouse e tastiera.',
+      'Nuova pagina Cooperativa: riquadro del party e ingresso incollando un invito, che porta nel rifugio come ospite; un link di un altro indirizzo viene aperto. Il party dice chi manca al Pronto. Regole del gruppo e degli scambi invariate.',
+      'Nuova pagina Personaggi: il personaggio sui gradini del portale, con la compagnia a sinistra e le scelte a destra.',
+      'Impostazioni con schede Audio, Schermo, Comandi e Cursore; nel menu la finestra è modale.',
+      'Barra in alto, pannelli di rifugio, party, scambi, Bestiario e selezione dungeon nello stesso stile di ferro e cremisi, con il GS minimo scritto sulle schede. Inventario, ritratti e schede degli oggetti non sono stati toccati.',
+      'Nessuna modifica a salvataggi e protocollo cooperativo. Il client distingue ora una connessione persa da un’uscita voluta. Controlli automatici e prove nel browser: la prova giocata resta da fare.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.0', date: '2026-11-03',
     changes: [
       'Attacchi base delle tre classi senza particelle casuali al lancio o in volo, incluso lo sbuffo della provocazione del Guerriero. Sangue, impatti, uccisioni, buff, altri stati, secondarie e proiettili nemici conservano i propri effetti.',
