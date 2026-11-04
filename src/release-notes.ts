@@ -159,6 +159,17 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.4', date: '2026-11-04',
+    changes: [
+      'Boss e luogotenenti ridisegnati con un generatore locale (SDXL 1.0 e Pixel Art XL): sedici figure nuove. Grafica generata con l\'IA: proposta da confermare con il proprietario.',
+      'I luogotenenti usano ora i fogli di sprite come i boss: camminata, attacco, furia, passaggio di fase e morte fino alle macerie. Il Bestiario mostra il nuovo disegno.',
+      'Le animazioni nascono da un solo disegno: le parti del corpo si spostano a pixel interi, le armi restano intere, la furia è un ricolore della stessa figura.',
+      'I fogli di terzi restano nel gioco per confronto: si vedono aprendolo con ?boss=classici.',
+      'Solo aspetto: nessuna variazione a vita, danni, velocità, raggi di colpo, salvataggi o protocollo cooperativo.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.3', date: '2026-11-04',
     changes: [
       'Rimosso il tooltip persistente delle azioni del menu principale; conservate navigazione da tastiera, descrizioni accessibili e motivi dei comandi non disponibili.',

@@ -253,3 +253,20 @@ Controlli automatici e fotogrammi, **non** una prova giocata: la conferma manual
 ### 3 novembre 2026: pagina Personaggi
 
 Il personaggio sta sui gradini del portale del rifugio (`presentation/character-altar.ts`, stessa densità di pixel del mondo, ingrandita per un intero dal CSS). A sinistra la compagnia, a destra classe con statistiche reali del set iniziale, sesso e set iniziale con i riquadri dell'inventario. Cambiando classe o sesso parte un lampo nel colore della classe. Classe e sesso partono già scelti (Guerriero, Maschio), come l'anteprima: resta da scrivere il nome. Un personaggio creato mostra livello, statistiche, equipaggiamento e il comando per entrare nel rifugio. Stili in `ui/character-page.css`, tutti sotto `#screen-characters`. Nessuna regola o valore cambia. Solo fotogrammi e controlli automatici: la prova giocata resta da fare.
+
+### 3 novembre 2026: boss e luogotenenti con il generatore locale
+
+Su richiesta dell'utente, ramo `feature/mob-ai-locale`, senza commit. Proposta per Jabbaz: la regola sull'IA va confermata.
+
+- **Figure:** 16 disegni nuovi, 4 boss e 12 luogotenenti, fra 4-6 candidati ciascuno. L'utente ha scelto i primi 9; gli ultimi 7 li ho scelti io e sono da confermare (Maestro dell'organo #1, Lavandaia #1, Regina #3, Campione vuoto #0, Caposquadra #2, Orsa #1, Astronomo #2).
+- **Fogli:** i luogotenenti passano ai fogli come i boss, stesso codice di disegno. Scala 1: un pixel e' un'unita' di mondo, come il personaggio. La taglia segue il cerchio di colpo.
+- **Animazioni da un solo disegno:** parti del corpo spostate a pixel interi, armi intere con il braccio, furia come ricolore su una rampa, passaggio di fase a retino, morte che perde pezzi fino alle macerie.
+- **Cosa si perde:** i vecchi boss avevano attacco, fase II e morte disegnati da artisti. Questi sono piu' forti come figura e piu' poveri come animazione. Per questo i fogli di terzi restano: `?boss=classici`.
+- **Bestiario:** la miniatura del luogotenente viene dal foglio.
+- **Solo aspetto:** vita, danni, velocita', raggi di colpo, salvataggi e protocollo non cambiano. Le ombre e i piedi restano dove erano.
+
+- **Revisione indipendente:** ha trovato il guardiano senza stinchi (il togli-ombra li prendeva per ombra), lame sfalsate dal pugno, furie sbiadite, morti con buchi a finestra, gerarchia di taglia rotta. Corretti e riscritti nei fogli.
+- **Difetti noti rimasti:** il Caposquadra sembra un soldato moderno e senza piccone; la Regina si vede dal dorso e il fungo si legge poco. Il revisore li ha bocciati come disegni: i candidati nuovi non sono stati generati perche' l'utente ha fermato il lavoro. Il Mastro d'incudine non ha un'incudine.
+- **Non fatti:** gli altri mob (solo prova su 8, non nel gioco). Prova giocata di ritmo, piedi che scivolano e sincronia con i colpi.
+
+Decisioni per Jabbaz: se accettare grafica generata sui boss; se le animazioni bastano; se togliere i vecchi fogli.

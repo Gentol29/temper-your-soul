@@ -240,3 +240,7 @@ Le tre licenze OFL scaricate pesano circa 4 KB ciascuna; nel progetto ci sono le
 ## Eccezione autorizzata: PixelLab (1 novembre 2026)
 
 Il proprietario ha richiesto esplicitamente VFX delle skill e poi icone oggetto generati con PixelLab, entro 39 generazioni. Gli output sono registrati come `PixelLab-output`, con i termini del servizio e senza dichiararli CC0. Nessuna generazione di personaggi, boss o mob in questo incremento. Vedere [dettagli e provenienza](vfx-pixellab.md).
+
+## Eccezione proposta: boss e luogotenenti generati in locale (3 novembre 2026)
+
+Su richiesta dell'utente, con un generatore sul suo PC: SDXL 1.0 base ([OpenRAIL++-M](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)) e [Pixel Art XL](https://huggingface.co/nerijs/pixel-art-xl) (OpenRAIL-M). Non e' una risorsa di terzi con un autore, ed e' grafica generata con l'IA: la regola del progetto la escludeva, e l'eccezione del 1 novembre copre solo effetti e icone. **Decide il proprietario.** I fogli di terzi non sono stati tolti: restano nel gioco con `?boss=classici`, e togliere i nuovi vuol dire una riga in `boss-sheets.ts`. Dettagli in `src/assets/art/boss-ia/LEGGIMI.md`. Solo licenze dei modelli lette sulla loro pagina: la tutela delle immagini generate non e' stata valutata oltre.
