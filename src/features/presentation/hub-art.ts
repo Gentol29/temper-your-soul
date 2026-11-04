@@ -1,4 +1,5 @@
-import { HUB_HOUSES, HUB_CRATES, HUB_CATHEDRAL, HUB_WALLS, HUB_STATIONS, HUB_TORCHES, type HubObstacle, type HubStation } from '../character/hub-state';
+import { HUB_HOUSES, HUB_CRATES, HUB_CATHEDRAL, HUB_WALLS, HUB_STATIONS, HUB_TORCHES, type HubStation } from './village-layout';
+import type { HubObstacle } from '../character/hub-map';
 import { drawLight } from './lights';
 import { HUB_COLORS, hubColor } from './hub-palette';
 import { drawHubPortal } from './hub-portal';

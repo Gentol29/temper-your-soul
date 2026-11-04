@@ -45,7 +45,13 @@ import { InventoryScreen } from './features/ui/inventory-screen';
 import { renderDefeat, renderDescentDefeat, renderDescentVictory, renderVictory } from './features/ui/end-screen';
 import { PhaseBanner } from './features/ui/phase-banner';
 import { CombatTally } from './features/match/combat-tally';
-import { MainMenu } from './features/ui/main-menu';
+import { MainMenu, type MenuCharacter } from './features/ui/main-menu';
+import { connectionLabel, type MenuActionId } from './features/ui/menu-model';
+import { CoopScreen } from './features/ui/coop-screen';
+import { MenuScene } from './features/presentation/menu-scene';
+import { CLASS_LABELS } from './features/character/character-class';
+import { pixelSvg } from './features/ui/character-portrait';
+import { characterPixels } from './features/presentation/character-art';
 import { AdminMenu } from './features/ui/admin-menu';
 import { RARITY_STATS } from './features/items/rarity';
 import { ADMIN_TOOLS_ENABLED, grantClassItems, unlockBestiary } from './features/admin/admin-tools';
@@ -84,9 +90,11 @@ const GEAR_SCORE_NOTICE_MS = 2000;
  * Schermata corrente dell'applicazione. Le prime sono fuori dalla partita (mostrano lo sfondo di un dungeon);
  * la partita avanza solo in `playing`.
  */
-type Screen = 'hub' | 'menu' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
+type Screen = 'hub' | 'menu' | 'characters' | 'coop' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
 
-const IDLE_SCREENS: readonly Screen[] = ['hub', 'menu', 'dungeons', 'inventory', 'bestiary'];
+const IDLE_SCREENS: readonly Screen[] = ['hub', 'menu', 'characters', 'coop', 'dungeons', 'inventory', 'bestiary'];
+/** Le schermate che hanno il rifugio dipinto come sfondo. */
+const REFUGE_SCREENS: readonly Screen[] = ['menu', 'characters', 'coop'];
 
 /** Come si entra in un dungeon: il Duello di sempre, la Discesa, il Pellegrinaggio. */
 type Mode = 'duel' | RunMode;
@@ -147,6 +155,12 @@ export class Game {
   private renderAppearance: Scene['appearance'];
   private readonly fullscreen: FullscreenToggle;
   private readonly menu: MainMenu;
+  private readonly menuScene = new MenuScene(requireElement<HTMLCanvasElement>('menu-scene'));
+  private readonly coop: CoopScreen;
+  /** Da dove si e' arrivati a dungeon e inventario: chiudendoli si torna li'. */
+  private returnTo: 'menu' | 'hub' = 'hub';
+  private connectionLost = false;
+  private wasOnline = false;
   private readonly adminMenu: AdminMenu;
   private readonly dungeonSelect: DungeonSelect;
   private readonly inventoryScreen: InventoryScreen;
@@ -202,15 +216,30 @@ export class Game {
     const storage = browserStorage();
     this.saveStore = new SaveStore(storage);
     this.audio = new AudioPlayer(storage);
-    this.settingsPanel = new SettingsPanel(this.audio, this.input, storage, { onOpen: () => { this.party.close(); this.pauseIfPlaying(); } });
+    this.settingsPanel = new SettingsPanel(this.audio, this.input, storage, {
+      onOpen: () => { this.party.close(); this.pauseIfPlaying(); },
+      onFullscreen: () => void this.fullscreen.toggle(),
+      onPerformance: () => this.performancePanel.toggle(),
+    });
     const loaded = this.saveStore.loadRoster();
     this.roster=loaded.roster;
     this.loadStatus = loaded.status;
     this.party.client.tradeCommit=delta=>{const before=deserializeCharacter(serializeCharacter(this.character))!;applyTradeDelta(this.character,delta);if(this.persist())return serializeCharacter(this.character);Object.assign(this.character,before);return null;};
 
-    this.hub = new HubScreen({portal:()=>this.openDungeons(),save:()=>{this.persist();},inventory:()=>this.openInventory(),menu:()=>this.showMenu()});
+    this.hub = new HubScreen({portal:()=>this.openDungeons('hub'),save:()=>{this.persist();},inventory:()=>this.openInventory('hub'),menu:()=>this.showMenu()});
     this.menu = new MainMenu({
-      onDungeons: () => this.openHub(),
+      onAction: (id) => this.onMenuAction(id),
+      onBlocked: (reason) => this.showToast(reason, 2600),
+      onSceneFocus: (scene) => { this.menuScene.focus = scene; },
+    });
+    this.coop = new CoopScreen({ onJoin: (code) => this.party.joinInvite(code), onBack: () => this.showMenu() });
+    requireElement('characters-back').addEventListener('click', () => this.showMenu());
+    this.party.onEnterRefuge = () => this.openHub();
+    // Nel menu il riquadro del party non si vede: il motivo di un errore arriva con un avviso.
+    this.party.onProblem = (message) => { if (this.screen === 'menu' || this.screen === 'characters') this.showToast(message); };
+    // Dentro i campi di testo l'Input ignora i tasti: anche li' ESC torna al menu.
+    for (const id of ['screen-characters', 'screen-coop']) requireElement(id).addEventListener('keydown', (event) => {
+      if (event.code === 'Escape' && event.target instanceof HTMLInputElement) { event.preventDefault(); this.showMenu(); }
     });
     this.adminMenu = new AdminMenu(ADMIN_TOOLS_ENABLED, {
       onGrantItems: (rarity) => {
@@ -231,14 +260,18 @@ export class Game {
       onPreview: (dungeon) => this.preview(dungeon),
       onBestiary: (dungeon) => this.openBestiary(dungeon),
       onInsufficientGearScore: (minimum) => this.showToast(`Punteggio gear score non sufficiente, gear score richiesto ${minimum}.`, GEAR_SCORE_NOTICE_MS, true),
-      onBack: () => this.openHub(),
+      onBack: () => this.leavePlace(),
     });
-    this.inventoryScreen = new InventoryScreen({ onChange: () => this.persist(), onBack: () => this.openHub() }, this.input.bindings);
+    this.inventoryScreen = new InventoryScreen({ onChange: () => this.persist(), onBack: () => this.leavePlace() }, this.input.bindings);
     this.bestiaryScreen = new BestiaryScreen({ onBack: () => this.openDungeons() });
     this.match = this.createMatch(this.dungeon);
-    this.menu.setNote(
-      storage === null ? 'Salvataggio locale non disponibile: i progressi non verranno conservati.' : LOAD_NOTES[this.loadStatus],
-    );
+    const problem = storage === null || this.loadStatus === 'recovered';
+    this.menu.setSave({
+      text: storage === null ? 'Salvataggio non disponibile' : this.loadStatus === 'recovered' ? 'Salvataggio illeggibile, copia conservata' : 'Salvataggio locale',
+      detail: storage === null ? 'Salvataggio locale non disponibile: i progressi non verranno conservati.' : LOAD_NOTES[this.loadStatus],
+      tone: problem ? 'bad' : 'ok',
+    });
+    if (problem) this.showToast(storage === null ? 'Salvataggio locale non disponibile: i progressi non verranno conservati.' : LOAD_NOTES.recovered);
   }
 
   start(): void {
@@ -285,6 +318,9 @@ export class Game {
     this.showMenu();
     this.lastTime = performance.now();
     requestAnimationFrame((time) => this.frame(time));
+    // Il riquadro di caricamento resta finche' i caratteri sono pronti, ma non blocca mai il gioco.
+    const fontsReady = 'fonts' in document ? document.fonts.ready : Promise.resolve();
+    void Promise.race([fontsReady, new Promise((resolve) => window.setTimeout(resolve, 2500))]).then(() => requireElement('system-loading').classList.add('hidden'));
   }
 
   // --- Navigazione tra le schermate ------------------------------------------------------------------------------
@@ -302,33 +338,67 @@ export class Game {
     this.screen = 'menu';
     this.clearBattleFeedback();
     this.overlay.hide();
+    // Tornando al menu una creazione lasciata a meta' si annulla, se c'e' gia' un personaggio a cui tornare.
+    if (this.draft !== null && this.roster.active) this.draft = null;
     this.screens.show('menu');
     this.preview(this.dungeon);
+    const character = this.character;
+    const progress = levelProgress(character.totalXp);
+    const summary: MenuCharacter | null = character.created
+      ? { name: character.name!, className: CLASS_LABELS[character.characterClass!], level: progress.level, gold: this.roster.gold, gearScore: character.gearScore, levelProgress: progress.current / progress.required, figure: pixelSvg(characterPixels(character.appearance(), 'game')) }
+      : null;
+    this.menu.render(summary, { characterName: summary?.name ?? null, inviteWaiting: this.party.inviteWaiting, incomplete: this.draft === null && !character.created });
+  }
+
+  private onMenuAction(id: MenuActionId): void {
+    switch (id) {
+      case 'continue': if (this.character.created) this.openHub(true); else this.openCharacters(); break;
+      case 'new_character': this.newDraft(); this.inventoryScreen.reset(); this.openCharacters(); break;
+      case 'settings': this.settingsPanel.open(); break;
+      case 'characters': this.openCharacters(); break;
+    }
+  }
+
+  private openCharacters(): void {
+    this.screen = 'characters';
+    this.screens.show('characters');
+    this.renderCharacters();
+    this.updateParty();
+    requireElement('characters-title').focus();
+  }
+
+  private renderCharacters(): void {
     const character=this.character;
     requireElement('menu-profiles').replaceChildren(renderCharacterProfiles(this.roster,this.draft!==null,{
-      onNew:()=>{this.newDraft();this.inventoryScreen.reset();this.showMenu();},
-      onCancel:()=>{this.draft=null;this.showMenu();},
-      onSelect:id=>{if(this.roster.select(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.showMenu();}},
-      onRemove:id=>{if(this.roster.remove(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.showMenu();}},
+      onNew:()=>{this.newDraft();this.inventoryScreen.reset();this.renderCharacters();this.updateParty();},
+      onCancel:()=>{this.draft=null;this.renderCharacters();this.updateParty();},
+      onSelect:id=>{if(this.roster.select(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.renderCharacters();}},
+      onRemove:id=>{if(this.roster.remove(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.renderCharacters();}},
     }));
-    requireElement('menu-appearance').replaceChildren(renderCharacterCreation(character,(name,body,kind)=>{
-      if(character.completeCreation(name,body,kind)){
-        if(this.draft===character){this.roster.add(character);this.draft=null;}
-        this.persist();this.showMenu();
-      }
+    requireElement('menu-appearance').replaceChildren(renderCharacterCreation(character,{
+      onCreate:(name,body,kind)=>{
+        if(character.completeCreation(name,body,kind)){
+          if(this.draft===character){this.roster.add(character);this.draft=null;}
+          this.persist();this.showMenu();
+        }
+      },
+      onContinue:()=>this.openHub(true),
     }));
-    for (const id of ['menu-dungeons']) {
-      (requireElement(id) as HTMLButtonElement).disabled = !this.character.created;
-    }
     this.adminMenu.setAvailable(this.character.created);
   }
 
-  private openHub(): void {
+  /** Chiude dungeon o inventario tornando da dove si era partiti. */
+  private leavePlace(): void {
+    if (this.returnTo === 'menu') this.showMenu();
+    else this.openHub();
+  }
+
+  private openHub(arrive = false): void {
     if(!this.character.created){this.showMenu();return;}
     if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
     this.screen='hub';this.input.releaseAll();this.clearBattleFeedback();this.overlay.hide();this.screens.show(null);
-    document.body.classList.add('in-menu');this.hub.show(this.character,this.roster);this.updateParty();
+    document.body.classList.add('in-menu');this.hub.show(this.character,this.roster,arrive,this.clock);this.updateParty();
   }
 
   private openPlayerProfile(): void {
@@ -343,18 +413,20 @@ export class Game {
     document.body.append(dialog);this.profileDialog=dialog;dialog.showModal();
   }
 
-  private openDungeons(): void {
+  private openDungeons(from?: 'menu' | 'hub'): void {
     this.hub.hide();
     if(!this.character.created) return;
+    if (from !== undefined) this.returnTo = from;
     this.screen = 'dungeons';
     this.screens.show('dungeons');
     this.dungeonSelect.render(this.character);
     this.updateParty();
   }
 
-  private openInventory(): void {
+  private openInventory(from?: 'menu' | 'hub'): void {
     this.hub.hide();
     if(!this.character.created)return;
+    if (from !== undefined) this.returnTo = from;
     this.screen = 'inventory';
     this.clearBattleFeedback();
     this.overlay.hide();
@@ -472,6 +544,7 @@ export class Game {
     if(this.screen==='hub'){if(!this.hub.closeDialog())this.showMenu();return;}
     if (this.settingsPanel.isOpen) this.settingsPanel.close();
     else if (this.screen === 'bestiary') this.openDungeons();
+    else if (this.screen === 'dungeons' || this.screen === 'inventory') this.leavePlace();
     else if (IDLE_SCREENS.includes(this.screen) && this.screen !== 'menu') this.showMenu();
     else this.togglePause();
   }
@@ -872,9 +945,10 @@ export class Game {
     // Come dopo un salvataggio: l'aspetto disegnato e il pannello del party seguono il personaggio aggiornato.
     this.renderAppearance = undefined;
     this.updateParty();
-    // Durante la creazione non si ridisegna il menu: il nome che si sta scrivendo andrebbe perso.
-    if (this.screen === 'menu' && this.draft === null) this.showMenu();
-    else if (this.screen === 'hub') this.hub.show(this.character,this.roster);
+    if (this.screen === 'menu') this.showMenu();
+    // Durante la creazione non si ridisegna la pagina: il nome che si sta scrivendo andrebbe perso.
+    else if (this.screen === 'characters' && this.draft === null) this.renderCharacters();
+    else if (this.screen === 'hub') this.hub.show(this.character,this.roster,false,this.clock);
     else if (this.screen === 'dungeons') this.dungeonSelect.render(this.character);
     else if (this.screen === 'bestiary') this.bestiaryScreen.render(this.character);
     else if (this.screen === 'inventory') {
@@ -888,6 +962,9 @@ export class Game {
   private persist(): boolean {
     this.renderAppearance = undefined;
     const saved = this.saveStore.saveRoster(this.roster);
+    this.menu.setSave(saved
+      ? { text: 'Salvato in locale', detail: 'I progressi sono salvati in questo browser.', tone: 'ok' }
+      : { text: 'Salvataggio non riuscito', detail: 'Impossibile salvare in questo browser: i progressi andranno persi alla chiusura.', tone: 'bad' });
     this.updateParty();
     if (!saved && !this.saveWarningShown) {
       this.saveWarningShown = true;
@@ -963,7 +1040,7 @@ export class Game {
     const { match } = this;
     if(this.screen==='hub'){
       const move=this.input.getVector('move_left','move_right','move_up','move_down');this.hub.step(STEP,move);
-      if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.dialogOpen?Vec2.ZERO:move});}
+      if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.inputLocked?Vec2.ZERO:move});}
     }
     if (this.screen === 'playing' || this.screen === 'ended') {
       this.poses.update(STEP, match.player.moving);
@@ -1014,6 +1091,7 @@ export class Game {
       this.step();
       this.accumulator -= STEP;
     }
+    if (this.screen === 'hub') this.hub.render(delta);
     if (this.pendingEnd !== null) {
       this.pendingEnd.remaining -= delta;
       if (this.pendingEnd.remaining <= 0) {
@@ -1043,8 +1121,17 @@ export class Game {
     // anche nei fotogrammi senza passi di simulazione. La scossa resta esclusa dalla mira.
     renderedMatch.player.aim = this.camera.pointerToWorld(this.input.pointer);
     this.hud.update(this.match, levelProgress(this.character.totalXp));
-    document.body.classList.toggle('initial-menu',this.screen==='menu');
     document.body.classList.toggle('aiming',this.screen==='playing');
+    const inRefuge=REFUGE_SCREENS.includes(this.screen);
+    document.body.classList.toggle('initial-menu',inRefuge);
+    document.body.classList.toggle('refuge-backdrop',inRefuge);
+    this.party.dock(this.screen==='coop'?this.coop.slot:null);
+    const link={connecting:this.party.client.connecting,online:Boolean(this.party.client.state),failed:this.party.failed};
+    if(link.failed&&!this.connectionLost&&this.wasOnline&&inRefuge)this.showToast('Connessione persa: ora giochi in singolo.');
+    this.connectionLost=link.failed;
+    this.wasOnline=link.online;
+    this.menu.setConnection(connectionLabel({...link,latency:this.party.client.latency}));
+    if(this.screen==='coop')this.coop.sync(link);
     const balance=requireElement('global-gold'),goldLabel=this.roster.gold.toLocaleString('it-IT');
     if(balance.textContent!==goldLabel)balance.textContent=goldLabel;
     const views = this.descentViews();
@@ -1057,7 +1144,7 @@ export class Game {
     if (this.input.inMatch && views !== null && this.input.isActionPressed('show_map')) this.descentMap.show(views.run);
     else this.descentMap.hide();
     this.audio.setListener(this.match.player.position, this.camera.width / 2);
-    const audioScreen: AudioScreen = this.screen === 'bestiary' || this.screen === 'hub' ? 'menu' : this.screen;
+    const audioScreen: AudioScreen = this.screen === 'bestiary' || this.screen === 'hub' || this.screen === 'characters' || this.screen === 'coop' ? 'menu' : this.screen;
     this.audio.setScene({ screen: audioScreen, theme: this.match.arena.theme, enraged: this.match.boss?.isEnraged ?? false });
     this.audio.update(delta);
     const mood = views === null
@@ -1078,7 +1165,9 @@ export class Game {
       ...(mood === undefined ? {} : { mood }),
       ...(nextVein === undefined ? {} : { nextVein: veinName(views.run.dungeonId, nextVein) }),
     };
-    renderScene(this.ctx, {
+    if (inRefuge) {
+      this.menuScene.draw(this.clock, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } else renderScene(this.ctx, {
       match: renderedMatch,
       effects: this.effects,
       poses: this.poses,

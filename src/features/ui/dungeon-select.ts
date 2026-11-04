@@ -68,6 +68,7 @@ export class DungeonSelect {
         el('b', 'dungeon-name', dungeon.name),
         renderBossArtwork(dungeon),
         el('span', 'dungeon-boss', `Boss: ${dungeon.boss.name}`),
+        el('span', 'dungeon-minimum', minimumDungeonGearScore(dungeon) > 0 ? `GS minimo: ${minimumDungeonGearScore(dungeon)}` : 'Nessun GS minimo'),
         el(
           'span',
           descent.clears > 0 ? 'dungeon-record done' : 'dungeon-record',

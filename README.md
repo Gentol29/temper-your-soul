@@ -10,6 +10,14 @@ Aggiornamento v0.11.01 del 3 novembre: camera degli incontri con offset dinamico
 
 Modifica locale successiva: icona Party con comandi nel riquadro, inviti all’HUB e uscita dal gruppo separata da Torna in singolo. La sessione resta collegata passando al menu o facendo una run locale; un solo gruppo per istanza, non persistente dopo l’uscita di tutti o il riavvio server.
 
+### Revisione PR #14 · 4 novembre 2026 · v0.11.03
+
+Menu senza accessi in basso a destra; **Entra** avvicina la camera al cortile e materializza il personaggio al centro. Lo stesso artwork modulare diventa la mappa giocabile dell’HUB: servizi raggiungibili a piedi con collisioni condivise e portale animato. Il riquadro del personaggio apre la selezione dei profili; il party resta accessibile nell’HUB. Titoli, testi e controlli usano Silkscreen come XP e oro, per scelta esplicita del proprietario. [Dettagli e prova manuale](docs/hub-artwork.md).
+
+**Protocollo 17:** riavviare il server e ricaricare tutte le schede. Salvataggi invariati. Incremento v0.11.03 per il ramo `feature/menu-rifugio` della PR #14, preparato su `codex/hub-artwork`; verifica automatica completata (930 test, tipi e build). Collisioni riferite ai piedi, sagome degli edifici e bordo interno del selciato; l’utente riferisce che le collisioni sembrano a posto nella sua prova. Forgia utilizzabile lungo il fronte, anche da sinistra. Etichette a risoluzione schermo ridotte di 2 px e canvas senza stiramento frazionario. Rimosso il tooltip persistente delle azioni del menu principale. Nuovo accesso, nuova misura dei testi e cooperativa da confermare giocando.
+
+Il fabbro non è più un NPC separato nella piazza: aprendo la Forgia si trovano le schede **Forgia** e **Fabbro**, per creazione e migliorie con i prezzi già previsti.
+
 ## Prima di lavorare: istruzioni per collaboratori e agenti AI
 
 Questa sezione si applica anche a **Claude, Codex e qualsiasi altro agente** che legga il repository. Il proprietario richiede esplicitamente sincronizzazione e aggiornamenti durante il lavoro.

@@ -19,6 +19,8 @@ export class PartyClient {
   receivedCharacters = 0;
   receivedFrames = 0;
   connecting = false;
+  /** La connessione si e' interrotta senza che il giocatore l'abbia chiesto, o il tentativo e' fallito. */
+  lost = false;
   private socket: WebSocket | null = null;
   private timer: number | undefined;
   private lastInput = 0;
@@ -32,6 +34,7 @@ export class PartyClient {
 
   connect(character: Character, code?: string, profileId='default'): void {
     if (this.socket) return;
+    this.lost = false;
     if (location.protocol === 'file:') { this.error('Per giocare online apri il gioco tramite il server HTTP.'); return; }
     this.connecting = true; this.changed();
     this.decoder = new SnapshotDecoder();
@@ -44,7 +47,7 @@ export class PartyClient {
       this.send({ visitor:Boolean(code),identity, type: 'enter', protocol: NETWORK.protocolVersion, character: this.serialized, ...(code ? { code } : {}) });
       this.timer = window.setInterval(() => {
         if (performance.now() - this.lastReply > 12_000 || (this.state?.playing && this.state.members.some(m=>m.id===this.playerId) && performance.now() - this.lastSnapshot > 4000)) {
-          this.error('Connessione interrotta: il server non risponde.'); this.leave(); return;
+          this.error('Connessione interrotta: il server non risponde.'); this.drop(); return;
         }
         this.send({ type: 'ping', sent: performance.now() });
       }, 2000);
@@ -78,12 +81,12 @@ export class PartyClient {
         case 'frame':
           this.receivedFrames++;
           try { this.receiveSnapshot(this.decoder.decode(message)); }
-          catch (error) { this.error(error instanceof Error ? error.message : 'Dati di rete non validi.'); this.leave(); }
+          catch (error) { this.error(error instanceof Error ? error.message : 'Dati di rete non validi.'); this.drop(); }
           break;
         case 'party': this.state = message.state; this.playerId = message.playerId; this.inviteBase = message.inviteBase ?? ''; this.connecting = false; this.lastSnapshot = performance.now(); this.changed(); break;
         case 'snapshot':
           this.receiveSnapshot(message.snapshot); break;
-        case 'error': this.error(message.message); if (!this.state) this.leave(); break;
+        case 'error': this.error(message.message); if (!this.state) this.drop(); break;
         case 'pong': {
           const rtt = performance.now() - message.sent;
           this.jitter = this.latency === null ? 0 : Math.abs(rtt - this.latency);
@@ -92,7 +95,7 @@ export class PartyClient {
       }
     });
     socket.addEventListener('error', () => this.error('Server cooperativo non raggiungibile. Verifica che npm run server sia avviato.'));
-    socket.addEventListener('close', () => { if (this.socket === socket) this.leave(); });
+    socket.addEventListener('close', () => { if (this.socket === socket) this.drop(); });
   }
   private receiveSnapshot(snapshot: BattleSnapshot): void {
     this.lastSnapshot = performance.now();
@@ -120,7 +123,14 @@ export class PartyClient {
     const now = performance.now(); if (now - this.lastInput < NETWORK.inputMs) return false;
     this.lastInput = now; this.send({ type: 'input', intent }); return true;
   }
+  /** Uscita non chiesta dal giocatore: resta il segno, che il menu mostra come disconnessione. */
+  private drop(): void {
+    this.leave();
+    this.lost = true;
+    this.changed();
+  }
   leave(): void {
+    this.lost = false;
     const socket = this.socket; const hadConnection = this.state !== null;
     this.socket = null; this.pending = null; window.clearInterval(this.timer); socket?.close();
     this.state = null;this.hub=null;this.tradeSaving=false;this.tradeFailure=false; this.playerId = ''; this.inviteBase = ''; this.connecting = false; this.latency = null; this.changed();

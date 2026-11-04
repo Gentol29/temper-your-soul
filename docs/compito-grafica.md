@@ -236,3 +236,20 @@ Verifica: 707 test, tipi client e server, build. Guardati nel browser, a dimensi
 ### 1° novembre 2026: pull request
 
 Su richiesta dell'utente il lavoro è stato committato sul ramo `feature/grafica-fasi-2` e ribasato sul main di Jabbaz v0.04.00 (danno intero per difetto). I conflitti erano solo in coda ai documenti. Anche il danno ai ripari ora si arrotonda per difetto, come quello alla vita. Verifica: 713 test, tipi client e server, build.
+
+### 3 novembre 2026: menu del rifugio (ramo `feature/menu-rifugio`)
+
+Su richiesta dell'utente il menu è stato rifatto più volte, fino alla versione scelta: rifugio lontano, comandi negli angoli. Regole e motivazioni sono in `docs/game-design.md`.
+
+- **Scena:** `presentation/menu-layout.ts` tiene la tabella dei pezzi, `presentation/menu-scene.ts` il movimento: portale, fiamme, fumo, braci e luci. Con il sistema impostato su «riduci animazioni» la scena resta ferma.
+- **Immagini generate con l'IA, su richiesta dell'utente:** provenienza e semi in `src/assets/art/menu/LEGGIMI.md` e `tools/arte/menu/`. Vanno approvate da Jabbaz: l'eccezione in `docs/vfx-pixellab.md` copre solo effetti e icone.
+- **Componenti:** `ui/forge-menu.css`, `ui/main-menu.ts`, `ui/menu-model.ts`, `ui/coop-screen.ts`, `presentation/menu-icons.ts`.
+- **Aree di altri:** nessun file in carico a `simonragaz87-sudo` è stato modificato. Il menu chiama soltanto il pannello già esistente del personaggio e lo sprite di gioco.
+- **Prove:** modello dei comandi, navigazione, inviti, stati, misure della scena, punti d'arrivo nel rifugio, contrasto dei testi, Silkscreen solo a 8 o 16 anche nel nuovo CSS.
+- **Nel browser:** versione finale a 1920x1080, 1280x720, 1024x768, 800x600, 1280x500 e 375x812. Cooperativa provata con due schede su un server separato, su una versione precedente della scena. Prima revisione indipendente: 44 problemi confermati, in parte doppi, tutti corretti.
+
+Controlli automatici e fotogrammi, **non** una prova giocata: la conferma manuale resta da fare.
+
+### 3 novembre 2026: pagina Personaggi
+
+Il personaggio sta sui gradini del portale del rifugio (`presentation/character-altar.ts`, stessa densità di pixel del mondo, ingrandita per un intero dal CSS). A sinistra la compagnia, a destra classe con statistiche reali del set iniziale, sesso e set iniziale con i riquadri dell'inventario. Cambiando classe o sesso parte un lampo nel colore della classe. Classe e sesso partono già scelti (Guerriero, Maschio), come l'anteprima: resta da scrivere il nome. Un personaggio creato mostra livello, statistiche, equipaggiamento e il comando per entrare nel rifugio. Stili in `ui/character-page.css`, tutti sotto `#screen-characters`. Nessuna regola o valore cambia. Solo fotogrammi e controlli automatici: la prova giocata resta da fare.

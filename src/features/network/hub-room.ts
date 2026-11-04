@@ -1,7 +1,7 @@
 import {NETWORK} from './protocol';
 import {HUB_NETWORK} from './hub-protocol';
 import {Vec2} from '../../core/vec2';
-import {HubState,HUB_MAP} from '../character/hub-state';
+import {HubState,HUB_MAP,hubSpawnPoint} from '../character/hub-state';
 import type {Character} from '../character/character';
 import {serializeCharacter,deserializeCharacter} from '../character/save-format';
 import type {HubView,TradeView,TradeDelta} from './hub-protocol';
@@ -17,7 +17,7 @@ export class HubRoom {
  readonly inputs=new Map<string,{move:Vec2;at:number}>();
  private serial=0;
  constructor(private readonly characters:Map<string,Character>,private readonly playing:()=>boolean,private readonly key='hub'){}
- enter(id:string,visitor:boolean):void {const state=new HubState();state.position=state.position.add(new Vec2((this.positions.size%4)*30,Math.floor(this.positions.size/4)*32));this.positions.set(id,state);this.present.set(id,true);if(!visitor)this.members.add(id);}
+ enter(id:string,visitor:boolean):void {const state=new HubState();state.position=hubSpawnPoint(this.positions.size);this.positions.set(id,state);this.present.set(id,true);if(!visitor)this.members.add(id);}
  leave(id:string):void {this.positions.delete(id);this.present.delete(id);this.members.delete(id);this.inputs.delete(id);this.invites.delete(id);for(const [to,from]of this.invites)if(from===id)this.invites.delete(to);this.cancel(id);}
  setPresence(id:string,present:boolean):void {if(!this.positions.has(id))throw new Error('Giocatore non presente.');if(!present){this.cancel(id);this.requireFree(id);this.inputs.delete(id);this.invites.delete(id);for(const [to,from] of this.invites)if(from===id)this.invites.delete(to);}this.present.set(id,present);}
  tick(now:number):void {for(const [id,state]of this.positions){if(this.present.get(id)===false||(this.playing()&&this.members.has(id)))continue;const input=this.inputs.get(id);state.step(NETWORK.step,input&&now-input.at<NETWORK.staleInputMs?input.move:Vec2.ZERO);}}

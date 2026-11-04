@@ -1,0 +1,539 @@
+/*
+ * Menu del rifugio: placche di ferro consumato, cornici sottili di rame, pannelli semiopachi.
+ * Ombre senza sfocatura e angoli a gradino: l'interfaccia parla la stessa pixel art della scena.
+ * Silkscreen solo a 8 o 16 pixel, come nel resto del gioco.
+ */
+:root {
+  --forge-ink: #08070a;
+  --forge-panel: #121014;
+  --forge-surface: #1b181c;
+  --forge-iron: #2e2d33;
+  --forge-iron-light: #5a5357;
+  --forge-copper: #b67a50;
+  --forge-copper-light: #dba777;
+  --forge-crimson: #6a1c26;
+  --forge-crimson-light: #93282f;
+  --forge-amber: #ffd77a;
+  --forge-text: #f1e6d4;
+  --forge-muted: #c2b7ac;
+  --forge-disabled: #a49a91;
+  --forge-corners:
+    linear-gradient(var(--forge-ink), var(--forge-ink)) 0 0 / 3px 3px no-repeat,
+    linear-gradient(var(--forge-ink), var(--forge-ink)) 100% 0 / 3px 3px no-repeat,
+    linear-gradient(var(--forge-ink), var(--forge-ink)) 0 100% / 3px 3px no-repeat,
+    linear-gradient(var(--forge-ink), var(--forge-ink)) 100% 100% / 3px 3px no-repeat;
+  --forge-rivets:
+    linear-gradient(var(--forge-copper), var(--forge-copper)) 6px 6px / 2px 2px no-repeat,
+    linear-gradient(var(--forge-copper), var(--forge-copper)) calc(100% - 6px) 6px / 2px 2px no-repeat,
+    linear-gradient(var(--forge-copper), var(--forge-copper)) 6px calc(100% - 6px) / 2px 2px no-repeat,
+    linear-gradient(var(--forge-copper), var(--forge-copper)) calc(100% - 6px) calc(100% - 6px) / 2px 2px no-repeat;
+}
+
+.forge-screen, #settings-panel, .profile-delete-dialog {
+  --relic-copper: var(--forge-copper);
+  --relic-panel: var(--forge-panel);
+  --relic-border: var(--forge-iron-light);
+  --relic-ivory: var(--forge-text);
+  --relic-muted: var(--forge-muted);
+  --relic-control: linear-gradient(#3a3539, #211e22);
+  --text: var(--forge-text);
+  --muted: var(--forge-muted);
+  --gold: var(--forge-copper-light);
+}
+
+/* --- Sfondo ------------------------------------------------------------------------------------------------------ */
+.menu-scene { display: none; z-index: 8; cursor: var(--cursor-default); }
+.refuge-backdrop .menu-scene { display: block; }
+.initial-menu .performance-toggle { display: none; }
+
+/* --- Pannelli e placche ------------------------------------------------------------------------------------------ */
+.forge-panel {
+  background: var(--forge-corners), var(--forge-rivets), #121014e6;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink);
+}
+
+.forge-plate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 14px;
+  color: var(--forge-text);
+  font: 400 24px/1.05 var(--relic-title);
+  letter-spacing: .02em;
+  text-align: left;
+  border: 0;
+  cursor: var(--cursor-pointer);
+  background: var(--forge-corners), linear-gradient(#433d41 0 2px, #2c282b 2px calc(100% - 3px), #151317 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink);
+}
+.forge-plate .pixel-icon { flex: none; width: 32px; height: 32px; }
+.forge-plate-label { min-width: 0; }
+.forge-plate.is-primary {
+  background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink);
+}
+.forge-plate:hover {
+  color: #fff6e6;
+  background: var(--forge-corners), linear-gradient(#5d5459 0 2px, #3f393d 2px calc(100% - 3px), #1d1a1e calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+}
+.forge-plate.is-primary:hover {
+  background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px));
+}
+.forge-plate:active { transform: translateY(1px); box-shadow: inset 0 0 0 1px var(--forge-copper-light); }
+.forge-plate:focus-visible { outline: 2px solid var(--forge-amber); outline-offset: 2px; }
+.forge-plate:focus-visible::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  background: var(--forge-amber);
+  box-shadow: 0 0 0 1px var(--forge-ink);
+}
+.forge-plate[aria-disabled=true], .forge-plate[aria-disabled=true]:hover, .forge-plate[aria-disabled=true]:active {
+  color: var(--forge-disabled);
+  cursor: not-allowed;
+  transform: none;
+  background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px);
+  box-shadow: inset 0 0 0 1px var(--forge-iron), 0 2px 0 var(--forge-ink);
+}
+.forge-plate[aria-disabled=true] .pixel-icon { filter: grayscale(1); opacity: .55; }
+
+/* --- Menu principale --------------------------------------------------------------------------------------------- */
+#screen-menu { background: none; backdrop-filter: none; padding: 0; overflow: hidden; }
+#screen-menu:not(.hidden) { display: block; }
+
+.menu-logo {
+  position: absolute;
+  top: clamp(6px, 2vh, 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.menu-emblem .pixel-icon { display: block; width: 48px; height: 48px; }
+.menu-logo .brand {
+  margin: 0;
+  font: 500 32px/1 var(--relic-title);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #f4e3c4;
+  text-shadow: 2px 0 0 var(--forge-ink), -2px 0 0 var(--forge-ink), 0 -2px 0 var(--forge-ink), 0 2px 0 var(--forge-ink), 3px 4px 0 #6a1c26, 4px 5px 0 var(--forge-ink);
+}
+
+.menu-hero { position: absolute; left: 16px; top: 16px; width: min(280px, calc(100vw - 32px)); padding: 12px 16px; }
+.menu-hero-name { margin: 0; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); overflow-wrap: anywhere; }
+.menu-hero-line { margin: 4px 0 0; color: var(--forge-muted); font-size: 16px; line-height: 1.35; }
+.menu-hero-stats { display: flex; gap: 16px; margin: 8px 0 0; }
+.menu-hero-stat { display: inline-flex; align-items: center; gap: 6px; }
+.menu-hero-stat .pixel-icon { width: 16px; height: 16px; }
+.menu-hero-stat small { color: var(--forge-muted); font: 8px var(--relic-pixel); }
+.menu-hero-stat b { color: var(--forge-text); font: 16px var(--relic-pixel); }
+
+/* Posizioni di partenza; l'impaginazione definitiva e' in fondo al file. */
+.menu-primary {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 60px);
+  transform: translateX(-50%);
+  width: min(340px, calc(100vw - 32px));
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+/* --- Versione e stato ---------------------------------------------------------------------------------------------- */
+.menu-release-footer { background: none; }
+.menu-version { color: var(--forge-text); font: 8px var(--relic-pixel); letter-spacing: 0; text-shadow: 1px 1px 0 var(--forge-ink); }
+.menu-changelog summary, .menu-status-item {
+  color: var(--forge-text);
+  font-size: 16px;
+  background: #121014e6;
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light);
+}
+.menu-changelog summary:hover, .menu-changelog[open] summary { color: #fff6e6; background: var(--forge-surface); box-shadow: inset 0 0 0 1px var(--forge-copper-light); }
+.menu-changelog summary:focus-visible { outline: 2px solid var(--forge-amber); outline-offset: 2px; }
+#menu-changelog-content { background: #121014f7; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-copper), 0 3px 0 var(--forge-ink); }
+.menu-status { position: absolute; right: 16px; bottom: 10px; display: flex; gap: 6px; pointer-events: auto; }
+.menu-status-item { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; }
+.menu-status-item::before { content: ''; width: 8px; height: 8px; background: var(--forge-iron-light); }
+.menu-status-item[data-tone=ok]::before { background: #8fb07a; }
+.menu-status-item[data-tone=busy]::before { background: var(--forge-amber); }
+.menu-status-item[data-tone=bad]::before { background: #e0584f; }
+.initial-menu .toast { bottom: 132px; z-index: 30; }
+.toast { color: var(--forge-text); background: #2a1014; border: 0; box-shadow: inset 0 0 0 1px var(--forge-copper), 0 3px 0 var(--forge-ink); }
+
+/* --- Pagine: personaggi, cooperativa, dungeon -------------------------------------------------------------------- */
+.forge-page { background: #08070ac7; backdrop-filter: none; padding: 32px 16px 24px; }
+.forge-screen .screen-card.wide { width: min(1040px, 100%); margin: auto; padding: 24px 28px; border: 0; border-radius: 0; background: var(--forge-corners), var(--forge-rivets), #121014f2; }
+.forge-screen .screen-head h2 { margin: 2px 0 0; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); }
+.forge-screen .eyebrow { color: var(--forge-copper-light); font: 600 16px var(--relic-text); letter-spacing: .14em; }
+
+.forge-screen .screen-head button, .forge-screen .relic-button, .forge-screen .profile-new, .forge-screen .profile-cancel,
+#settings-panel .relic-button, .profile-delete-dialog button {
+  color: var(--forge-text);
+  font-weight: 400;
+  background: var(--forge-corners), linear-gradient(#433d41 0 2px, #2c282b 2px calc(100% - 3px), #151317 calc(100% - 3px));
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink);
+  transition: none;
+}
+.forge-screen .screen-head button:hover, .forge-screen .relic-button:hover, .forge-screen .profile-new:hover, .forge-screen .profile-cancel:hover,
+#settings-panel .relic-button:hover, .profile-delete-dialog button:hover {
+  color: #fff6e6;
+  background: var(--forge-corners), linear-gradient(#5d5459 0 2px, #3f393d 2px calc(100% - 3px), #1d1a1e calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+  transform: none;
+}
+.forge-screen .dungeon-enter:not([aria-disabled=true]), .profile-delete-dialog button.danger {
+  background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink);
+}
+.forge-screen :is(button, input, summary):focus-visible, #settings-panel :is(button, input, summary):focus-visible, .profile-delete-dialog button:focus-visible {
+  outline: 2px solid var(--forge-amber);
+  outline-offset: 2px;
+}
+.forge-screen .relic-button:disabled, #settings-panel .relic-button:disabled {
+  color: var(--forge-disabled);
+  opacity: 1;
+  background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px);
+  box-shadow: inset 0 0 0 1px var(--forge-iron);
+}
+
+/* Personaggi. */
+.characters-layout { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 1.7fr); gap: 24px; align-items: start; margin-top: 16px; }
+.forge-screen .profiles-heading h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+.forge-screen .profile-new { padding: 8px 10px; font-size: 16px; }
+.forge-screen .profile-select { color: var(--forge-text); background: #1b181c; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.forge-screen .profile-select:hover { background: #2a2529; box-shadow: inset 0 0 0 1px var(--forge-copper-light); }
+.forge-screen .profile-select[aria-pressed=true] { background: #2a1317; box-shadow: inset 0 0 0 1px var(--forge-copper), inset 3px 0 0 var(--forge-amber); }
+.forge-screen .profile-select strong { color: var(--forge-text); font: 400 16px var(--relic-title); }
+.forge-screen .profile-select small { color: var(--forge-muted); }
+.forge-screen .profile-remove { color: #f1cfc8; background: #2a1014; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px #8a3c3f; }
+.forge-screen .profile-remove:hover { background: #3f151b; }
+
+.forge-screen .character-creation { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px 20px; margin: 0; max-width: none; text-align: left; }
+.forge-screen .character-creation > h2, .forge-screen .character-creation > .creation-warning, .forge-screen .character-creation > .creation-error, .forge-screen .character-creation > button { grid-column: 1 / -1; }
+.forge-screen .character-creation > h2 { margin: 0; color: var(--forge-text); font: 400 24px var(--relic-title); }
+.forge-screen .character-creation > label, .forge-screen .creation-bodies, .forge-screen .creation-classes { grid-column: 1; }
+.forge-screen .character-creation legend, .forge-screen .character-creation > label { color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
+.forge-screen .character-creation fieldset { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 10px; border: 0; border-radius: 0; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+.forge-screen .character-creation input[type=text] { display: block; width: 100%; margin-top: 6px; padding: 10px; color: var(--forge-text); font-size: 16px; background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.forge-screen .character-creation input[type=radio] { accent-color: var(--forge-copper); }
+.forge-screen .creation-warning { color: var(--forge-amber); font-size: 16px; }
+.forge-screen .creation-error { margin: 0; color: #ff9d8f; font-size: 16px; }
+.forge-screen .character-creation:not(:has(.creation-error:not(:empty))) .creation-error { display: none; }
+.forge-screen .admin-menu { margin: 16px 0 0; max-width: none; color: var(--forge-muted); border-color: var(--forge-iron-light); border-radius: 0; }
+.forge-screen .admin-menu summary { color: var(--forge-copper-light); }
+
+/* Cooperativa. */
+.coop-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 16px; }
+#party-panel.is-docked { position: static; display: block; width: auto; max-width: none; max-height: none; padding: 14px; contain: none; color: var(--forge-text); background: #1b181c99; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+#party-panel.is-docked .party-heading > .relic-button { display: none; }
+#party-panel.is-docked .party-open { font: 400 24px var(--relic-title); }
+.party-readiness { color: var(--forge-amber); }
+.coop-join { display: grid; gap: 8px; padding: 14px; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+.coop-join label { color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
+.coop-join-row { display: flex; gap: 8px; }
+.coop-join input { flex: 1; min-width: 0; padding: 10px; color: var(--forge-text); font-size: 16px; background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.coop-join input:disabled { color: var(--forge-disabled); }
+.coop-join .relic-button { padding: 8px 16px; font: 400 16px var(--relic-title); }
+.coop-invite-message { min-height: 18px; margin: 0; color: var(--forge-amber); font-size: 16px; }
+.coop-invite-message:empty { display: none; }
+.coop-steps { display: grid; gap: 10px; margin: 16px 0 0; padding: 0 0 0 20px; color: var(--forge-copper-light); }
+.coop-steps li b { display: block; color: var(--forge-text); font: 400 16px/1.15 var(--relic-title); }
+.coop-steps li span { color: var(--forge-muted); font-size: 16px; line-height: 1.4; }
+
+/* Scelta del dungeon: stesse placche, nessuna regola nuova. */
+#screen-dungeons { background: #08070aa6; backdrop-filter: none; }
+#screen-dungeons .dungeon-card { background: #17151af2; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink); }
+#screen-dungeons .dungeon-card:is(:hover, :focus-visible) { box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink); outline-offset: 2px; }
+#screen-dungeons .dungeon-name { color: var(--forge-text); }
+#screen-dungeons .dungeon-boss { color: var(--forge-copper-light); }
+.dungeon-minimum { color: var(--forge-amber); font: 8px var(--relic-pixel); }
+.forge-screen .dungeon-card.is-unavailable { opacity: 1; }
+.forge-screen .dungeon-card.is-unavailable > :not(.dungeon-buttons) { opacity: .62; }
+.forge-screen .dungeon-card.is-unavailable .dungeon-minimum { opacity: 1; color: #ff9d8f; }
+.forge-screen .dungeon-enter[aria-disabled=true], .forge-screen .dungeon-enter[aria-disabled=true]:hover { color: var(--forge-disabled); background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px); box-shadow: inset 0 0 0 1px var(--forge-iron); }
+
+/* Impostazioni: nel menu si aprono al centro, con il rifugio velato dietro. */
+#settings-panel { color-scheme: dark; color: var(--forge-text); background: var(--forge-corners), var(--forge-rivets), var(--forge-panel); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink); padding: 20px; }
+.initial-menu #settings-panel { top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: min(540px, calc(100vw - 32px)); max-height: min(86dvh, 640px); overflow-y: auto; outline: 100vmax solid #08070acc; }
+#settings-panel h2 { margin: 0; color: var(--forge-text); font: 400 24px var(--relic-title); }
+#settings-panel .settings-tab { color: var(--forge-text); font: 400 16px var(--relic-title); background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel .settings-tab[aria-selected=true] { background: #2a1317; box-shadow: inset 0 0 0 1px var(--forge-copper), inset 0 -3px 0 var(--forge-amber); }
+#settings-panel .audio-panel-close { color: var(--forge-text); background: #211e22; border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel .binding-button, #settings-panel .controls-reset { color: var(--forge-text); background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel .controls-message { color: var(--forge-amber); }
+#settings-panel .controls-fixed, #settings-panel .settings-storage { color: var(--forge-muted); }
+.settings-screen-action { display: block; width: 100%; padding: 10px; font-size: 16px; }
+.settings-pane > .settings-screen-action:not(:first-child) { margin-top: 16px; }
+.settings-pane > p { color: var(--forge-muted); }
+
+/* Conferme. */
+.profile-delete-dialog { color: var(--forge-text); background: var(--forge-corners), var(--forge-rivets), var(--forge-panel); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-copper), 0 3px 0 var(--forge-ink); }
+.profile-delete-dialog::backdrop { background: #08070acc; }
+.profile-delete-dialog h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+.profile-delete-dialog p { color: var(--forge-muted); }
+
+/* Caricamento iniziale. */
+.system-loading { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--forge-text); font: 16px var(--relic-pixel); background: var(--forge-ink); }
+.system-loading.hidden { display: none; }
+.system-loading-ember { width: 16px; height: 16px; background: #d9423a; box-shadow: 0 0 0 4px #4a0f1b; animation: forge-ember 1s steps(4) infinite alternate; }
+@keyframes forge-ember { from { background: #d9423a; } to { background: var(--forge-amber); } }
+@media (prefers-reduced-motion: reduce) { .system-loading-ember { animation: none; } }
+
+/* --- Finestre piu' piccole ---------------------------------------------------------------------------------------- */
+@media (max-height: 700px), (max-width: 899px) and (max-height: 840px) {
+  .menu-logo .brand { font-size: 32px; }
+  .menu-emblem .pixel-icon { width: 32px; height: 32px; }
+  .menu-primary { gap: 4px; padding: 8px; }
+  .menu-primary .forge-plate { min-height: 40px; font-size: 24px; padding: 4px 12px; }
+  .menu-hero { padding: 8px 12px; }
+  .menu-hero-name { font-size: 24px; }
+}
+@media (max-width: 1260px) {
+  .menu-hero { width: 220px; }
+}
+@media (max-width: 1100px) {
+  .menu-logo .brand { font-size: 32px; }
+  .menu-logo { left: auto; right: 16px; transform: none; }
+}
+@media (max-width: 899px) {
+}
+@media (max-width: 760px), (max-height: 560px) {
+  #screen-menu:not(.hidden) { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 64px; overflow-y: auto; }
+  .menu-logo, .menu-hero, .menu-primary { position: static; transform: none; width: 100%; max-width: none; flex: none; }
+  .menu-logo { justify-content: center; white-space: normal; }
+  .menu-logo .brand { font-size: 24px; text-align: center; }
+  .menu-primary { top: auto; }
+  .menu-status-item { padding: 4px 6px; font-size: 8px; }
+  .menu-version { left: auto; right: 16px; bottom: 42px; transform: none; }
+  .characters-layout, .coop-layout { grid-template-columns: minmax(0, 1fr); }
+  .forge-screen .character-creation { grid-template-columns: minmax(0, 1fr); }
+  .forge-screen .character-creation > label, .forge-screen .creation-bodies, .forge-screen .creation-classes { grid-column: 1; grid-row: auto; }
+  .forge-screen .screen-card.wide { padding: 16px; }
+}
+
+/* Rifiniture emerse dalle prove nel browser. */
+.initial-menu #settings-panel > .relic-button { display: none; }
+#screen-dungeons .dungeon-boss { color: var(--forge-copper-light); font: 400 16px/1.15 var(--relic-title); letter-spacing: 0; text-transform: none; }
+.forge-screen .character-creation > h2 { font-size: 24px; }
+@media (max-height: 820px) {
+  .forge-page { padding-top: 12px; padding-bottom: 12px; }
+  .forge-screen .screen-card.wide { padding: 14px 20px; }
+  .forge-screen .screen-head h2 { font-size: 24px; }
+  .characters-layout { margin-top: 8px; }
+  #screen-dungeons .boss-artwork { height: 112px; }
+  #screen-dungeons .dungeon-references { margin-bottom: 8px; }
+}
+
+.forge-screen-reader { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Focus delle schede e dei titoli di pagina. */
+#screen-dungeons .dungeon-card:focus-visible { outline: 2px solid var(--forge-amber); outline-offset: 2px; }
+.forge-screen h2[tabindex]:focus { outline: none; }
+
+/* Discesa e miniature dei boss nello stesso stile delle placche. */
+.forge-screen .dungeon-enter { border: 0; border-radius: 0; }
+.forge-screen .dungeon-enter:not([aria-disabled=true]):hover { color: #fff6e6; background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px)); }
+#screen-dungeons .boss-artwork { border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.forge-screen .screen-head button:disabled:hover, .forge-screen .profile-new:disabled:hover, .forge-screen .relic-button:disabled:hover { color: var(--forge-disabled); background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px); box-shadow: inset 0 0 0 1px var(--forge-iron); }
+@media (max-height: 820px) {
+  #screen-dungeons .dungeon-card { grid-template-rows: 20px 48px 112px 34px 28px 28px 30px auto auto; }
+}
+
+/* Il riquadro del party dentro la pagina Cooperativa: i membri sono il contenuto principale. */
+#party-panel.is-docked .party-slot { background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#party-panel.is-docked .party-slot-empty { color: var(--forge-muted); background: #17151a; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+#party-panel.is-docked .party-member-name { font-size: 16px; line-height: 18px; }
+#party-panel.is-docked :is(.party-member-status, .party-leader, .party-widget-status, .party-local-badge) { font-size: 16px; }
+#party-panel.is-docked .party-link { color: var(--forge-text); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+
+/* Cursori dell'audio: binario scuro e cursore quadrato di rame. */
+#settings-panel input[type=range] { appearance: none; height: 16px; background: none; }
+#settings-panel input[type=range]::-webkit-slider-runnable-track { height: 8px; background: var(--forge-iron); box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel input[type=range]::-moz-range-track { height: 8px; background: var(--forge-iron); box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel input[type=range]::-webkit-slider-thumb { appearance: none; width: 12px; height: 16px; margin-top: -4px; border: 0; border-radius: 0; background: var(--forge-copper-light); box-shadow: inset 0 0 0 1px var(--forge-ink); }
+#settings-panel input[type=range]::-moz-range-thumb { width: 12px; height: 16px; border: 0; border-radius: 0; background: var(--forge-copper-light); box-shadow: inset 0 0 0 1px var(--forge-ink); }
+
+/* Gli avvisi non coprono i comandi. */
+.initial-menu .toast { top: clamp(64px, 12vh, 112px); bottom: auto; }
+
+/* Schermi grandi: la scena ingrandisce di 3 volte, i comandi la seguono. */
+@media (min-width: 1700px) and (min-height: 950px) {
+  .menu-logo .brand { font-size: 64px; }
+  .menu-emblem .pixel-icon { width: 64px; height: 64px; }
+  .menu-hero { width: 380px; padding: 16px 20px; }
+  .menu-hero-name { font-size: 32px; }
+  .menu-hero-line { font-size: 16px; }
+  .menu-primary { width: 460px; gap: 8px; padding: 14px; }
+  .menu-primary .forge-plate { min-height: 64px; font-size: 24px; }
+  .menu-primary .forge-plate .pixel-icon { width: 48px; height: 48px; }
+  .menu-status-item, .menu-changelog summary { font-size: 16px; }
+}
+
+/* --- Tutto cio che viene prima della partita parla lo stesso linguaggio ---------------------------------------------
+ * Barra in alto, rifugio, servizi, party, scambi e bestiario. Restano fuori l'inventario e le schede degli oggetti,
+ * in carico a un altro referente (docs/ripartizione-compiti.md).
+ */
+.hub-screen, .hub-dialog-card, .profile-modal, #party-panel, #global-controls, .global-wallet, .trade-confirm, #screen-bestiary {
+  --relic-copper: var(--forge-copper);
+  --relic-panel: var(--forge-panel);
+  --relic-border: var(--forge-iron-light);
+  --relic-ivory: var(--forge-text);
+  --relic-muted: var(--forge-muted);
+  --relic-control: linear-gradient(#3a3539, #211e22);
+  --text: var(--forge-text);
+  --muted: var(--forge-muted);
+  --gold: var(--forge-copper-light);
+}
+#global-controls > button, .hub-screen .relic-button, .hub-dialog-card .relic-button, .profile-modal > button, .profile-modal .relic-button, .trade-confirm .relic-button, #party-panel .relic-button, #screen-bestiary .relic-button, #screen-bestiary .screen-head button {
+  color: var(--forge-text);
+  font-weight: 400;
+  background: var(--forge-corners), linear-gradient(#433d41 0 2px, #2c282b 2px calc(100% - 3px), #151317 calc(100% - 3px));
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink);
+  transition: none;
+}
+#global-controls > button:hover, .hub-screen .relic-button:hover, .hub-dialog-card .relic-button:hover, .profile-modal > button:hover, .profile-modal .relic-button:hover, .trade-confirm .relic-button:hover, #party-panel .relic-button:hover, #screen-bestiary .relic-button:hover, #screen-bestiary .screen-head button:hover {
+  color: #fff6e6;
+  background: var(--forge-corners), linear-gradient(#5d5459 0 2px, #3f393d 2px calc(100% - 3px), #1d1a1e calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+  transform: none;
+}
+.hub-dialog-card .relic-button:disabled, #party-panel .relic-button:disabled, .trade-confirm .relic-button:disabled, #screen-bestiary .relic-button:disabled {
+  color: var(--forge-disabled);
+  opacity: 1;
+  background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px);
+  box-shadow: inset 0 0 0 1px var(--forge-iron);
+}
+:is(.hub-screen, .hub-dialog-card, .profile-modal, #party-panel, #global-controls, .trade-confirm, #screen-bestiary) :is(button, input, select, summary):focus-visible { outline: 2px solid var(--forge-amber); outline-offset: 2px; }
+
+.global-wallet { padding: 0 12px 0 8px; color: var(--forge-text); text-shadow: none; background: #121014e6; box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink); }
+
+.hub-dialog { background: #08070ae0; }
+.hub-dialog-card, .profile-modal, .trade-confirm {
+  color: var(--forge-text);
+  background: var(--forge-corners), var(--forge-rivets), var(--forge-panel);
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink);
+}
+.profile-modal::backdrop, .trade-confirm::backdrop { background: #08070ae0; }
+.hub-dialog-head { padding-bottom: 10px; box-shadow: 0 1px 0 var(--forge-iron-light); }
+.hub-dialog-head h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+.hub-dialog-compact .hub-dialog-head h2 { font-size: 24px; }
+.hub-service-wallet { color: var(--forge-amber); font: 16px var(--relic-pixel); }
+.hub-service-note, .hub-offer p, .storage-help { color: var(--forge-muted); font-size: 16px; }
+.hub-offer, .storage-panel, .storage-backpack, .trade-side { background: #1b181c; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+.hub-offer h3, .storage-panel h3, .trade-side h3 { color: var(--forge-text); }
+.hub-offer .hub-service-action { color: var(--forge-text); font: 400 16px var(--relic-title); }
+.hub-offer .hub-service-action:not(:disabled) { background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
+.hub-offer .hub-service-action:not(:disabled):hover { background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px)); }
+.storage-cell, .trade-cell, .profile-cell { background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+.storage-count { color: var(--forge-amber); font: 16px var(--relic-pixel); }
+.storage-slot-number { color: var(--forge-muted); }
+.profile-stats p { color: var(--forge-text); border-bottom-color: var(--forge-iron); }
+.player-profile h2, .hub-dialog-card h2 { color: var(--forge-text); }
+.hub-interaction-tooltip { color: var(--forge-text); background: var(--forge-panel); border: 0; box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); font: 16px var(--relic-pixel); max-width: none; white-space: nowrap; }
+.hub-interaction-tooltip:before { display: none; }
+
+#party-panel { color: var(--forge-text); background: var(--forge-corners), var(--forge-rivets), var(--forge-panel); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink); padding: 14px; }
+#party-panel .party-open { color: var(--forge-text); }
+#party-panel .party-slot { background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#party-panel .party-slot-empty { color: var(--forge-muted); background: #17151a; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+#party-panel .party-link { color: var(--forge-text); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#party-panel .party-inline-actions .party-danger { background: var(--forge-corners), linear-gradient(#5a2a2c, #2c1216); box-shadow: inset 0 0 0 1px #8a3c3f, 0 2px 0 var(--forge-ink); }
+#party-panel .party-inline-actions .party-ready, #party-panel .party-inline-actions .party-ready[aria-pressed=true] { color: var(--forge-text); background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
+#party-panel .party-inline-actions .party-ready[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--forge-amber), 0 2px 0 var(--forge-ink); }
+.party-widget-status, .party-inline-note { color: var(--forge-muted); }
+
+#screen-bestiary { background: #08070ad9; backdrop-filter: none; }
+#screen-bestiary .screen-card.wide { background: var(--forge-corners), var(--forge-rivets), #121014f7; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink); }
+#screen-bestiary .screen-head h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+#screen-bestiary .eyebrow { color: var(--forge-copper-light); font: 600 16px var(--relic-text); letter-spacing: .14em; }
+
+/* Logo: lettere di metallo a bande nette. */
+.menu-logo .brand {
+  color: transparent;
+  background: linear-gradient(#fff3d8 0 38%, #e9c99a 38% 62%, #b98a5e 62%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(2px 0 0 var(--forge-ink)) drop-shadow(-2px 0 0 var(--forge-ink)) drop-shadow(0 -2px 0 var(--forge-ink)) drop-shadow(0 2px 0 var(--forge-ink)) drop-shadow(3px 4px 0 #6a1c26);
+}
+
+/* Riquadro del personaggio: ritratto da sprite, classe, livello con barra, oro e GS. */
+.menu-hero { display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 12px; align-items: start; }
+.menu-hero:has(.menu-hero-empty) { display: block; }
+.menu-hero-figure { width: 64px; height: 64px; overflow: hidden; background: var(--forge-ink); box-shadow: inset 0 0 0 1px var(--forge-copper); }
+.menu-hero-figure svg { display: block; width: 96px; height: 96px; margin: -8px 0 0 -16px; }
+.menu-hero-xp { position: relative; height: 8px; margin-top: 6px; background: var(--forge-ink); box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.menu-hero-xp i { position: absolute; inset: 1px auto 1px 1px; background: var(--forge-copper-light); }
+.menu-hero-stats { grid-column: 1 / -1; }
+
+/* --- Impaginazione del menu: azioni in basso a sinistra, accessi in basso a destra, logo in alto al centro ------------
+ * Solo gli angoli si scuriscono, a bande nette: il centro resta scena, con portale e cancello ben visibili.
+ */
+.menu-lintel, .menu-ledge { position: absolute; left: 0; right: 0; pointer-events: none; display: none; }
+
+@media (min-width: 761px) and (min-height: 561px) {
+  .menu-lintel { display: block; top: 0; height: 104px; background: linear-gradient(#08070ad9 0 44%, #08070aa6 44% 62%, #08070a66 62% 80%, #08070a2e 80% 92%, transparent 92%); }
+  .menu-ledge {
+    display: block;
+    bottom: 0;
+    height: 270px;
+    background: linear-gradient(90deg, #08070af0 0 330px, #08070ab3 330px 360px, #08070a66 360px 386px, #08070a2e 386px 410px, transparent 410px calc(100% - 560px), #08070a2e calc(100% - 560px) calc(100% - 536px), #08070a66 calc(100% - 536px) calc(100% - 512px), #08070ab3 calc(100% - 512px) calc(100% - 488px), #08070af0 calc(100% - 488px));
+    -webkit-mask-image: linear-gradient(transparent 0 3%, #0000002e 3% 7%, #00000066 7% 11%, #000000b3 11% 16%, #000 16%);
+    mask-image: linear-gradient(transparent 0 3%, #0000002e 3% 7%, #00000066 7% 11%, #000000b3 11% 16%, #000 16%);
+  }
+  #screen-menu .menu-hero { z-index: 1; top: 10px; left: 16px; background: none; box-shadow: none; padding: 0; width: auto; display: grid; grid-template-columns: 64px minmax(120px, auto) auto; column-gap: 12px; align-items: center; }
+  #screen-menu .menu-hero:has(.menu-hero-empty) { display: block; width: min(300px, calc(50vw - 366px)); }
+  #screen-menu .menu-hero-stats { grid-column: auto; flex-direction: column; gap: 2px; margin: 0; }
+  #screen-menu .menu-hero-name, #screen-menu .menu-hero-line, #screen-menu .menu-hero-stat b { text-shadow: 1px 2px 0 var(--forge-ink); }
+  #screen-menu .menu-hero-line, #screen-menu .menu-hero-stat small { color: var(--forge-text); }
+  #screen-menu .menu-primary { top: auto; bottom: 52px; left: 24px; transform: none; width: 300px; gap: 4px; background: none; box-shadow: none; padding: 0; }
+  #screen-menu .menu-primary .forge-plate:not(.is-primary) {
+    background: none;
+    box-shadow: inset 0 -1px 0 #b67a5066;
+    text-shadow: 1px 2px 0 var(--forge-ink);
+  }
+  #screen-menu .menu-primary .forge-plate:not(.is-primary):not([aria-disabled=true]):hover {
+    color: #fff6e6;
+    background: linear-gradient(transparent, #93282f99);
+    box-shadow: inset 0 -2px 0 var(--forge-amber);
+  }
+  #screen-menu .forge-plate[aria-disabled=true], #screen-menu .forge-plate[aria-disabled=true]:hover { color: var(--forge-disabled); background: none; box-shadow: none; }
+  .menu-status-item, .menu-changelog summary { background: #121014b3; box-shadow: none; }
+}
+@media (min-width: 1700px) and (min-height: 950px) {
+  .menu-lintel { height: 150px; }
+  .menu-ledge { height: 390px; }
+  #screen-menu .menu-hero { top: 16px; left: 24px; }
+  #screen-menu .menu-primary { bottom: 64px; left: 32px; width: 440px; gap: 8px; }
+  #screen-menu .menu-primary .forge-plate { min-height: 64px; }
+}
+/* Il riquadro del personaggio non invade il logo centrato, nemmeno con un nome lungo. */
+@media (min-width: 1101px) and (max-width: 1480px) and (min-height: 561px) {
+  #screen-menu .menu-hero { max-width: calc(50vw - 366px); grid-template-columns: 64px minmax(0, 1fr); }
+  #screen-menu .menu-hero-stats { grid-column: 2; flex-direction: row; gap: 12px; }
+}
+@media (min-width: 761px) and (min-height: 561px) {
+  #screen-menu .menu-hero-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #screen-menu .menu-hero:has(.menu-hero-empty) .menu-hero-name { white-space: normal; }
+}
+@media (min-width: 761px) and (min-height: 561px) and (max-width: 1100px) {
+  #screen-menu .menu-hero:has(.menu-hero-empty) { width: 280px; }
+}

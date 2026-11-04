@@ -1,6 +1,8 @@
 import './style.css';
 import { Game } from './game';
 import { requireElement } from './features/ui/dom';
+import './features/ui/pixel-type.css';
+import './features/ui/dungeon-cards.css';
 
 const game = new Game(requireElement<HTMLCanvasElement>('game'));
 game.start();

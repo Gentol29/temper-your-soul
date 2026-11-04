@@ -2,6 +2,8 @@ import {describe,it,expect} from 'vitest';
 import {Character} from '../character/character';
 import {serializeCharacter,deserializeCharacter} from '../character/save-format';
 import {PartyRoom} from './party-room';
+import {HUB_NETWORK} from './hub-protocol';
+import {HubState, hubApproachPoint, hubBlocked} from '../character/hub-state';
 import {Vec2} from '../../core/vec2';
 import {applyTradeDelta} from '../character/trade-transfer';
 function hero(name:string){const c=Character.createStarter();c.completeCreation(name,'male','mage');c.addRolls([{familyId:'arcane_staff',rarity:'rare'}]);return c;}
@@ -15,8 +17,17 @@ describe('hub cooperativo',()=>{
   r.hub.positions.get('e')!.position=r.hub.positions.get('a')!.position;r.hub.invite('a','e');expect(()=>r.hub.accept('e',true)).toThrow('completo');
  });
  it('movimento autorevole, collisioni e scadenza dell’input',()=>{
-  const r=setup(),p=r.hub.positions.get('a')!;p.position=new Vec2(270,540);r.hub.inputs.set('a',{move:new Vec2(0,-1),at:0});
-  for(let i=0;i<120;i++)r.tick(0);expect(p.position.y).toBeGreaterThanOrEqual(486);const before=p.position;r.tick(1000);expect(p.position).toEqual(before);
+  const r=setup(),p=r.hub.positions.get('a')!;p.position=hubApproachPoint('merchant').add(new Vec2(0,5));r.hub.inputs.set('a',{move:new Vec2(-1,0),at:0});
+  for(let i=0;i<120;i++)r.tick(0);expect(hubBlocked(p.position)).toBe(false);expect(p.position.x).toBeGreaterThan(370);expect(p.nearest()?.id).toBe('merchant');const before=p.position;r.tick(1000);expect(p.position).toEqual(before);
+ });
+ it('tutti i visitatori nascono sul selciato e client e server si fermano sugli stessi bordi',()=>{
+  const r=setup();for(let i=2;i<HUB_NETWORK.capacity;i++)r.enter('visitor-'+i,serializeCharacter(hero('Visita'+i)),true);
+  for(const p of r.hub.positions.values())expect(hubBlocked(p.position)).toBe(false);
+  const local=new HubState(),remote=r.hub.positions.get('a')!;
+  for(const move of [new Vec2(0,-1),new Vec2(-1,0),new Vec2(-1,1),new Vec2(1,1),new Vec2(1,-1)]){
+   r.hub.inputs.set('a',{move,at:0});
+   for(let i=0;i<180;i++){local.step(1/60,move);r.tick(0);expect(remote.position).toEqual(local.position);expect(hubBlocked(remote.position)).toBe(false);}
+  }
  });
  it('il deposito non compare nelle viste pubbliche o nei profili degli altri utenti',()=>{
   const r=setup(),c=r.characters.get('a')!,item=c.inventory.at(-1)!;c.discard(item.uid);c.storage.push(item);c.storagePositions[item.uid]=12;

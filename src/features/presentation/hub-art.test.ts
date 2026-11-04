@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {NPC_FRAMES,smithPixels,SMITH_ART,HUB_STRUCTURES} from './hub-art';
-import {HUB_HOUSES,HUB_CATHEDRAL,HUB_WALLS,HUB_CRATES,houseFootprint} from '../character/hub-state';
+import {HUB_HOUSES,HUB_CATHEDRAL,HUB_WALLS,HUB_CRATES,houseFootprint} from './village-layout';
 import {characterPixels} from './character-art';
 import {Character} from '../character/character';
 import {HUB_PORTAL,portalStonePixels,portalVortexPixels,portalMouthHalfWidth} from './hub-portal';

@@ -703,3 +703,41 @@ Cammino a dodici frame con piede sollevato in avanzamento e appoggio in arretram
 ### Primarie senza particelle e testi premio · 3 novembre 2026
 
 Decisione esplicita: rimuovere soltanto particelle di lancio e scia delle primarie delle tre classi; conservare gli altri effetti. Fendente, freccia e dardi elementali ricevono animazioni Hi-bit locali; onda visiva di 0,24 s attorno all’Arciere durante il tiro. Nessun cambiamento a danno, settore, hitbox, gittata o cadenza. XP 8 → 16 px, distanza righe 12 → 24 unità, stesso Silkscreen; nuovo testo +N oro da 16 px all’accredito effettivo, sopra il destinatario. Regole economiche, salvataggio v10 e protocollo 14 invariati. Nuovi interventi grafici vincolati allo stile Hi-bit e alla palette cupa con accenti elementali: requisito in AGENTS.md/CLAUDE.md. [Dettagli e verifiche](attacchi-base-hi-bit.md).
+
+## Menu del rifugio · proposta del ramo `feature/menu-rifugio`, 3 novembre 2026
+
+Proposta da approvare. Lo sfondo del menu è il rifugio a pezzi: cortile vuoto più una struttura per file (cattedrale, deposito, fucina, mercante, cancello, due tratti di mura), posizionati da una tabella in `presentation/menu-layout.ts`. Portale, fiamme, fumo e luci si muovono nel codice (`presentation/menu-scene.ts`). I comandi stanno negli angoli in basso, azioni a sinistra e accessi a destra; il centro resta scena.
+
+**Immagini generate con l'IA, su richiesta dell'utente:** cortile e strutture vengono dal modello locale di pixel art, a partire da una tavola dell'utente. L'eccezione del proprietario in `docs/vfx-pixellab.md` copre solo effetti e icone: questi sfondi vanno approvati da Jabbaz prima di entrare nel gioco ufficiale. Provenienza in `src/assets/art/menu/LEGGIMI.md`.
+
+- **Comandi principali:** Continua, Nuovo personaggio, Impostazioni. **Accessi:** Scegli dungeon, Personaggi, Inventario, Deposito, Forgia, Mercante, Cooperativa. Il modello è in `ui/menu-model.ts`, senza DOM e coperto da test.
+- **Luoghi del rifugio:** Inventario, Deposito, Forgia e Mercante entrano nel rifugio e aprono il pannello esistente; da soli il giocatore sta davanti alla postazione, in un rifugio condiviso la posizione resta del server. Il Fabbro resta raggiungibile a piedi: il brief non lo elenca fra gli accessi.
+- **Stati:** nessun personaggio (restano Nuovo personaggio, Personaggi, Impostazioni), comandi non disponibili con il motivo, caricamento, salvataggio, connessione, disconnessione, gruppo incompleto. Il gruppo incompleto segue la regola del server: il leader non deve dichiararsi pronto e può partire se gli altri membri lo sono.
+- **Cooperativa:** nuova schermata con il riquadro del party esistente e l'ingresso incollando un invito, che porta nel rifugio come ospite; un link di un altro indirizzo viene aperto. Le regole di gruppo e scambi non cambiano.
+- **Impostazioni:** schede Audio, Schermo, Comandi, Cursore. I comandi restano quelli già rimappabili. Il pulsante Impostazioni aggiunto in 0.10.1 nel piè di pagina lascia il posto al comando del menu.
+- **Tastiera:** frecce fra i comandi, Invio per attivare, ESC per tornare; i comandi non disponibili restano raggiungibili per leggerne il motivo.
+- **Palette:** nelle schermate del menu carbone, ardesia, cremisi e rame sostituiscono il prugna del Reliquiario, come chiesto dal brief. Lo stesso vale per barra in alto, Impostazioni, avvisi, servizi del rifugio, party, scambi, profilo e Bestiario. Restano fuori inventario e schede degli oggetti, in carico a un altro referente. Decisione per il proprietario: approvare o no questa estensione.
+
+Nessun valore di bilanciamento, salvataggio o protocollo cambia. Punti aperti: prova giocata, gradimento della scena, estensione della palette, inserimento del Fabbro fra gli accessi.
+
+
+## HUB nello stesso artwork del menu · 4 novembre 2026
+
+Decisione esplicita del proprietario per la revisione della PR #14: eliminare gli accessi in basso a destra; usare il cortile illustrato come mappa dell’HUB; sostituire la tipografia gotica con il carattere pixel di XP/oro (Silkscreen); cambiare Continua in Entra, con zoom e materializzazione al centro.
+
+Il menu e l’HUB condividono PNG, edifici e animazioni. La geometria non cambia con le dimensioni della finestra: sui formati stretti cambia l’inquadratura. Servizi e portale si usano avvicinandosi; selezione dei profili dal riquadro del personaggio, cooperativa dall’icona Party nell’HUB. Nessuna modifica a prezzi, ricompense, combattimento o formato del salvataggio. Protocollo 15 per impedire l’ingresso con la vecchia geometria.
+
+Taratura visuale provvisoria in `presentation/hub-arrival.ts`: zoom 1,1 s, materializzazione da 0,55 s per 0,7 s, assestamento 0,25 s. Il movimento riprende alla fine (1,5 s totali); con animazioni ridotte è immediato. In un HUB condiviso la posizione ricevuta dal server resta autorevole, anche rientrando dal menu. La prima entrata usa la partenza centrale. Da confermare giocando: scala, ampiezza della vista, durata e raggiungibilità percepita dei servizi; nessuna prova manuale ancora registrata.
+
+
+### Fabbro riunito nella Forgia
+
+Decisione esplicita del proprietario: nessun NPC Fabbro separato nell’HUB. La struttura Forgia apre una finestra con due schede: **Forgia** per il crafting già esistente, **Fabbro** per le migliorie già esistenti. Costi, bonus, limite +5 e formato dei salvataggi invariati. Rimossa anche la collisione del vecchio banco, su client e server; protocollo 16. Una transazione aggiorna la scheda attiva e salva immediatamente. Prova giocata ancora da confermare.
+
+### Cammino sul selciato e leggibilità in movimento
+
+Su richiesta del proprietario, il giocatore cammina soltanto sui mattoni del cortile e del ponte sud. Il punto del personaggio nell’HUB rappresenta l’appoggio dei piedi; il raggio resta 9 unità. Sagome poligonali escludono edifici, banchi, colonne del varco e bordo interno delle mura. I quattro servizi conservano un accesso raggiungibile sul selciato; il Mercante si usa dal fianco destro della tenda. Gli edifici sono fuori dal percorso e non coprono il personaggio che vi sta davanti; cinta e varco conservano l’occlusione in prospettiva. Il server usa la stessa geometria e sceglie partenze libere per i visitatori: protocollo 17.
+
+Etichette dei servizi e nomi dei visitatori passano dal canvas ingrandito a testi DOM, senza trasformazioni frazionarie e allineati ai pixel fisici. A fine zoom il canvas mantiene la stessa scala intera su entrambi gli assi, anche con finestre di dimensioni dispari. Restano Silkscreen, passo fisso 60 Hz e frequenze di rete attuali. Da confermare giocando: leggibilità delle scritte mentre si cammina, margini lungo tutta la cinta e coerenza in cooperativa. Nessuna conferma manuale ancora registrata.
+
+Riscontro successivo del proprietario, 4 novembre: le collisioni sembrano a posto nella prova svolta. Restano tali sagome; la Forgia si usa a distanza dal suo fronte (652, 300) → (758, 345), con lo stesso raggio di 62 unità, per renderla accessibile anche arrivando da sinistra. Tooltip e priorità dei bersagli usano il punto del fronte più vicino al giocatore. Su richiesta esplicita i nomi dell’HUB e il tooltip diminuiscono di 2 px: a scala 3× i nomi passano da 24 a 22 px, il tooltip da 16 a 14 px. Eccezione locale alle misure DOM precedenti, senza cambiare Silkscreen né i font del canvas. Nuovo accesso, nuova leggibilità e cooperativa ancora da confermare giocando.

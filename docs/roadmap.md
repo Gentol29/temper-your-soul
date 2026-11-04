@@ -2,6 +2,20 @@
 
 ## Priorità corrente e TODO
 
+- [x] Rimosso il tooltip persistente delle azioni del menu principale, mantenendo navigazione e descrizioni accessibili.
+
+- [x] Forgia utilizzabile lungo tutto il fronte, tooltip coerente anche arrivando da sinistra; nomi dell’HUB e tooltip ridotti di 2 px. Collisioni conservate dopo il riscontro positivo dell’utente.
+- [ ] Conferma manuale del nuovo accesso della Forgia e della misura ridotta delle scritte.
+
+- [x] HUB: appoggio dei piedi coerente con collisioni e profondità, sagome prospettiche, limite al selciato e partenze cooperative libere; protocollo 17. Etichette a risoluzione schermo e canvas senza stiramento frazionario.
+- [ ] Prova giocata lungo tutti gli edifici e la cinta, apertura dei quattro servizi, ponte sud, ghosting sul monitor dell’utente e cooperativa dopo il riavvio. [Verifiche tecniche](hub-artwork.md).
+
+- [x] Fabbro dentro la Forgia, con due schede per creazione e migliorie; NPC e ostacolo separati rimossi. Protocollo 16.
+- [ ] Conferma manuale delle due schede, creazione/migliorie e passaggio libero nell’area del vecchio banco.
+
+- [x] Revisione locale PR #14: menu essenziale, Entra, Silkscreen globale, artwork condiviso con HUB giocabile e ingresso con zoom/materializzazione. Protocollo 15; salvataggi invariati.
+- [ ] Prova manuale del nuovo HUB: ingresso, durata dello zoom, font, ostacoli, Portale/Deposito/Forgia/Fabbro/Mercante e cooperativa dopo il riavvio. [Dettagli](hub-artwork.md).
+
 - [x] Camera degli incontri con offset del mouse limitato e smorzamento esponenziale a ogni fotogramma, separato dal passo fisso. Mira dalla vista decentrata; gli snapshot cooperativi ricentrano soltanto entrando in una stanza. Dieci nuovi test, verifica completa della v0.11.01: 872 test in 79 file, tipi e build.
 - [x] Controllo tecnico nel browser della camera a desktop e 390 px: limite, cursore fermo senza deriva, movimento, mira, pausa/ripresa e resize; nessuna eccezione. Non costituisce conferma giocata.
 - [ ] Prova giocata della camera: tarare massimo 100 unità / velocità 8 s⁻¹, provare rientro al centro, movimento/scatti, pausa, finestre strette e cooperativa. HUB con camera autonoma invariato; limiti ai bordi degli incontri ancora aperti.

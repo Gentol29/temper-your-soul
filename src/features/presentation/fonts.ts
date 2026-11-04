@@ -4,12 +4,12 @@
  */
 
 /**
- * Famiglie per il canvas: titoli gotici, testi nel carattere di sistema, numeri ed etichette piccole in pixel art.
+ * Famiglie per il canvas: titoli, testi, numeri ed etichette nello stesso carattere pixel art.
  * Pixelify Sans, provato il 1 novembre 2026, e' stato scartato: la sua B maiuscola si legge come una G.
  */
 export const CANVAS_FONTS = {
-  title: "'Grenze Gotisch', Georgia, serif",
-  text: 'system-ui, sans-serif',
+  title: "'Silkscreen', monospace",
+  text: "'Silkscreen', monospace",
   pixel: "'Silkscreen', monospace",
 } as const;
 
@@ -19,7 +19,7 @@ export const CANVAS_FONTS = {
  * misura si arrotonda al multiplo di 8 piu' vicino.
  */
 export function canvasFont(size: number, family: keyof typeof CANVAS_FONTS, style = ''): string {
-  const px = family === 'pixel' ? Math.max(8, Math.round(size / 8) * 8) : size;
+  const px = Math.max(8, Math.round(size / 8) * 8);
   return `${style === '' ? '' : `${style} `}${px}px ${CANVAS_FONTS[family]}`;
 }
 
