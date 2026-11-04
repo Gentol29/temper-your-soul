@@ -91,8 +91,8 @@ export const BOSS_IA_SHEETS: Readonly<Record<string, BossIaSheet>> = {
   first_apprentice: {
     layout: {
       url: new URL('../../../assets/art/boss-ia/first_apprentice.png', import.meta.url).href,
-      cell: { width: 57, height: 66 },
-      feet: { x: 28, y: 64 },
+      cell: { width: 57, height: 71 },
+      feet: { x: 28, y: 69 },
       clips: { walk: { row: 0, frames: 8 }, attack: { row: 1, frames: 6 }, rageWalk: { row: 2, frames: 8 }, rageAttack: { row: 3, frames: 6 }, transform: { row: 4, frames: 7 }, death: { row: 5, frames: 9 } },
     },
     walkFps: 8,
@@ -135,8 +135,8 @@ export const BOSS_IA_SHEETS: Readonly<Record<string, BossIaSheet>> = {
   colony_queen: {
     layout: {
       url: new URL('../../../assets/art/boss-ia/colony_queen.png', import.meta.url).href,
-      cell: { width: 84, height: 71 },
-      feet: { x: 44, y: 71 },
+      cell: { width: 77, height: 77 },
+      feet: { x: 48, y: 77 },
       clips: { walk: { row: 0, frames: 8 }, attack: { row: 1, frames: 6 }, rageWalk: { row: 2, frames: 8 }, rageAttack: { row: 3, frames: 6 }, transform: { row: 4, frames: 7 }, death: { row: 5, frames: 9 } },
     },
     walkFps: 6,
@@ -157,13 +157,13 @@ export const BOSS_IA_SHEETS: Readonly<Record<string, BossIaSheet>> = {
   iron_foreman: {
     layout: {
       url: new URL('../../../assets/art/boss-ia/iron_foreman.png', import.meta.url).href,
-      cell: { width: 71, height: 96 },
-      feet: { x: 39, y: 87 },
+      cell: { width: 82, height: 84 },
+      feet: { x: 55, y: 77 },
       clips: { walk: { row: 0, frames: 8 }, attack: { row: 1, frames: 6 }, rageWalk: { row: 2, frames: 8 }, rageAttack: { row: 3, frames: 6 }, transform: { row: 4, frames: 7 }, death: { row: 5, frames: 9 } },
     },
     walkFps: 5,
     feetY: 25,
-    portraitScale: 2,
+    portraitScale: 3,
   },
   mother_bear: {
     layout: {
@@ -179,8 +179,8 @@ export const BOSS_IA_SHEETS: Readonly<Record<string, BossIaSheet>> = {
   astronomer: {
     layout: {
       url: new URL('../../../assets/art/boss-ia/astronomer.png', import.meta.url).href,
-      cell: { width: 54, height: 84 },
-      feet: { x: 26, y: 82 },
+      cell: { width: 55, height: 87 },
+      feet: { x: 27, y: 85 },
       clips: { walk: { row: 0, frames: 8 }, attack: { row: 1, frames: 6 }, rageWalk: { row: 2, frames: 8 }, rageAttack: { row: 3, frames: 6 }, transform: { row: 4, frames: 7 }, death: { row: 5, frames: 9 } },
     },
     walkFps: 7,

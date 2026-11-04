@@ -2,7 +2,8 @@ import type { Camera } from '../../../core/camera';
 import { Vec2 } from '../../../core/vec2';
 import type { ArenaDefinition, ArenaThemeId, Solid } from '../../arena/arena';
 import { litColor } from '../lights';
-import { drawTile, pickVariant, tileSheet, tileVariants, TILE_SIZE } from './tiles';
+import { drawFacade, fillSurface } from './scenery';
+import { drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SIZE } from './tiles';
 
 /*
  * Muri in vista a tre quarti. Il muro in alto mostra la sua faccia: una fascia sotto la cima, alta fin dove arrivano
@@ -102,7 +103,7 @@ function fillWithTiles(
   const firstRow = material === 'wall' ? top : Math.floor(top / TILE_SIZE) * TILE_SIZE;
   for (let y = firstRow; y < top + height; y += TILE_SIZE) {
     for (let x = Math.floor(left / TILE_SIZE) * TILE_SIZE; x < left + width; x += TILE_SIZE) {
-      const tile = pickVariant(variants, columnNoise(x, material === 'wall' ? 5 : y));
+      const tile = tileAt(theme!, material, x, y, columnNoise(x, material === 'wall' ? 5 : y));
       if (tile !== undefined) drawTile(ctx, sheet, tile, x, y);
     }
     if (material === 'wall') break;
@@ -138,6 +139,7 @@ function drawFaceBand(ctx: CanvasRenderingContext2D, left: number, top: number, 
 export function drawTopWallFace(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, style: WallFaceStyle): void {
   const top = arena.wallThickness;
   const height = wallFaceHeight(arena);
+  if (style.tiles !== undefined && drawFacade(ctx, arena, camera, style.tiles, top + height, style)) return;
   if (camera.position.y > top + height + 24) return;
   const left = Math.max(arena.wallThickness, Math.floor(camera.position.x / 32) * 32 - 32);
   const right = Math.min(arena.width - arena.wallThickness, camera.position.x + camera.width + 32);
@@ -205,14 +207,23 @@ export function drawSolidBlock(ctx: CanvasRenderingContext2D, solid: Solid, came
  * La cima del muro in basso, ridisegnata davanti alle figure: chi passa vicino al muro ci finisce dietro. Si disegna
  * dopo la luce, quindi i colori si scuriscono con il buio della scena (`ambient`) come il muro sotto.
  */
-export function drawBottomWallLip(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, cap: string, edge: string, ambient: string): void {
+export function drawBottomWallLip(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, cap: string, edge: string, ambient: string, theme?: ArenaThemeId): void {
   const top = arena.height - arena.wallThickness;
   if (camera.position.y + camera.height < top) return;
   const left = Math.max(0, camera.position.x - 4);
   const right = Math.min(arena.width, camera.position.x + camera.width + 4);
   if (right <= left) return;
-  ctx.fillStyle = litColor(cap, ambient);
-  ctx.fillRect(left, top, right - left, arena.wallThickness);
+  if (theme !== undefined && tileSheet(theme) !== null && tileGrid(theme, 'cap') !== undefined) {
+    fillSurface(ctx, theme, 'cap', left, top, right - left, arena.wallThickness);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = ambient;
+    ctx.fillRect(left, top, right - left, arena.wallThickness);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = litColor(cap, ambient);
+    ctx.fillRect(left, top, right - left, arena.wallThickness);
+  }
   ctx.fillStyle = litColor(edge, ambient);
   ctx.fillRect(left, top, right - left, 2);
 }

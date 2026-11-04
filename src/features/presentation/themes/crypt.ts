@@ -6,7 +6,8 @@ import { faceSpots, wallSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
-import { drawTile, pickVariant, tileColors, tileSheet, tileVariants } from './tiles';
+import { drawFloorScenery, drawFloorSceneryLights, drawPixelRing, drawScenicPillar, drawSceneryPiece, floorVersion, sceneryReady } from './scenery';
+import { drawTile, tileAt, tileColors, tileSheet } from './tiles';
 
 /**
  * Decorazione della cripta (solo aspetto). Le posizioni sono frazioni della mappa, ricavate dall'arena del prototipo
@@ -71,10 +72,25 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
       const zone = hash(Math.floor(x / CRYPT_DECOR.zoneSize), Math.floor(y / CRYPT_DECOR.zoneSize) + 977);
       const carpeted = (x > carpet.xMin && x < carpet.xMax) || (y > carpet.yMin && y < carpet.yMax);
       // Con il foglio dei tile: le lastre di 0x72 ricolorate negli stessi tre toni.
-      const tile = sheet === null ? undefined : pickVariant(tileVariants('crypt', zone > 0.72 ? 'floorWorn' : zone < 0.22 ? 'floorDark' : 'floor'), n);
+      const tile = sheet === null ? undefined : tileAt('crypt', zone > 0.72 ? 'floorWorn' : zone < 0.22 ? 'floorDark' : 'floor', x, y, n);
       if (sheet !== null && tile !== undefined) {
         drawTile(ctx, sheet, tile, x, y);
-        if (carpeted) {
+        const carpetTile = carpeted ? tileAt('crypt', 'carpet', x, y, 0) : undefined;
+        if (carpetTile !== undefined) {
+          drawTile(ctx, sheet!, carpetTile, x, y);
+          // L'orlo del tappeto: un filo scuro e uno d'oro spento, solo dove finisce.
+          const onCarpet = (px: number, py: number): boolean => (px > carpet.xMin && px < carpet.xMax) || (py > carpet.yMin && py < carpet.yMax);
+          ctx.fillStyle = '#1c1014';
+          if (!onCarpet(x - tileSize, y)) ctx.fillRect(x, y, 2, tileSize);
+          if (!onCarpet(x + tileSize, y)) ctx.fillRect(x + tileSize - 2, y, 2, tileSize);
+          if (!onCarpet(x, y - tileSize)) ctx.fillRect(x, y, tileSize, 2);
+          if (!onCarpet(x, y + tileSize)) ctx.fillRect(x, y + tileSize - 2, tileSize, 2);
+          ctx.fillStyle = '#5a4428';
+          if (!onCarpet(x - tileSize, y)) ctx.fillRect(x + 3, y, 1, tileSize);
+          if (!onCarpet(x + tileSize, y)) ctx.fillRect(x + tileSize - 4, y, 1, tileSize);
+          if (!onCarpet(x, y - tileSize)) ctx.fillRect(x, y + 3, tileSize, 1);
+          if (!onCarpet(x, y + tileSize)) ctx.fillRect(x, y + tileSize - 4, tileSize, 1);
+        } else if (carpeted) {
           ctx.fillStyle = '#38313c50';
           ctx.fillRect(x + 2, y + 2, 28, 28);
         }
@@ -107,6 +123,8 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
     }
   }
 
+  drawFloorScenery(ctx, arena, camera, 'crypt');
+
   // Il muro perimetrale appartiene al mondo, non allo schermo.
   const wall = arena.wallThickness;
   ctx.fillStyle = CRYPT_WALL.cap;
@@ -120,9 +138,20 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
 
 /** Rune nel contesto finale: evita giunzioni antialias visibili fra i tasselli della cache. */
 function drawRunes(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const scenic = sceneryReady('crypt');
   for (const fraction of CRYPT_DECOR.runeCircles) {
     const circle = new Vec2(fraction.x * arena.width, fraction.y * arena.height);
     if (!camera.isVisible(circle, 140)) continue;
+    if (scenic) {
+      // A pixel interi, come il resto della scenografia.
+      for (const r of [90, 108]) drawPixelRing(ctx, circle.x, circle.y, r, 2, '#575064');
+      ctx.fillStyle = '#8b6b94';
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        ctx.fillRect(Math.round(circle.x + Math.cos(a) * 99) - 4, Math.round(circle.y + Math.sin(a) * 99) - 4, 8, 8);
+      }
+      continue;
+    }
     ctx.strokeStyle = '#575064';
     ctx.lineWidth = 2;
     for (const r of [90, 108]) {
@@ -146,7 +175,8 @@ function drawRunes(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
 const floorCache = new FloorCache(drawStaticFloor);
 
 function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, clock: number): void {
-  floorCache.draw(ctx, arena, camera, tileSheet('crypt') === null ? '' : 'tiles');
+  floorCache.draw(ctx, arena, camera, floorVersion('crypt'));
+  drawFloorSceneryLights(ctx, arena, camera, 'crypt', clock);
   drawRunes(ctx, arena, camera);
   // I cerchi runici brillano appena: punti di riferimento nel buio.
   for (const fraction of CRYPT_DECOR.runeCircles) {
@@ -173,7 +203,9 @@ function drawTorch(ctx: CanvasRenderingContext2D, x: number, y: number, clock: n
   const light = CRYPT_DECOR.torchLight;
   const flicker = Math.sin(clock * 8 + x) * 0.5 + Math.sin(clock * 13 + y) * 0.5;
   drawLight(ctx, x, y - 12, light.color, light.radius + flicker * 4, 0.85 + flicker * 0.1);
-  if (sconce) {
+  if (drawSceneryPiece(ctx, 'crypt', 'sconce', 0, x, y + (sconce ? 8 : 10))) {
+    // Il supporto viene dal foglio; qui solo la fiamma.
+  } else if (sconce) {
     // Staffa di ferro murata.
     ctx.fillStyle = '#2a2730';
     ctx.fillRect(x - 6, y - 2, 12, 4);
@@ -629,6 +661,7 @@ function snap(value: number): number {
  * non cambiano da un fotogramma all'altro; l'ingombro resta il cerchio della colonna.
  */
 function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera, clock: number): void {
+  if (drawScenicPillar(ctx, pillar, camera, 'crypt', clock)) return;
   if (!camera.isVisible(pillar.position, pillar.radius + 20)) return;
   const sprite = pillarSprite(pillar);
   if (sprite === null) return;
@@ -658,7 +691,7 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const cryptTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, CRYPT_WALL.cap, CRYPT_WALL.edge, ambient),
+  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, CRYPT_WALL.cap, CRYPT_WALL.edge, ambient, 'crypt'),
   ambient: '#262c44',
   block: { cap: '#3a3e4a', edge: CRYPT_WALL.edge, face: CRYPT_WALL.face, tiles: 'crypt' },
   silhouette: '#d8d2ff73',
@@ -666,6 +699,6 @@ export const cryptTheme: ArenaTheme = {
   groundColors: [
     ...CRYPT_FLOOR.base, ...CRYPT_FLOOR.worn, ...CRYPT_FLOOR.dark, CRYPT_WALL.cap, '#8b6b94',
     ...tileColors('crypt', 'floor'), ...tileColors('crypt', 'floorWorn'), ...tileColors('crypt', 'floorDark'),
-    ...tileColors('crypt', 'chasm'), ...tileColors('crypt', 'bridgeEW'),
+    ...tileColors('crypt', 'chasm'), ...tileColors('crypt', 'bridgeEW'), ...tileColors('crypt', 'carpet'), '#1c1014', '#5a4428',
   ],
 };

@@ -247,8 +247,11 @@ const stoneCache = new WeakMap<Palette, Palette>();
 function stonePalette(palette: Palette): Palette {
   let stone = stoneCache.get(palette);
   if (!stone) {
+    // Per luminosita', non per posizione: le tavolozze del generatore hanno fino a 16 colori.
     const greys = ['#2a2a30', '#5a5a64', '#7a7a84', '#8a8a94'];
-    stone = Object.fromEntries(Object.keys(palette).map((key, i) => [key, greys[Math.min(i, greys.length - 1)]!]));
+    const light = (hex: string): number => parseInt(hex.slice(1, 3), 16) * 0.21 + parseInt(hex.slice(3, 5), 16) * 0.72 + parseInt(hex.slice(5, 7), 16) * 0.07;
+    const ranked = Object.entries(palette).sort((a, b) => light(a[1]) - light(b[1]));
+    stone = Object.fromEntries(ranked.map(([key], i) => [key, greys[Math.round((i / Math.max(1, ranked.length - 1)) * (greys.length - 1))]!]));
     stoneCache.set(palette, stone);
   }
   return stone;
@@ -277,7 +280,7 @@ function mixHex(from: string, to: string, amount: number): string {
  * `rim` (#rrggbbaa) la sagoma ha un bordo di un'unita' di quel colore, che la stacca dal pavimento; '' = senza bordo.
  */
 const minionRasters = new WeakMap<SpriteFrame, WeakMap<Palette, Map<string, HTMLCanvasElement>>>();
-function minionRaster(frame: SpriteFrame, palette: Palette, scale: number, rim = ''): HTMLCanvasElement {
+export function minionRaster(frame: SpriteFrame, palette: Palette, scale: number, rim = ''): HTMLCanvasElement {
   let byPalette = minionRasters.get(frame);
   if (!byPalette) {
     byPalette = new WeakMap();
@@ -313,6 +316,30 @@ function minionRaster(frame: SpriteFrame, palette: Palette, scale: number, rim =
   }
   byRim.set(rim, raster);
   return raster;
+}
+
+/** Dove era ogni servitore all'ultimo disegno, quando si e' mosso l'ultima volta e verso dove: solo per l'aspetto, non per le regole. */
+const minionSteps = new WeakMap<Minion, { x: number; y: number; movedAt: number; left: boolean }>();
+/** Chi, fra i servitori disegnati di profilo, guarda a sinistra: la morte (`combat-vfx.ts`) ha solo l'id. */
+export const minionsFacingLeft = new Set<number>();
+const STILL_AFTER = 0.14;
+
+/** Vero se il servitore si e' mosso da poco: chi sta fermo non deve camminare sul posto. */
+function minionIsMoving(minion: Minion, time: number): boolean {
+  const { x, y } = minion.position;
+  const step = minionSteps.get(minion);
+  if (step === undefined) {
+    minionSteps.set(minion, { x, y, movedAt: time, left: false });
+    return true;
+  }
+  if (Math.abs(x - step.x) + Math.abs(y - step.y) > 0.05) {
+    // Chi sale o scende quasi dritto non si volta a ogni minimo scarto.
+    if (Math.abs(x - step.x) > 0.25 * Math.abs(y - step.y)) step.left = x < step.x;
+    step.x = x;
+    step.y = y;
+    step.movedAt = time;
+  }
+  return time - step.movedAt < STILL_AFTER;
 }
 
 /** Alone dei servitori: un raster per colore e raggio. */
@@ -356,7 +383,7 @@ export const ELITE_COLORS: Readonly<Record<string, string>> = {
 export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: number, flash: number, prey = false, rim = ''): void {
   const art = minionArt(minion.definition.visual);
   const { x, y } = minion.position;
-  const half = (art.frames[0].length * art.scale) / 2;
+  const half = (art.frames[0]!.length * art.scale) / 2;
   if (minion.state === 'burrowed' || minion.state === 'emerging') {
     // Un cumulo di terra che si muove; quando sta per uscire trema.
     const shake = minion.state === 'emerging' ? Math.sin(time * 60) * 2 : 0;
@@ -390,7 +417,10 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     ctx.drawImage(glowRaster(art.glow, radius), Math.round(x - radius), Math.round(y - radius - lift));
     ctx.restore();
   }
-  const frameIndex = dormant ? 0 : Math.floor(time * (art.fps ?? 6) + minion.id) % 2;
+  const moving = minionIsMoving(minion, time);
+  const stands = art.walks === true && !moving;
+  const count = art.frames.length;
+  const frameIndex = dormant || stands ? 0 : ((Math.floor(time * (art.fps ?? 6) + minion.id) % count) + count) % count;
   const sprite = art.frames[frameIndex]!;
   const bob = dormant || art.bob === false ? 0 : Math.sin(time * 8 + minion.id) * 1.5;
   const palette = dormant ? stonePalette(art.palette) : art.palette;
@@ -399,6 +429,15 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
   const left = Math.round(x - raster.width / 2);
   const top = Math.round(y - raster.height / 2 + bob - lift);
   ctx.save();
+  if (art.faces === true) {
+    if (minionSteps.get(minion)?.left === true) {
+      minionsFacingLeft.add(minion.id);
+      ctx.translate(left * 2 + raster.width, 0);
+      ctx.scale(-1, 1);
+    } else {
+      minionsFacingLeft.delete(minion.id);
+    }
+  }
   if (minion.state === 'reviving') {
     // Le ossa a terra, schiacciate: tra poco si rialzano.
     ctx.globalAlpha = 0.6;

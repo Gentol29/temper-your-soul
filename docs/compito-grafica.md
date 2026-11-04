@@ -270,3 +270,16 @@ Su richiesta dell'utente, ramo `feature/mob-ai-locale`, senza commit. Proposta p
 - **Non fatti:** gli altri mob (solo prova su 8, non nel gioco). Prova giocata di ritmo, piedi che scivolano e sincronia con i colpi.
 
 Decisioni per Jabbaz: se accettare grafica generata sui boss; se le animazioni bastano; se togliere i vecchi fogli.
+
+### 4 novembre 2026: mob e mappe con il generatore locale · v0.11.05
+
+Ramo `feature/produzione-grafica`, sopra la PR 15. Proposta per Jabbaz: stessa decisione sull'IA. Inventario completo in [produzione-grafica.md](produzione-grafica.md).
+
+- **Mob:** tutti gli 88, con quattro fotogrammi. Quelli di profilo si voltano secondo il verso di marcia; chi sta fermo non cammina sul posto.
+- **Mappe:** i quattro dungeon a un pixel per unita' di mondo, con facciate, portali, colonne, arredi, ponti e bordi dei pozzi. Il disegno sta in `themes/scenery.ts`.
+- **Boss:** fogli riscritti con la riduzione che tiene volti e arti; Caposquadra e Regina hanno un disegno nuovo.
+- **Solo aspetto:** vita, danni, velocita', collisioni, raggi di colpo, salvataggi e protocollo non cambiano. Soglie e aperture delle porte sono disegnate di nuovo, la zona di gioco e' la stessa.
+- **Prove:** partite automatiche nei quattro dungeon e in pellegrinaggio, `npm run verify`. Non provati: una partita giocata a mano e il multigiocatore.
+- **Da rivedere:** 12 mob segnati nell'inventario; il modello non sa disegnare mantice e incudine. Il Rifugio non e' toccato: su main e' ora l'illustrazione del menu.
+
+Decisioni per Jabbaz: se accettare grafica generata su mob e mappe; se togliere i mob e i tile di prima.

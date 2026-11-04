@@ -6,6 +6,7 @@ import type { Camera } from '../../core/camera';
 import type { Match } from '../match/match';
 import { drawBoss, drawMinion, drawPlayer } from './draw-actors';
 import { drawArena } from './draw-arena';
+import { drawPillarsOverDecals, drawPillarTop, pillarTopsBehind, rememberScene } from './themes/scenery';
 import { drawHazards } from './draw-hazards';
 import { drawChargeTelegraph, drawFallingSpell, drawPendingZone, drawProjectile, drawZoneFlash } from './draw-combat';
 import { drawTelegraphs } from './draw-telegraphs';
@@ -100,6 +101,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   lightMap.dropCovered(match.arena.chasms);
   drawDecals(ctx, effects, camera);
   drawBloodStains(ctx, effects.combatVfx, camera);
+  drawPillarsOverDecals(ctx, match.arena, camera);
   drawHazards(ctx, match.arena, match.covers, camera, clock, effects.coverFlashes);
   collectActorLights(ctx, scene);
   const ambient = scene.mood === undefined ? theme.ambient : moodAmbient(theme.ambient, scene.mood);
@@ -114,14 +116,15 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   drawPersistentVfx(ctx, match, match.time);
 
   // Le figure si disegnano dall'alto in basso: chi sta piu' in basso e' piu' vicino e copre chi sta dietro.
-  const figures: { y: number; draw: () => void }[] = [];
+  const figures: { x: number; y: number; draw: () => void }[] = [];
   for (const minion of match.minions) {
-    figures.push({ y: minion.position.y, draw: () => drawMinion(ctx, minion, clock, effects.minionFlashes.get(minion.id) ?? 0, minion.prey || minion.id === scene.preyId, theme.silhouette) });
+    figures.push({ x: minion.position.x, y: minion.position.y, draw: () => drawMinion(ctx, minion, clock, effects.minionFlashes.get(minion.id) ?? 0, minion.prey || minion.id === scene.preyId, theme.silhouette) });
   }
   // Il boss resta visibile durante la sequenza della morte (lampeggia, trema e si frantuma).
   const death = effects.bossDeath;
   if (boss !== null && (!boss.health.isDead || death !== null)) {
     figures.push({
+      x: boss.position.x,
       y: boss.position.y,
       draw: () => drawBoss(ctx, boss, player, poses, match.time, {
         flash: effects.bossFlash / FEEDBACK.hitFlash,
@@ -133,9 +136,10 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
       }),
     });
   }
-  figures.push({ y: player.position.y, draw: () => drawPlayer(ctx, player, poses, match.time, !player.isInvulnerable || Math.floor(clock * 20) % 2 === 0, scene.appearance) });
+  figures.push({ x: player.position.x, y: player.position.y, draw: () => drawPlayer(ctx, player, poses, match.time, !player.isInvulnerable || Math.floor(clock * 20) % 2 === 0, scene.appearance) });
   for (const ally of scene.allies ?? []) {
     figures.push({
+      x: ally.player.position.x,
       y: ally.player.position.y,
       draw: () => {
         ctx.save();
@@ -145,6 +149,10 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
       },
     });
   }
+  // Le colonne con qualcuno dietro si ordinano con le figure: chi sta davanti resta davanti.
+  const pillarTops = pillarTopsBehind(match.arena, camera, figures);
+  if (pillarTops.length > 0) rememberScene(ctx);
+  for (const top of pillarTops) figures.push({ x: top.x, y: top.y, draw: () => drawPillarTop(ctx, match.arena, top) });
   figures.sort((a, b) => a.y - b.y);
   for (const figure of figures) figure.draw();
   drawMinionDeaths(ctx, effects.combatVfx);

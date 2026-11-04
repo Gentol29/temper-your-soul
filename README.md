@@ -424,3 +424,7 @@ Solo le primarie perdono le particelle casuali al lancio e nella scia; sangue, i
 ### Boss e luogotenenti con il generatore locale · v0.11.04, proposta
 
 Sedici figure nuove fatte in locale con SDXL e Pixel Art XL, a fogli con camminata, attacco, furia, passaggio di fase e morte. Solo aspetto. Grafica generata con l'IA: da confermare con il proprietario. I vecchi boss si vedono con `?boss=classici`. Dettagli in [compito-grafica](docs/compito-grafica.md). Prova giocata ancora da fare.
+
+### Mob e mappe gotiche con il generatore locale · v0.11.05, proposta
+
+Tutti gli 88 mob e le mappe dei quattro dungeon fatti in locale con SDXL e Pixel Art XL, a un pixel per unità di mondo: facciate gotiche, portali, colonne e arredi diversi per ogni dungeon. Solo aspetto: collisioni, regole e salvataggi non cambiano. Grafica generata con l'IA: da confermare con il proprietario. Per confrontare: `?mob=classici`, `?tile=classici`. Dettagli in [docs/produzione-grafica.md](docs/produzione-grafica.md).

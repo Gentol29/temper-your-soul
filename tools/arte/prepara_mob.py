@@ -2,6 +2,7 @@
 
 Uso, con il Python della cartella del generatore:
   python tools/arte/prepara_mob.py --anteprime cartella [--gruppo crypt_]   # strisce, animazioni e controlli dei candidati
+  python tools/arte/prepara_mob.py --scrivi                                 # sprite scelti (mob-moti.json), per il gioco
 
 Per ogni originale: griglia vera di Pixel Art XL (celle da 8 pixel), sfondo e ombra a terra tolti, figura ritagliata e
 ridotta alla stessa area dello sprite disegnato a mano (cosi' l'ingombro nel mondo non cambia), tavolozza limitata.
@@ -34,6 +35,8 @@ CELLA = 8
 SPAZIO = 8
 SIMBOLI = "abcdefghijklmnopqrstuvwxyz"
 VUOTO = -1
+# Le tinte di ogni dungeon, in gradi: caldi per brace e rame, viola per l'Ordine, verdi per la palude, azzurri per il gelo.
+GAMMA = {"crypt": ((0, 55), (255, 360)), "swamp": ((0, 55), (55, 175), (255, 330)), "forge": ((0, 60), (255, 300)), "glacier": ((0, 55), (170, 300))}
 PAVIMENTO = {"crypt": "#2b2a33", "swamp": "#2c3226", "forge": "#2e2622", "glacier": "#39485a"}
 
 
@@ -129,6 +132,15 @@ def togli_sfondo(a, tolleranza=38.0, buchi=False, ombra=0.62):
     return figura, persa
 
 
+def solo_maggiore(figura):
+    """Solo il pezzo connesso piu' grande della maschera."""
+    tutti = pezzi(figura)
+    pulita = np.zeros_like(figura)
+    for y, x in tutti[0] if tutti else []:
+        pulita[y, x] = True
+    return pulita
+
+
 def isola(figura):
     """Tiene il pezzo piu' grande e quelli non trascurabili; toglie schizzi e sporco. Quanto pesa il pezzo maggiore dice
     se il modello ha disegnato un soggetto solo."""
@@ -151,10 +163,16 @@ def misura_finale(larg, alt, bersaglio_l, bersaglio_a):
     return max(4, round(larg * fattore)), max(4, round(alt * fattore))
 
 
+LUCE = np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
+# Quante celle servono perche' un segno sopravviva alla riduzione, e quanto deve staccarsi dal colore mediano.
+SEGNO_SCURO, SEGNO_CHIARO, SEGNO_STACCO = 0.3, 0.28, 40.0
+
+
 def campiona(a, figura, cx, cy, passo, larg, alt):
     """Ridipinge la figura su una griglia larg x alt centrata in (cx, cy), `passo` celle per pixel. Per ogni pixel il
-    colore mediano delle celle coperte, se sono per lo piu' figura. Provate anche la moda (puntini) e la media (colori
-    impastati): la mediana con la pulizia di `pulisci` e' risultata la piu' netta."""
+    colore mediano delle celle coperte, se sono per lo piu' figura. Con la sola mediana occhi, mani, zampe sottili e
+    contorni fra le gambe spariscono: se una parte delle celle e' molto piu' scura o molto piu' chiara delle altre,
+    vince quella (scuro prima del chiaro, perche' separa le forme). Provate la moda (puntini) e la media (impastata)."""
     colori = np.zeros((alt, larg, 3), dtype=np.float32)
     piena = np.zeros((alt, larg), dtype=bool)
     limite_y, limite_x = figura.shape
@@ -169,7 +187,18 @@ def campiona(a, figura, cx, cy, passo, larg, alt):
             maschera = figura[ya:yb, xa:xb]
             if maschera.size and maschera.mean() >= 0.45:
                 piena[j, i] = True
-                colori[j, i] = np.median(a[ya:yb, xa:xb][maschera], axis=0)
+                celle = a[ya:yb, xa:xb][maschera]
+                mediana = np.median(celle, axis=0)
+                luce = celle @ LUCE
+                centro = float(mediana @ LUCE)
+                scure = luce < centro - SEGNO_STACCO
+                chiare = luce > centro + SEGNO_STACCO
+                if scure.mean() >= SEGNO_SCURO:
+                    colori[j, i] = np.median(celle[scure], axis=0)
+                elif chiare.mean() >= SEGNO_CHIARO:
+                    colori[j, i] = np.median(celle[chiare], axis=0)
+                else:
+                    colori[j, i] = mediana
     return colori, piena
 
 
@@ -209,7 +238,25 @@ def gradua(matrice, tavola, tetto=0.45):
     if media <= tetto:
         return tavola
     fattore = tetto / media
-    return np.array([[round(v * 255) for v in colorsys.hsv_to_rgb(h, s * fattore, v0)] for h, s, v0 in hsv], dtype=np.int32)
+    # Le luci restano accese: un fuoco spento non si legge piu' come fuoco.
+    return np.array([[round(v * 255) for v in colorsys.hsv_to_rgb(h, s * (1.0 if v0 > 0.8 else fattore), v0)] for h, s, v0 in hsv], dtype=np.int32)
+
+
+def ritinta(tavola, regole):
+    """Riporta sulla gamma del dungeon i colori che il modello ha sbagliato, senza toccare il disegno: una campana verde
+    torna bronzo, un occhio blu torna brace. Ogni regola sposta su una tinta i colori dentro un intervallo di gradi."""
+    nuova = []
+    for colore in tavola:
+        h, sat, v = colorsys.rgb_to_hsv(*(colore / 255.0))
+        gradi = h * 360
+        for regola in regole:
+            basso, alto = regola["da"]
+            dentro = basso <= gradi <= alto if basso <= alto else gradi >= basso or gradi <= alto
+            if dentro and sat >= regola.get("oltre", 0.15) and v <= regola.get("fino_a", 1.0):
+                h, sat = regola["a"] / 360.0, min(1.0, sat * regola.get("sat", 1.0))
+                break
+        nuova.append([round(c * 255) for c in colorsys.hsv_to_rgb(h, sat, v)])
+    return np.array(nuova, dtype=np.int32)
 
 
 def pulisci(m, tavola, soglia=70.0):
@@ -284,12 +331,15 @@ def bipede(m, c, voce):
     ginocchio = c.r0 + 0.80 * c.H
     # Con la testa grande le spalle sono piu' in basso: la testa non deve muoversi come un braccio.
     spalla = c.r0 + voce.get("spalla", 0.28) * c.H
-    fine_braccio = anca + c.H * 0.10
-    spalle = c.W * 0.30
+    # Il braccio si muove intero fino alla punta della mano, altrimenti la mano si sdoppia.
+    fine_braccio = c.r0 + voce.get("mani", 0.72) * c.H
+    spalle = c.W * voce.get("spalle", 0.30)
+    # Quello che sta oltre i fianchi e' cio' che il braccio regge: non deve restare indietro quando il braccio va avanti.
+    oltre = c.W * voce.get("oltre", 0.40)
 
     def campo(lato):
         def f(x, y):
-            if y < fine_braccio and abs(x - c.cx) > spalle and y >= spalla:
+            if (spalla <= y < fine_braccio and abs(x - c.cx) > spalle) or abs(x - c.cx) > oltre:
                 return -lato, -1 + (1 if (x - c.cx) * lato > 0 else -1)
             if y < anca:
                 return -lato, -1
@@ -306,8 +356,12 @@ def veste(m, c, voce):
     ampiezza = max(1, round(c.W * 0.07))
     vita = c.r0 + 0.5 * c.H
 
+    parte = voce.get("parte")
+
     def campo(fase):
         def f(x, y):
+            if parte and c.c0 + parte[0] * c.W <= x <= c.c0 + parte[2] * c.W and c.r0 + parte[1] * c.H <= y <= c.r0 + parte[3] * c.H:
+                return 2 * fase, 0
             if y < vita:
                 return 0, -1 if fase else 0
             t = morsetto((y - vita) / max(1.0, c.r1 - vita))
@@ -338,7 +392,8 @@ def ali(m, c, voce):
     """Di fronte: tre fasce per ala, su, a meta', giu', a meta'. Agli estremi le punte si avvicinano al corpo, perche'
     un'ala alzata si vede di scorcio, e il corpo fa il contrario di poco, come chi si tiene in aria."""
     ampiezza = max(2, round(c.W * 0.11))
-    tronco = c.W * 0.16
+    # Con le zampe sotto il corpo (gli insetti) il tronco e' piu' largo: le zampe non devono battere come ali.
+    tronco = c.W * voce.get("tronco", 0.16)
 
     def campo(fase):
         def f(x, y):
@@ -373,13 +428,14 @@ def striscia(m, c, voce):
     return [deforma(m, campo(f)) for f in (0.0, math.pi / 2, math.pi, 3 * math.pi / 2)]
 
 
-def schiaccia(c, quanto, largo):
+def schiaccia(c, quanto, largo, cucitura=0.62):
     """La parte alta scende di `quanto` righe e i fianchi si allargano: occhi e piedi restano identici."""
-    pancia = c.r0 + 0.62 * c.H
+    pancia = c.r0 + cucitura * c.H
     fianco = c.W * 0.26
+    spalle = c.r0 + 0.4 * c.H
 
     def f(x, y):
-        dx = (1 if x > c.cx else -1) * largo if abs(x - c.cx) > fianco else 0
+        dx = (1 if x > c.cx else -1) * largo if abs(x - c.cx) > fianco and y >= spalle else 0
         return dx, quanto if y < pancia else 0
     return f
 
@@ -387,8 +443,8 @@ def schiaccia(c, quanto, largo):
 def rimbalzo(m, c, voce):
     """Chi salta o rimbalza: anticipo schiacciato, stacco in aria un po' allungato, atterraggio. Un salto vero, non un
     respiro: la base lascia il suolo."""
-    forza = max(1, round(c.H * 0.08))
-    stacco = max(2, round(c.H * 0.12))
+    forza = min(2, max(1, round(c.H * 0.08)))
+    stacco = min(4, max(2, round(c.H * 0.12)))
     pancia = c.r0 + 0.62 * c.H
 
     def in_aria(x, y):
@@ -399,7 +455,8 @@ def rimbalzo(m, c, voce):
 
 def respiro(m, c, voce):
     """Chi sta fermo (nidi, torrette): la parte alta cala di poco e torna, senza toccare il dettaglio."""
-    return [m, deforma(m, schiaccia(c, 1, 0)), deforma(m, schiaccia(c, 1 if c.H < 40 else 2, 0)), deforma(m, schiaccia(c, 1, 0))]
+    cucitura = voce.get("cucitura", 0.62)
+    return [m, deforma(m, schiaccia(c, 1, 0, cucitura)), deforma(m, schiaccia(c, 2, 0, cucitura)), deforma(m, schiaccia(c, 1, 0, cucitura))]
 
 
 def fiamma(m, c, voce):
@@ -418,25 +475,27 @@ def fiamma(m, c, voce):
     return [m, deforma(m, campo(1, 0)), deforma(m, campo(0, 1)), deforma(m, campo(-1, 0))]
 
 
-def oscilla(m, c, voce):
-    """Appeso per la cima (campane, lanterne, mazzafrusti): la base dondola a fasce, la cima resta."""
-    ampiezza = max(1, round(c.W * 0.12))
-
-    def campo(fase):
-        def f(x, y):
-            return round(ampiezza * morsetto((y - c.r0) / max(1, c.H))) * fase, 0
-        return f
-
-    return [m, deforma(m, campo(1)), m, deforma(m, campo(-1))]
+def sobbalzo(m, c, voce):
+    """Un oggetto rigido: tutto intero, su e giu' di un pixel. Il dettaglio non cambia."""
+    def campo(dy):
+        return lambda x, y: (0, dy)
+    return [m, deforma(m, campo(-1)), m, deforma(m, campo(1))]
 
 
 MOTI = {"bipede": bipede, "veste": veste, "quadrupede": quadrupede, "ali": ali, "striscia": striscia,
-        "rimbalzo": rimbalzo, "respiro": respiro, "fiamma": fiamma, "oscilla": oscilla}
+        "rimbalzo": rimbalzo, "respiro": respiro, "fiamma": fiamma, "sobbalzo": sobbalzo}
 # Questi non deformano il disegno: si riducono di nuovo dall'originale ruotato. Angoli in gradi per fotogramma.
-ROTAZIONI = {"dondolo": (0, 6, 0, -6), "rotazione": (0, 22.5, 45, 67.5)}
+ROTAZIONI = {"dondolo": (0, 6, 0, -6), "rotazione": (0, 22.5, 45, 67.5), "oscilla": (0, 7, 0, -7)}
 
 # Chi cammina ha il ciclo legato alla velocita' (un piede a terra non deve scivolare); gli altri hanno un ritmo proprio.
 RITMO_FISSO = {"ali": 12, "rimbalzo": 8, "respiro": 4, "fiamma": 10, "oscilla": 6, "dondolo": 5, "rotazione": 10}
+
+
+# Solo chi sta in aria ondeggia nel gioco: a terra i piedi devono restare fermi.
+FLUTTUANO = {"ali", "dondolo", "rotazione"}
+
+# Per questi i fotogrammi sono un passo: da fermi restano sul primo.
+CAMMINANO = {"bipede", "veste", "quadrupede", "striscia", "rimbalzo"}
 
 
 def ritmo(moto, voce, c):
@@ -455,6 +514,19 @@ def lancio(m, c):
     def f(x, y):
         return (max(1, round(c.W * 0.05)), -alza) if y < meta else (0, 0)
     return deforma(m, f)
+
+
+def senza_frammenti(matrice):
+    """Toglie i pezzetti rimasti staccati dopo uno spostamento: una parte del corpo non vola via da sola."""
+    tutti = pezzi(matrice > VUOTO)
+    if len(tutti) < 2:
+        return matrice
+    nuova = matrice.copy()
+    for celle in tutti:
+        if len(celle) < max(4, len(tutti[0]) * 0.02):
+            for y, x in celle:
+                nuova[y, x] = VUOTO
+    return nuova
 
 
 def con_contorno(matrice):
@@ -488,48 +560,73 @@ def sprite(percorso, voce):
         a = np.rot90(a, k=voce["ruota"] // 90).astype(np.float32)
     figura, persa = togli_sfondo(a, buchi=bool(voce.get("buchi")))
     figura, quota = isola(figura)
+    if voce.get("un_pezzo"):
+        # Un oggetto solo: i frammenti attorno al soggetto principale sono scarti del modello.
+        figura = solo_maggiore(figura)
+    if voce.get("taglia_fondo"):
+        # Quello che il modello ha messo a terra sotto la figura e che non e' sfondo (un'ombra chiara, un vaso).
+        righe = np.nonzero(figura.any(axis=1))[0]
+        figura[righe[-1] + 1 - round(len(righe) * voce["taglia_fondo"]):] = False
     if figura.sum() < 200:
         return None
     ys, xs = np.nonzero(figura)
     tocca = bool(ys.min() == 0 or xs.min() == 0 or ys.max() == figura.shape[0] - 1 or xs.max() == figura.shape[1] - 1)
     larg0, alt0 = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
     larg, alt = misura_finale(larg0, alt0, voce["larghezza"], voce["altezza"])
+    if max(larg, alt) < 26:
+        # Occhi e zampe non stanno in meno di tanto: il disegno cresce, l'ingombro di gioco resta il raggio di colpo.
+        fattore = 26 / max(larg, alt)
+        larg, alt = round(larg * fattore), round(alt * fattore)
     larg, alt = max(4, larg - 2), max(4, alt - 2)
     passo = larg0 / larg
     cx, cy = (xs.min() + xs.max() + 1) / 2, (ys.min() + ys.max() + 1) / 2
     colori, piena = campiona(a, figura, cx, cy, passo, larg + SPAZIO * 2, alt + SPAZIO * 2)
     if not piena.any():
         return None
-    massimo = 8 if max(larg, alt) <= 20 else 12 if max(larg, alt) <= 36 else 16
+    massimo = voce.get("colori") or (8 if max(larg, alt) <= 20 else 12 if max(larg, alt) <= 36 else 16)
     base, tavola = limita_palette(colori, piena, massimo)
+    # I fotogrammi ruotati vengono dall'originale: si riportano su questi colori, prima di tinte e saturazione, cosi' gli
+    # indici valgono anche per la tavolozza finale e il colore non cambia da un fotogramma all'altro.
+    tavola_grezza = tavola.copy()
     # Sui mob piccoli un pixel solo puo' essere un occhio: non si pulisce.
     if max(larg, alt) > 20:
         base = pulisci(base, tavola)
     tavola = gradua(base, tavola)
+    if voce.get("tinte"):
+        tavola = ritinta(tavola, voce["tinte"])
+    if voce.get("bianco_a"):
+        # Lo sfondo rimasto chiuso dentro la figura, dove togliere i buchi mangerebbe anche il resto.
+        tavola = tavola.copy()
+        tavola[tavola.min(axis=1) > 215] = [int(voce["bianco_a"][i:i + 2], 16) for i in (1, 3, 5)]
     if voce.get("occhi"):
         base, tavola = metti_occhi(base, tavola, voce["occhi"])
     moto = voce.get("moto") or "respiro"
     c = Corpo(base)
     if moto in ROTAZIONI:
         fotogrammi = []
-        for angolo in ROTAZIONI[moto]:
+        for angolo in voce.get("angoli") or ROTAZIONI[moto]:
             if angolo == 0:
                 fotogrammi.append(base)
                 continue
-            centro = (float(cx), float(cy))
+            # Chi e' appeso (una campana) gira attorno alla cima; gli altri attorno al centro.
+            centro = (float(cx), float(ys.min())) if moto == "oscilla" else (float(cx), float(cy))
             ruotata = np.asarray(Image.fromarray(a.astype(np.uint8), "RGB").rotate(angolo, Image.Resampling.NEAREST, center=centro))
             maschera = np.asarray(Image.fromarray(figura.astype(np.uint8) * 255).rotate(angolo, Image.Resampling.NEAREST, center=centro)) > 127
             altri, piena_r = campiona(ruotata.astype(np.float32), maschera, cx, cy, passo, larg + SPAZIO * 2, alt + SPAZIO * 2)
-            fotogrammi.append(sul_tavola(altri, piena_r, tavola))
+            ruotato = sul_tavola(altri, piena_r, tavola_grezza)
+            fotogrammi.append(pulisci(ruotato, tavola_grezza) if max(larg, alt) > 20 else ruotato)
     else:
         fotogrammi = list(MOTI[moto](base, c, voce))
     if voce.get("luogotenente"):
         fotogrammi.append(lancio(base, c))
-    fotogrammi = [con_contorno(f) for f in fotogrammi]
+    fotogrammi = [con_contorno(senza_frammenti(f)) for f in fotogrammi]
     piene = np.any([f > VUOTO for f in fotogrammi], axis=0)
     righe = np.nonzero(piene.any(axis=1))[0]
     colonne = np.nonzero(piene.any(axis=0))[0]
     fotogrammi = [f[righe[0]:righe[-1] + 1, colonne[0]:colonne[-1] + 1] for f in fotogrammi]
+    # Gli sprite di profilo guardano tutti a destra: e' il gioco a specchiarli secondo il verso di marcia.
+    if voce.get("specchia"):
+        fotogrammi = [f[:, ::-1] for f in fotogrammi]
     scuro = np.clip((tavola[0] * 0.45).astype(np.int32), 0, 255)
     luce_originale = float((a[figura] @ np.array([0.299, 0.587, 0.114])).mean() / 255.0)
     return {"fotogrammi": fotogrammi, "tavola": np.vstack([scuro, tavola]), "fps": ritmo(moto, voce, c), "moto": moto,
@@ -586,7 +683,7 @@ def tremolio(a, b, lato=5, raggio=2):
 
 # Spostamento del bordo in un passo (circa 2 = un pixel) ammesso per ogni moto: sotto non si vede, sopra e' a scatti.
 PASSI = {"bipede": (0.3, 1.4), "veste": (0.15, 1.2), "quadrupede": (0.3, 1.5), "ali": (0.4, 1.9), "striscia": (0.25, 1.7),
-         "rimbalzo": (0.3, 4.5), "respiro": (0.04, 0.8), "fiamma": (0.08, 1.4), "oscilla": (0.15, 1.3),
+         "rimbalzo": (0.3, 4.5), "respiro": (0.04, 1.2), "fiamma": (0.08, 1.4), "oscilla": (0.15, 2.2),
          "dondolo": (0.3, 2.0), "rotazione": (0.3, 3.0)}
 
 
@@ -659,6 +756,15 @@ def controlla(esito, voce, nome):
         quota_stacco = float((stacco >= 0.12).mean()) if stacco.size else 0.0
         if quota_stacco < 0.20:
             difetti.append(f"si perde sul pavimento: solo il {quota_stacco:.0%} del bordo interno si stacca")
+    gamma = GAMMA.get(nome.split("_")[0])
+    if gamma and usati.size:
+        fuori_gamma = 0
+        for indice in usati:
+            h, sat, v = colorsys.rgb_to_hsv(*(tavola[indice] / 255.0))
+            if sat > 0.3 and v > 0.25 and not any(basso <= h * 360 <= alto for basso, alto in gamma):
+                fuori_gamma += 1
+        if fuori_gamma > usati.size * 0.06:
+            difetti.append(f"tinte fuori gamma per il dungeon: {fuori_gamma / usati.size:.0%} dei pixel")
     distanze = [float(np.sqrt(((tavola[i] - tavola[j]) ** 2).sum())) for i in range(1, len(tavola)) for j in range(i + 1, len(tavola))]
     if distanze and min(distanze) < 12:
         difetti.append(f"colori quasi uguali in tavolozza: distanza {min(distanze):.0f}")
@@ -786,8 +892,42 @@ def anteprime(misure, cartella, gruppo, ingrandimento):
     (cartella / f"controlli-{gruppo or 'tutti'}.json").write_text(json.dumps(riassunto, indent=1, ensure_ascii=False), encoding="utf-8")
 
 
+def scrivi(misure):
+    """Scrive gli sprite di chi ha una `scelta` in mob-moti.json. Gli altri restano quelli a mano."""
+    righe = ["/*", " * Generato da tools/arte/prepara_mob.py: non modificare a mano.",
+             " * Sprite dei mob dal generatore locale (SDXL 1.0 e Pixel Art XL); quattro fotogrammi ricavati da un solo disegno.",
+             " */", "", "export interface GeneratedSprite {", "  readonly frames: readonly (readonly string[])[];",
+             "  readonly palette: Readonly<Record<string, string>>;", "  readonly fps: number;", "  readonly walks: boolean;", "  readonly faces: boolean;", "  readonly bob: boolean;", "}", "",
+             "export const GENERATED_SPRITES: Readonly<Record<string, GeneratedSprite>> = {"]
+    quanti = 0
+    for nome, voce in misure.items():
+        if "scelta" not in voce:
+            continue
+        esito = sprite(candidati(nome)[voce["scelta"]], voce)
+        tavola = ", ".join(f"{SIMBOLI[i]}: '#{int(c[0]):02x}{int(c[1]):02x}{int(c[2]):02x}'" for i, c in enumerate(esito["tavola"]))
+        righe.append(f"  {nome}: {{")
+        righe.append("    frames: [")
+        for f in esito["fotogrammi"][:4]:
+            testo = ["".join("." if v < 0 else SIMBOLI[v] for v in riga) for riga in f]
+            righe.append("      [" + ", ".join(f"'{r}'" for r in testo) + "],")
+        righe.append("    ],")
+        righe.append(f"    palette: {{ {tavola} }},")
+        cammina = "true" if esito["moto"] in CAMMINANO else "false"
+        fluttua = "true" if voce.get("fluttua", esito["moto"] in FLUTTUANO) else "false"
+        righe.append(f"    fps: {esito['fps']},")
+        righe.append(f"    walks: {cammina},")
+        righe.append(f"    faces: {'true' if voce.get('lato') else 'false'},")
+        righe.append(f"    bob: {fluttua},")
+        righe.append("  },")
+        quanti += 1
+    righe += ["};", ""]
+    USCITA.write_text("\n".join(righe), encoding="utf-8", newline="\n")
+    print(f"Scritti {quanti} sprite, {USCITA.stat().st_size // 1024} KB")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--scrivi", action="store_true", help="scrive gli sprite scelti per il gioco")
     p.add_argument("--misure", type=Path, default=QUI / "mob-misure.json")
     p.add_argument("--anteprime", type=Path, help="cartella di strisce, animazioni e controlli")
     p.add_argument("--gruppo", default="", help="prefisso degli id, per le anteprime")
@@ -799,6 +939,8 @@ def main():
         misure = {n: misure[n] for n in args.solo.split(",")}
     if args.anteprime:
         anteprime(misure, args.anteprime, args.gruppo, args.ingrandimento)
+    if args.scrivi:
+        scrivi(misure)
 
 
 if __name__ == "__main__":

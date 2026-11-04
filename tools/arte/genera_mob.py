@@ -68,6 +68,7 @@ def main():
     p.add_argument("--quanti", type=int, default=3, help="candidati per mob")
     p.add_argument("--passi", type=int, default=20)
     p.add_argument("--solo", help="id separati da virgole")
+    p.add_argument("--cartella", default="mob", help="sottocartella delle immagini (i tile stanno in tile)")
     args = p.parse_args()
 
     dati = json.loads(args.prompt.read_text(encoding="utf-8"))
@@ -78,12 +79,12 @@ def main():
     inizio = time.time()
     for nome, candidato in lavori:
         seme = seme_di(nome, candidato)
-        prefisso = f"mob/{nome}/{seme}"
-        if not list((IMMAGINI / "mob" / nome).glob(f"{seme}_*.png")):
+        prefisso = f"{args.cartella}/{nome}/{seme}"
+        if not list((IMMAGINI / args.cartella / nome).glob(f"{seme}_*.png")):
             voce = mob[nome]
             # Gli oggetti hanno il loro stile: con "enemy sprite" il modello ci mette sempre una persona.
             oggetto = voce.get("tipo") == "oggetto"
-            stile = dati["stile_oggetto"] if oggetto else dati["stile"]
+            stile = dati["stile_oggetto"] if oggetto else dati["stile_lato"] if voce.get("tipo") == "lato" else dati["stile"]
             positivo = stile.format(prompt=voce["prompt"], sfondo=voce.get("sfondo", dati["sfondo"]))
             negativo = ", ".join(filter(None, [dati["negativo"], dati["negativo_oggetto"] if oggetto else "", voce.get("evita")]))
             genera(positivo, negativo, seme, args.passi, prefisso)

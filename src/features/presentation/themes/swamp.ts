@@ -6,7 +6,9 @@ import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
-import { drawTile, pickVariant, tileColors, tileSheet, tileVariants, TILE_SIZE } from './tiles';
+import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
+import type { TileGrid } from './tile-atlas';
+import { drawTile, pickVariant, tileColors, tileGrid, tileSheet, tileVariants, TILE_SIZE } from './tiles';
 
 /*
  * La palude spenta: acque nere con isolotti di fango, canne, funghi che brillano, nebbia che deriva e alberi morti.
@@ -37,7 +39,7 @@ const SWAMP_DECOR = {
 };
 
 /** Faccia del muro in alto: un argine di terra con radici che pendono. */
-const SWAMP_WALL_FACE: WallFaceStyle = { face: '#232c1a', dark: '#141a0f', light: '#3f5428', pattern: 'earth' };
+const SWAMP_WALL_FACE: WallFaceStyle = { face: '#232c1a', dark: '#141a0f', light: '#3f5428', pattern: 'earth', tiles: 'swamp' };
 
 /** Numero pseudo-casuale in [0, 1) che dipende solo dalla posizione. */
 function hash(x: number, y: number): number {
@@ -85,6 +87,120 @@ function forGroundCells(
  * La parte ferma del terreno, dipinta una volta nei tasselli della cache: acqua, riva e fango (con la grana dei tile
  * quando il foglio e' caricato) e le macchie scure del fango.
  */
+/** Lato della grana della riva e della griglia su cui si interpola il livello: la riva e' a un pixel, il livello cambia piano. */
+const SHORE_GRAIN = 128;
+const SHORE_LATTICE = 8;
+let shoreGrainValues: Float32Array | null = null;
+let mudPixels: { sheet: HTMLImageElement; data: Uint8ClampedArray } | null = null;
+let shoreLayer: HTMLCanvasElement | null = null;
+
+/** Rumori a piu' scale su un quadrato che ripete: i periodi dividono il lato, quindi senza cuciture. */
+function shoreGrain(): Float32Array {
+  if (shoreGrainValues !== null) return shoreGrainValues;
+  const values = new Float32Array(SHORE_GRAIN * SHORE_GRAIN);
+  const smooth = (t: number): number => t * t * (3 - 2 * t);
+  for (const [period, weight] of [[32, 0.5], [16, 0.28], [8, 0.15], [4, 0.07]] as const) {
+    const count = SHORE_GRAIN / period;
+    const node = (x: number, y: number): number => hash(x % count + period, y % count + period * 3);
+    for (let y = 0; y < SHORE_GRAIN; y++) {
+      const iy = Math.floor(y / period);
+      const sy = smooth(y / period - iy);
+      for (let x = 0; x < SHORE_GRAIN; x++) {
+        const ix = Math.floor(x / period);
+        const sx = smooth(x / period - ix);
+        const top = node(ix, iy) + (node(ix + 1, iy) - node(ix, iy)) * sx;
+        const bottom = node(ix, iy + 1) + (node(ix + 1, iy + 1) - node(ix, iy + 1)) * sx;
+        values[y * SHORE_GRAIN + x]! += (top + (bottom - top) * sy) * weight;
+      }
+    }
+  }
+  shoreGrainValues = values;
+  return values;
+}
+
+/** I pixel del fango dal foglio, letti una volta sola. */
+function readMudPixels(sheet: HTMLImageElement, mud: TileGrid, span: number): Uint8ClampedArray {
+  if (mudPixels !== null && mudPixels.sheet === sheet) return mudPixels.data;
+  const canvas = document.createElement('canvas');
+  canvas.width = span;
+  canvas.height = span;
+  const painter = canvas.getContext('2d', { willReadFrequently: true })!;
+  painter.drawImage(sheet, mud.x, mud.y, span, span, 0, 0, span, span);
+  const data = painter.getImageData(0, 0, span, span).data;
+  mudPixels = { sheet, data };
+  return data;
+}
+
+/**
+ * Fango e acqua con le superfici del foglio. La riva corre a un pixel per unita', come tutto il resto: il livello si
+ * interpola da una griglia rada, gli si somma la grana e il tassello si compone pixel per pixel, una volta sola.
+ */
+function drawScenicGround(ctx: CanvasRenderingContext2D, camera: Camera, sheet: HTMLImageElement, water: TileGrid, mud: TileGrid): void {
+  const { cell, mudThreshold, shoreBand, edgeJitter } = SWAMP_DECOR;
+  const span = mud.cells * mud.size;
+  const wrap = (value: number, side: number): number => ((value % side) + side) % side;
+  const left = Math.floor(camera.position.x);
+  const top = Math.floor(camera.position.y);
+  const width = Math.ceil(camera.width) + 1;
+  const height = Math.ceil(camera.height) + 1;
+  for (let y = Math.floor(top / span) * span; y < top + height; y += span) {
+    for (let x = Math.floor(left / span) * span; x < left + width; x += span) {
+      ctx.drawImage(sheet, water.x, water.y, span, span, x, y, span, span);
+    }
+  }
+
+  const lattice0x = Math.floor(left / SHORE_LATTICE);
+  const lattice0y = Math.floor(top / SHORE_LATTICE);
+  const columns = Math.ceil(width / SHORE_LATTICE) + 2;
+  const rows = Math.ceil(height / SHORE_LATTICE) + 2;
+  const levels = new Float32Array(columns * rows);
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < columns; i++) {
+      levels[j * columns + i] = patchNoise(((lattice0x + i) * SHORE_LATTICE) / cell, ((lattice0y + j) * SHORE_LATTICE) / cell);
+    }
+  }
+
+  if (shoreLayer === null) shoreLayer = document.createElement('canvas');
+  if (shoreLayer.width !== width || shoreLayer.height !== height) {
+    shoreLayer.width = width;
+    shoreLayer.height = height;
+  }
+  const painter = shoreLayer.getContext('2d')!;
+  const image = painter.createImageData(width, height);
+  const out = image.data;
+  const grain = shoreGrain();
+  const source = readMudPixels(sheet, mud, span);
+  const shoreLimit = mudThreshold - shoreBand;
+  const rimLimit = shoreLimit + shoreBand * 0.16;
+  for (let y = 0; y < height; y++) {
+    const worldY = top + y;
+    const row = Math.floor(worldY / SHORE_LATTICE) - lattice0y;
+    const fy = worldY / SHORE_LATTICE - lattice0y - row;
+    const grainRow = wrap(worldY, SHORE_GRAIN) * SHORE_GRAIN;
+    const sourceRow = wrap(worldY, span) * span;
+    for (let x = 0; x < width; x++) {
+      const worldX = left + x;
+      const column = Math.floor(worldX / SHORE_LATTICE) - lattice0x;
+      const fx = worldX / SHORE_LATTICE - lattice0x - column;
+      const at = row * columns + column;
+      const upper = levels[at]! + (levels[at + 1]! - levels[at]!) * fx;
+      const lower = levels[at + columns]! + (levels[at + columns + 1]! - levels[at + columns]!) * fx;
+      const level = upper + (lower - upper) * fy + (grain[grainRow + wrap(worldX, SHORE_GRAIN)]! - 0.5) * edgeJitter * 1.4;
+      if (level <= shoreLimit) continue;
+      const from = (sourceRow + wrap(worldX, span)) * 4;
+      // Il fango; verso l'acqua e' bagnato e piu' scuro, con una linea scura sul bordo come gli oggetti.
+      const light = level > mudThreshold ? 1 : level > rimLimit ? 0.44 : 0.2;
+      const to = (y * width + x) * 4;
+      out[to] = source[from]! * light + 6 * (1 - light);
+      out[to + 1] = source[from + 1]! * light + 12 * (1 - light);
+      out[to + 2] = source[from + 2]! * light + 10 * (1 - light);
+      out[to + 3] = 255;
+    }
+  }
+  painter.putImageData(image, 0, 0);
+  ctx.drawImage(shoreLayer, left, top);
+}
+
 function drawStaticGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
   const { cell, mudThreshold, shoreBand, water, mud, shore } = SWAMP_DECOR;
   const sheet = tileSheet('swamp');
@@ -94,6 +210,14 @@ function drawStaticGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition,
   ctx.beginPath();
   ctx.rect(0, 0, arena.width, arena.height);
   ctx.clip();
+  const waterGrid = tileGrid('swamp', 'water');
+  const mudGrid = tileGrid('swamp', 'floor');
+  if (sheet !== null && waterGrid !== undefined && mudGrid !== undefined) {
+    drawScenicGround(ctx, camera, sheet, waterGrid, mudGrid);
+    drawFloorScenery(ctx, arena, camera, 'swamp');
+    ctx.restore();
+    return;
+  }
   forGroundCells(arena, camera, (cx, cy, n, level, isMud) => {
     const palette = isMud ? mud : level > mudThreshold - shoreBand ? shore : water;
     ctx.fillStyle = palette[n > 0.75 ? 2 : n > 0.35 ? 1 : 0]!;
@@ -140,7 +264,7 @@ function drawGroundMotion(ctx: CanvasRenderingContext2D, arena: ArenaDefinition,
       // Increspatura che oscilla sull'acqua.
       ctx.fillStyle = '#27493b66';
       ctx.fillRect(px + 8, py + 20 + Math.sin(clock * 1.4 + cx * 0.7 + cy) * 3, 20, 2);
-    } else if (isMud && n > 0.82) {
+    } else if (isMud && n > 0.82 && !sceneryReady('swamp')) {
       // Ciuffo di canne che ondeggia piano.
       ctx.fillStyle = '#566a2e';
       for (let i = 0; i < 3; i++) {
@@ -161,6 +285,7 @@ function drawWall(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera:
   ctx.fillRect(0, 0, t, arena.height);
   ctx.fillRect(arena.width - t, 0, t, arena.height);
   drawTopWallFace(ctx, arena, camera, SWAMP_WALL_FACE);
+  if (sceneryReady('swamp')) return;
   const face = wallFaceHeight(arena);
   // Un groviglio di radici e muschio sul lato interno, solo nel tratto visibile (in alto, sotto la faccia).
   const { x: camX, y: camY } = camera.position;
@@ -193,6 +318,7 @@ function drawWallMushrooms(ctx: CanvasRenderingContext2D, arena: ArenaDefinition
     if (!camera.isVisible(spot, 120)) continue;
     const pulse = 0.6 + 0.4 * Math.sin(clock * 2 + spot.x * 0.03);
     drawLight(ctx, spot.x, spot.y, SWAMP_DECOR.mushroom.glow, 110, 0.4 + 0.3 * pulse);
+    if (sceneryReady('swamp')) continue;
     ctx.fillStyle = SWAMP_DECOR.mushroom.cap;
     ctx.fillRect(spot.x - 7, spot.y - 3, 6, 3);
     ctx.fillRect(spot.x + 1, spot.y - 6, 8, 3);
@@ -206,6 +332,7 @@ function drawWallMushrooms(ctx: CanvasRenderingContext2D, arena: ArenaDefinition
  * delle zone della Madre delle spore, e un fungo dello stesso colore li nasconderebbe.
  */
 function drawMushrooms(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, clock: number): void {
+  if (sceneryReady('swamp')) return;
   const grid = SWAMP_DECOR.mushroomGrid;
   const { x: camX, y: camY } = camera.position;
   const gx0 = Math.floor((camX - 40) / grid);
@@ -278,7 +405,8 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
 const floorCache = new FloorCache(drawStaticFloor);
 
 function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, clock: number): void {
-  floorCache.draw(ctx, arena, camera, tileSheet('swamp') === null ? '' : 'tiles');
+  floorCache.draw(ctx, arena, camera, floorVersion('swamp'));
+  drawFloorSceneryLights(ctx, arena, camera, 'swamp', clock);
   drawGroundMotion(ctx, arena, camera, clock);
   drawWallMushrooms(ctx, arena, camera, clock);
   drawMushrooms(ctx, arena, camera, clock);
@@ -287,6 +415,7 @@ function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
 
 /** Albero morto: radici contorte attorno al tronco, rami spogli piegati dal vento e un fungo a mensola che brilla. */
 function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera, clock: number): void {
+  if (drawScenicPillar(ctx, pillar, camera, 'swamp', clock)) return;
   const { x, y } = pillar.position;
   const r = pillar.radius;
   if (!camera.isVisible(pillar.position, r * 2.2)) return;
@@ -375,7 +504,7 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const swampTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, SWAMP_DECOR.wall.base, SWAMP_DECOR.wall.moss, ambient),
+  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, SWAMP_DECOR.wall.base, SWAMP_DECOR.wall.moss, ambient, 'swamp'),
   ambient: '#22302a',
   block: { cap: '#26301c', edge: SWAMP_DECOR.wall.moss, face: SWAMP_WALL_FACE, tiles: 'swamp' },
   silhouette: '#e6f2cc66',
@@ -388,6 +517,6 @@ export const swampTheme: ArenaTheme = {
     SWAMP_DECOR.mushroom.glow,
     SWAMP_DECOR.mushroom.paleCap,
     SWAMP_DECOR.mushroom.paleGlow,
-    ...tileColors('swamp', 'floor'), ...tileColors('swamp', 'chasm'), ...tileColors('swamp', 'bridgeEW'),
+    ...tileColors('swamp', 'floor'), ...tileColors('swamp', 'chasm'), ...tileColors('swamp', 'bridgeEW'), ...tileColors('swamp', 'water'),
   ],
 };

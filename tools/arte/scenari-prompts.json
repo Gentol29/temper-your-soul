@@ -1,0 +1,583 @@
+{
+  "stili": {
+    "superficie": "pixel art, 16-bit dark gothic fantasy video game ground texture, top-down view, {prompt}, seamless repeating pattern, flat even lighting, limited palette, crisp pixels",
+    "parete": "pixel art, 16-bit dark gothic fantasy video game wall tileset, flat front view, {prompt}, seamless repeating horizontally, even lighting, limited palette, crisp pixels",
+    "oggetto": "pixel art, 16-bit dark gothic fantasy video game prop sprite, three-quarter top-down view, {prompt}, only one object, whole object visible, centered, bold black outline, strong readable silhouette, limited palette, on a plain flat white background"
+  },
+  "negativi": {
+    "superficie": "person, character, creature, face, text, watermark, signature, logo, frame, border, vignette, blurry, smooth gradient, photo, photorealistic, 3d render, horizon, sky, perspective",
+    "parete": "person, character, creature, text, watermark, signature, logo, frame, border, vignette, blurry, smooth gradient, photo, photorealistic, 3d render, sky, ground, floor, perspective, horizon",
+    "oggetto": "person, human, body, floor, ground shadow, cast shadow, scene, room, background, text, watermark, sprite sheet, multiple objects, several views, collage, blurry, photo, 3d render, frame, border"
+  },
+  "voci": {
+    "crypt_pavimento": {
+      "prompt": "worn gothic crypt floor of large irregular grey slate flagstones, dark grout between stones, cracks, cold blue grey",
+      "asse": "xy"
+    },
+    "crypt_pavimento2": {
+      "prompt": "ancient funerary paving of big square slate slabs with engraved gothic crosses, worn edges, dust, cold grey",
+      "asse": "xy"
+    },
+    "crypt_cima": {
+      "prompt": "rough dark stone rubble and broken masonry blocks seen from above, charcoal slate",
+      "asse": "xy"
+    },
+    "crypt_abisso": {
+      "prompt": "deep black abyss with barely visible dark rocks far below, almost black, cold",
+      "asse": "xy"
+    },
+    "crypt_tappeto": {
+      "prompt": "long worn crimson gothic carpet runner, dark red fabric with faded gold cross pattern, torn",
+      "asse": "xy"
+    },
+    "crypt_muro1": {
+      "prompt": "gothic crypt wall of dark slate ashlar blocks with a row of pointed arch niches, carved stone, cold grey, faint crimson stains",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "crypt_muro2": {
+      "prompt": "gothic cathedral wall with tall narrow pointed lancet windows glowing dim crimson, dark slate blocks, stone tracery",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "crypt_muro3": {
+      "prompt": "crypt wall with burial niches holding skulls and bones in rows, dark stone arches, ossuary",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "crypt_lesena": {
+      "prompt": "(single tall carved gothic stone pilaster buttress:1.6), dark slate, pointed top, narrow, front view",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "statue, face, wide"
+    },
+    "crypt_porta": {
+      "prompt": "(gothic pointed stone archway doorway:1.6) with carved dark slate frame and iron portcullis, front view",
+      "stile": "oggetto",
+      "evita": "door closed wood, person"
+    },
+    "crypt_colonna": {
+      "prompt": "(tall gothic stone column:1.6) with carved pointed capital and square base, dark slate, cracks, cold light",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "statue, face, greek"
+    },
+    "crypt_rudere": {
+      "prompt": "(broken gothic stone column stump:1.6) with fallen rubble around the base, dark slate, cracks, moss",
+      "stile": "oggetto",
+      "evita": "statue, face"
+    },
+    "crypt_statua": {
+      "prompt": "(hooded mourning angel stone statue on a plinth:1.6), folded wings, weeping, dark grey weathered stone, gothic",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "colorful, human skin"
+    },
+    "crypt_sarcofago": {
+      "prompt": "(stone gothic sarcophagus with carved knight lid:1.6), dark slate, cracked, cross, three-quarter view from above",
+      "stile": "oggetto",
+      "evita": "gold, egyptian"
+    },
+    "crypt_ossario": {
+      "prompt": "(heap of skulls and bones with three lit candles on top:1.6), ivory bones, melted wax, dark",
+      "stile": "oggetto",
+      "evita": "flesh, cartoon"
+    },
+    "crypt_altare": {
+      "prompt": "(gothic stone altar with crimson cloth and two tall candlesticks:1.6), dark slate, carved front",
+      "stile": "oggetto",
+      "evita": "gold, person"
+    },
+    "crypt_gabbia": {
+      "prompt": "(rusty iron gibbet cage on a stone base with bones inside:1.6), gothic, dark iron",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "person, bird"
+    },
+    "crypt_macerie": {
+      "prompt": "(small low pile of broken grey stone rubble:1.7), flat, dust",
+      "stile": "oggetto",
+      "evita": "column, wall"
+    },
+    "crypt_ossa": {
+      "prompt": "(scattered old bones and one skull lying flat on the ground:1.7), ivory",
+      "stile": "oggetto",
+      "evita": "standing, full skeleton, flesh"
+    },
+    "crypt_candele": {
+      "prompt": "(cluster of melted candles lying on the ground, small warm flames:1.7), white wax puddle",
+      "stile": "oggetto",
+      "evita": "table, candelabra, hand"
+    },
+    "crypt_lapide": {
+      "prompt": "(flat engraved grave slab set into the floor with gothic cross, dark stone, cracked:1.7), seen from above",
+      "stile": "oggetto",
+      "evita": "standing tombstone, grass"
+    },
+    "crypt_grata": {
+      "prompt": "(square iron floor drain grate with dark below:1.7), rusty bars, seen from above",
+      "stile": "oggetto",
+      "evita": "wall, window"
+    },
+    "crypt_panca": {
+      "prompt": "(old dark oak church pew bench:1.7), long and low, carved gothic pointed ends, front three-quarter view",
+      "stile": "oggetto",
+      "larghezza": 1216,
+      "altezza": 768,
+      "evita": "cushion, red, modern"
+    },
+    "crypt_stendardo": {
+      "prompt": "(hanging torn crimson gothic banner with black skull emblem:1.7), wooden rod, tattered bottom, front view",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "flag pole, person"
+    },
+    "crypt_torcia": {
+      "prompt": "(iron wall sconce with unlit torch:1.7), gothic wrought iron, dark",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1024,
+      "evita": "flame, wall, person"
+    },
+    "swamp_fango": {
+      "prompt": "wet dark olive swamp mud with cracks, small stones, dead grass tufts and moss patches, sick green brown",
+      "asse": "xy"
+    },
+    "swamp_lastre": {
+      "prompt": "sunken gothic flagstones half buried in black mud and moss, broken old paving in a swamp, sick olive",
+      "asse": "xy"
+    },
+    "swamp_acqua": {
+      "prompt": "stagnant black swamp water with oily ripples, floating dead algae and duckweed specks, very dark teal",
+      "asse": "xy"
+    },
+    "swamp_cima": {
+      "prompt": "dense tangled peat, roots and dark moss seen from above, swamp bank, dark green brown",
+      "asse": "xy"
+    },
+    "swamp_muro1": {
+      "prompt": "ruined drowned gothic wall of mossy dark stone with pointed arches, hanging dead roots and vines, swamp, sick olive",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "swamp_muro2": {
+      "prompt": "dark earth bank with thick twisted roots and old stone blocks of a sunken chapel, moss, glowing small teal mushrooms",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "swamp_muro3": {
+      "prompt": "rotten wooden palisade and mossy gothic stone wall with a pointed window, hanging vines, swamp",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "swamp_lesena": {
+      "prompt": "(single mossy broken gothic stone buttress wrapped in dead roots:1.6), narrow, front view",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "tree crown, wide"
+    },
+    "swamp_porta": {
+      "prompt": "(ruined gothic stone archway doorway wrapped in roots and moss:1.6), rotten wooden portcullis, front view",
+      "stile": "oggetto",
+      "evita": "person"
+    },
+    "swamp_albero": {
+      "prompt": "(gnarled dead swamp tree:1.6) with twisted bare branches and big exposed roots, black bark, shelf fungus glowing teal",
+      "stile": "oggetto",
+      "larghezza": 832,
+      "altezza": 1216,
+      "evita": "leaves, green crown, face"
+    },
+    "swamp_colonna": {
+      "prompt": "(drowned gothic stone column:1.6) covered with moss and vines, cracked, sinking in mud, sick olive stone",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "statue, greek, clean"
+    },
+    "swamp_fungo": {
+      "prompt": "(giant glowing swamp mushrooms cluster:1.6), pale teal caps, thick stems, spores, dark base",
+      "stile": "oggetto",
+      "larghezza": 832,
+      "altezza": 1216,
+      "evita": "red, cartoon face"
+    },
+    "swamp_statua": {
+      "prompt": "(half sunken mossy stone angel statue:1.6), broken wing, vines, weathered, gothic, sick olive stone",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "human skin, colorful"
+    },
+    "swamp_ceppo": {
+      "prompt": "(rotten hollow tree stump with shelf fungus and roots:1.6), black wood, moss",
+      "stile": "oggetto",
+      "evita": "face, leaves"
+    },
+    "swamp_canne": {
+      "prompt": "(small clump of dead reeds and cattails:1.7), dry olive stalks, no ground",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1024,
+      "evita": "flowers, tree"
+    },
+    "swamp_funghetti": {
+      "prompt": "(small group of tiny glowing teal mushrooms:1.7), low, pale caps",
+      "stile": "oggetto",
+      "evita": "red, face"
+    },
+    "swamp_ninfee": {
+      "prompt": "(few dark lily pads floating flat, seen from above:1.7), sick green, one pale bud",
+      "stile": "oggetto",
+      "evita": "pink, big flower, pond"
+    },
+    "swamp_tronco": {
+      "prompt": "(fallen rotten log lying flat with moss and small mushrooms:1.7), black wood, horizontal",
+      "stile": "oggetto",
+      "larghezza": 1216,
+      "altezza": 640,
+      "evita": "face, standing"
+    },
+    "swamp_teschi": {
+      "prompt": "(old bones and a skull half sunk in mud, flat on the ground:1.7), stained olive",
+      "stile": "oggetto",
+      "evita": "standing skeleton, flesh"
+    },
+    "swamp_ponte": {
+      "prompt": "rotten dark wooden planks of a swamp boardwalk running horizontally, nails, moss in the gaps",
+      "asse": "xy"
+    },
+    "swamp_radici": {
+      "prompt": "(thick tangled knot of dead black roots:1.7) with moss and pale small mushrooms, low and wide",
+      "stile": "oggetto",
+      "evita": "tree crown, leaves, face"
+    },
+    "swamp_liane": {
+      "prompt": "(hanging dead vines and roots dripping from above:1.7), dark green brown, front view, thin, no ground",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "tree, leaves, flowers"
+    },
+    "forge_basalto": {
+      "prompt": "black basalt flagstones of a ruined gothic foundry floor covered in ash and soot, cracks, charcoal",
+      "asse": "xy"
+    },
+    "forge_basalto2": {
+      "prompt": "cracked dark stone foundry floor with iron plates set between slabs, rivets, soot, rust stains",
+      "asse": "xy"
+    },
+    "forge_lava": {
+      "prompt": "molten lava river surface, bright orange and yellow flowing magma with dark crust plates and glowing cracks",
+      "asse": "xy"
+    },
+    "forge_cima": {
+      "prompt": "soot black heavy masonry and iron bands seen from above, charcoal and rust",
+      "asse": "xy"
+    },
+    "forge_ponte": {
+      "prompt": "heavy rusty iron grate walkway, riveted steel bars running horizontally, dark gaps, soot",
+      "asse": "xy"
+    },
+    "forge_muro1": {
+      "prompt": "gothic foundry wall of black basalt blocks and riveted iron plates, pointed arch furnace mouths glowing orange, soot",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "forge_muro2": {
+      "prompt": "ruined forge wall with huge rusty pipes, gothic pointed iron frames, chains, ember glow, black stone",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "forge_muro3": {
+      "prompt": "black stone wall with pointed arch windows glowing amber and iron buttresses, gothic foundry cathedral",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "forge_lesena": {
+      "prompt": "(single tall riveted iron and basalt gothic buttress:1.6), narrow, pointed top, soot, front view",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "wide, statue"
+    },
+    "forge_porta": {
+      "prompt": "(gothic pointed archway of black iron and basalt with heavy riveted portcullis:1.6), ember glow, front view",
+      "stile": "oggetto",
+      "evita": "person, wood"
+    },
+    "forge_colonna": {
+      "prompt": "(tall gothic basalt column bound with riveted iron bands:1.6), glowing ember cracks, soot, square base",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "statue, greek"
+    },
+    "forge_fornace": {
+      "prompt": "(small round gothic iron furnace with glowing orange mouth and chimney:1.6), rivets, soot, coal at the base",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "person, modern"
+    },
+    "forge_incudine": {
+      "prompt": "(heavy black iron anvil on a tree stump block:1.7), hammer resting on it, soot",
+      "stile": "oggetto",
+      "evita": "person, demon, face"
+    },
+    "forge_crogiolo": {
+      "prompt": "(large iron crucible on a tripod full of glowing molten metal:1.6), rivets, soot",
+      "stile": "oggetto",
+      "evita": "person, face"
+    },
+    "forge_catene": {
+      "prompt": "(massive iron hook and chains hanging from a riveted gantry post:1.6), rust, gothic",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "person, crane modern"
+    },
+    "forge_ingranaggio": {
+      "prompt": "(huge broken rusty iron gear half fallen on rubble:1.6), rivets, soot",
+      "stile": "oggetto",
+      "evita": "clock, modern, person"
+    },
+    "forge_carbone": {
+      "prompt": "(low pile of black coal and glowing embers:1.7), flat",
+      "stile": "oggetto",
+      "evita": "volcano, tall"
+    },
+    "forge_scorie": {
+      "prompt": "(small patch of cooled black slag with a thin glowing orange crack, flat on the ground, seen from above:1.7)",
+      "stile": "oggetto",
+      "evita": "tall, volcano, rock pile"
+    },
+    "forge_braciere": {
+      "prompt": "(gothic wrought iron brazier on three legs with burning coals:1.7), black iron, amber glow",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1024,
+      "evita": "person, tall flames"
+    },
+    "forge_catena": {
+      "prompt": "(rusty heavy iron chain lying coiled flat on the ground:1.7), seen from above",
+      "stile": "oggetto",
+      "evita": "hanging, person"
+    },
+    "forge_cassa": {
+      "prompt": "(heavy charred oak crate bound with riveted iron bands:1.7), front three-quarter view, soot",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1024,
+      "evita": "treasure, gold, open lid"
+    },
+    "forge_tubo": {
+      "prompt": "(vertical riveted rusty iron pipe with a valve wheel:1.7), front view, narrow",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "person, modern"
+    },
+    "glacier_ghiaccio": {
+      "prompt": "ancient blue glacier ice floor with deep cracks and trapped bubbles, frozen flagstones visible under the ice, dark blue",
+      "asse": "xy"
+    },
+    "glacier_lastre": {
+      "prompt": "frozen gothic paving stones covered in frost and thin ice, cracked blue grey slabs, snow in the gaps",
+      "asse": "xy"
+    },
+    "glacier_neve": {
+      "prompt": "packed snow with wind ridges and frost, pale blue white, soft bumps",
+      "asse": "xy"
+    },
+    "glacier_baratro": {
+      "prompt": "deep dark blue ice crevasse seen from above, jagged dark ice far below, almost black blue",
+      "asse": "xy"
+    },
+    "glacier_ponte": {
+      "prompt": "frozen wooden planks covered with thick ice and frost running horizontally, pale blue, icicles",
+      "asse": "xy"
+    },
+    "glacier_muro1": {
+      "prompt": "frozen gothic cathedral wall covered in thick blue ice, pointed arches visible under the ice, hanging icicles, frost",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "glacier_muro2": {
+      "prompt": "glacier ice wall with huge blue ice blocks and dark rock, frozen pointed lancet windows, snow on ledges",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "glacier_muro3": {
+      "prompt": "dark stone gothic wall encased in frost with blue crystal clusters growing from it and icicles",
+      "stile": "parete",
+      "asse": "x",
+      "larghezza": 1216,
+      "altezza": 640
+    },
+    "glacier_lesena": {
+      "prompt": "(single tall frozen gothic stone buttress covered in ice and icicles:1.6), narrow, front view",
+      "stile": "oggetto",
+      "larghezza": 640,
+      "altezza": 1216,
+      "evita": "wide, statue"
+    },
+    "glacier_porta": {
+      "prompt": "(frozen gothic pointed archway of ice covered stone with icy portcullis:1.6), icicles, front view",
+      "stile": "oggetto",
+      "evita": "person, wood"
+    },
+    "glacier_colonna": {
+      "prompt": "(tall gothic stone column encased in clear blue ice:1.6), icicles, frost, square base",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "statue, greek, face"
+    },
+    "glacier_cristallo": {
+      "prompt": "(large cluster of tall jagged blue ice crystals:1.6) glowing softly, dark rock base",
+      "stile": "oggetto",
+      "larghezza": 832,
+      "altezza": 1216,
+      "evita": "purple, snowflake, face"
+    },
+    "glacier_statua": {
+      "prompt": "(frozen knight statue encased in blue ice on a plinth:1.6), gothic armor, frost, icicles",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "colorful, human skin"
+    },
+    "glacier_stalagmite": {
+      "prompt": "(big jagged ice stalagmite with dark rock core:1.6), frost, snow at the base",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1216,
+      "evita": "face, snowman"
+    },
+    "glacier_cumulo": {
+      "prompt": "(low wide snow drift mound:1.7), pale blue white, soft shadow shapes, seen from above at an angle",
+      "stile": "oggetto",
+      "larghezza": 1216,
+      "altezza": 768,
+      "evita": "igloo, snowman, house"
+    },
+    "glacier_schegge": {
+      "prompt": "(small low cluster of sharp ice shards:1.7), pale blue, glinting",
+      "stile": "oggetto",
+      "evita": "tall, face"
+    },
+    "glacier_crepa": {
+      "prompt": "(jagged dark crack in blue ice, flat decal seen from above:1.7), thin zigzag",
+      "stile": "oggetto",
+      "evita": "wall, tall"
+    },
+    "glacier_scheletro": {
+      "prompt": "(frozen old bones half buried in snow, flat on the ground:1.7), frost",
+      "stile": "oggetto",
+      "evita": "standing skeleton, flesh"
+    },
+    "glacier_blocco": {
+      "prompt": "(block of ancient blue ice with jagged top:1.7), frost and cracks, heavy",
+      "stile": "oggetto",
+      "larghezza": 768,
+      "altezza": 1024,
+      "evita": "perfect cube, face"
+    },
+    "glacier_ghiaccioli": {
+      "prompt": "(row of long hanging icicles:1.7), pale blue, front view, no wall",
+      "stile": "oggetto",
+      "larghezza": 1216,
+      "altezza": 640,
+      "evita": "face, snowman"
+    },
+    "crypt_ponte": {
+      "prompt": "old dark oak planks of a heavy bridge running horizontally, iron nails and straps, deep wood grain, worn",
+      "asse": "xy"
+    },
+    "crypt_portale": {
+      "prompt": "(wide gothic pointed stone archway:1.7) carved dark slate, empty dark opening in the middle, front view, massive jambs, keystone with a small skull",
+      "stile": "oggetto",
+      "larghezza": 1408,
+      "altezza": 1152,
+      "evita": "door, portcullis, bars, person, narrow"
+    },
+    "swamp_portale": {
+      "prompt": "(wide ruined gothic pointed stone archway:1.7) wrapped in black roots and moss, empty dark opening in the middle, front view",
+      "stile": "oggetto",
+      "larghezza": 1408,
+      "altezza": 1152,
+      "evita": "door, portcullis, bars, person, narrow"
+    },
+    "forge_portale": {
+      "prompt": "(wide gothic pointed archway of black iron and basalt:1.7), riveted jambs, ember glow on the edges, empty dark opening in the middle, front view",
+      "stile": "oggetto",
+      "larghezza": 1408,
+      "altezza": 1152,
+      "evita": "door, portcullis, bars, person, narrow"
+    },
+    "glacier_portale": {
+      "prompt": "(wide frozen gothic pointed archway of ice covered stone:1.7), icicles on the arch, empty dark opening in the middle, front view",
+      "stile": "oggetto",
+      "larghezza": 1408,
+      "altezza": 1152,
+      "evita": "door, portcullis, bars, person, narrow"
+    },
+    "crypt_varco": {
+      "prompt": "(one very wide low gothic pointed arch gateway:1.8), opening much wider than tall, thick stone jambs on both sides, a single solid arch and nothing else, front view, isolated, carved dark slate blocks, small skull on the keystone",
+      "stile": "oggetto",
+      "larghezza": 1536,
+      "altezza": 1024,
+      "evita": "door, portcullis, bars, person, narrow, wall behind, side wings, towers, several arches"
+    },
+    "swamp_varco": {
+      "prompt": "(one very wide low gothic pointed arch gateway:1.8), opening much wider than tall, thick stone jambs on both sides, a single solid arch and nothing else, front view, isolated, mossy dark stone blocks wrapped by thin black roots and hanging moss",
+      "stile": "oggetto",
+      "larghezza": 1536,
+      "altezza": 1024,
+      "evita": "door, portcullis, bars, person, narrow, wall behind, side wings, towers, several arches"
+    },
+    "forge_varco": {
+      "prompt": "(one very wide low gothic pointed arch gateway:1.8), opening much wider than tall, thick stone jambs on both sides, a single solid arch and nothing else, front view, isolated, black basalt blocks bound with riveted iron bands, ember glow in the cracks",
+      "stile": "oggetto",
+      "larghezza": 1536,
+      "altezza": 1024,
+      "evita": "door, portcullis, bars, person, narrow, wall behind, side wings, towers, several arches"
+    },
+    "glacier_varco": {
+      "prompt": "(one very wide low gothic pointed arch gateway:1.8), opening much wider than tall, thick stone jambs on both sides, a single solid arch and nothing else, front view, isolated, frozen grey stone blocks covered with blue ice and short icicles",
+      "stile": "oggetto",
+      "larghezza": 1536,
+      "altezza": 1024,
+      "evita": "door, portcullis, bars, person, narrow, wall behind, side wings, towers, several arches"
+    }
+  }
+}

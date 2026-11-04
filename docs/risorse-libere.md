@@ -244,3 +244,7 @@ Il proprietario ha richiesto esplicitamente VFX delle skill e poi icone oggetto 
 ## Eccezione proposta: boss e luogotenenti generati in locale (3 novembre 2026)
 
 Su richiesta dell'utente, con un generatore sul suo PC: SDXL 1.0 base ([OpenRAIL++-M](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)) e [Pixel Art XL](https://huggingface.co/nerijs/pixel-art-xl) (OpenRAIL-M). Non e' una risorsa di terzi con un autore, ed e' grafica generata con l'IA: la regola del progetto la escludeva, e l'eccezione del 1 novembre copre solo effetti e icone. **Decide il proprietario.** I fogli di terzi non sono stati tolti: restano nel gioco con `?boss=classici`, e togliere i nuovi vuol dire una riga in `boss-sheets.ts`. Dettagli in `src/assets/art/boss-ia/LEGGIMI.md`. Solo licenze dei modelli lette sulla loro pagina: la tutela delle immagini generate non e' stata valutata oltre.
+
+## Eccezione proposta: mob e mappe generati in locale (4 novembre 2026)
+
+Stesso generatore, stesse licenze e stessa decisione aperta dei boss qui sopra: **decide il proprietario.** Copre gli 88 mob (v0.11.05) e i fogli delle mappe dei quattro dungeon. Il nodo `tools/arte/comfyui/tile_circolare.py` e' scritto per il progetto, non scaricato. Mob a mano e tile di prima non sono stati tolti: restano con `?mob=classici` e `?tile=classici`. Inventario e candidati scelti in [produzione-grafica.md](produzione-grafica.md).

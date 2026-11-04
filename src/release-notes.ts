@@ -159,6 +159,20 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.5', date: '2026-11-04',
+    changes: [
+      'Tutti gli 88 mob ridisegnati con il generatore locale (SDXL 1.0 e Pixel Art XL), con quattro fotogrammi di animazione. Grafica generata con l\'IA: proposta da confermare con il proprietario.',
+      'I mob di profilo si voltano secondo il verso di marcia, anche quando muoiono; chi sta fermo non cammina sul posto.',
+      'Mappe dei quattro dungeon rifatte a un pixel per unità di mondo, come personaggi e mob: facciate gotiche sopra il muro, portali, colonne e statue, arredi a terra, ponti, ringhiere e bordi dei pozzi, diversi per Cripta, Palude, Fucina e Ghiacciaio.',
+      'Chi passa dietro una colonna finisce dietro alla sua cima. Soglie e aperture delle porte sono disegnate con luce a gradini: la zona di gioco non cambia.',
+      'Caposquadra e Regina hanno un disegno nuovo; tutti i fogli di boss e luogotenenti sono riscritti con una riduzione che tiene volti e arti, e le armi restano intere.',
+      'Il Bestiario mostra gli sprite nuovi a pixel interi. Con una finestra grande il pavimento non si ridisegna più a ogni fotogramma.',
+      'Per confrontare: ?mob=classici e ?tile=classici riportano mob e mappe di prima. Il Rifugio non cambia.',
+      'Solo aspetto: nessuna variazione a vita, danni, velocità, collisioni, raggi di colpo, salvataggi o protocollo cooperativo.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.4', date: '2026-11-04',
     changes: [
       'Boss e luogotenenti ridisegnati con un generatore locale (SDXL 1.0 e Pixel Art XL): sedici figure nuove. Grafica generata con l\'IA: proposta da confermare con il proprietario.',

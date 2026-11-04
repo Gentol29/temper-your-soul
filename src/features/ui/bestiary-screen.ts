@@ -93,8 +93,9 @@ function minionCard(minion: MinionDefinition, kills: number): HTMLElement {
 /** Miniatura del servitore (sagoma scura se la pagina e' chiusa). */
 function thumbnail(visual: string, open: boolean): HTMLCanvasElement {
   const art = minionArt(visual);
-  const frame = art.frames[0];
-  const scale = 3;
+  const frame = art.frames[0]!;
+  // Gli sprite del generatore sono a un pixel per unita' e nella scheda sarebbero minuscoli: a due, a pixel interi.
+  const scale = art.scale === 1 ? 2 : art.scale;
   const canvas = document.createElement('canvas');
   canvas.className = 'bestiary-thumb';
   canvas.width = Math.max(...frame.map((row) => row.length)) * scale;

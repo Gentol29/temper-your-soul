@@ -5,7 +5,9 @@ import type { ArenaThemeId } from '../arena/arena';
 import { ART_CREDITS } from './art-credits';
 import { ARENA_THEMES } from './themes';
 import { TILE_ATLASES, type TileMaterial } from './themes/tile-atlas';
-import { pickVariant, TILE_CREDITS, TILE_SIZE, tileColors, tileVariants } from './themes/tiles';
+import { SCENERY_ATLASES } from './themes/scenery-atlas';
+import { TILE_ATLASES_IA } from './themes/tile-atlas-ia';
+import { pickVariant, TILE_CREDITS, TILE_SCALE, TILE_SIZE, tileAt, tileColors, tileGrid, tileVariants } from './themes/tiles';
 import { drawSolidBlock } from './themes/wall';
 
 /** Il minimo di `node:fs` che serve ai test (il progetto non include i tipi di Node e non li aggiunge per questo). */
@@ -29,45 +31,53 @@ function pngSize(bytes: Uint8Array): { width: number; height: number } {
 
 const THEMES = Object.keys(TILE_ATLASES) as ArenaThemeId[];
 /** I materiali su cui passano i colpi: pavimento, pozzi e ponti. */
-const GROUND: readonly TileMaterial[] = ['floor', 'floorWorn', 'floorDark', 'chasm', 'bridgeEW', 'bridgeNS'];
+const GROUND: readonly TileMaterial[] = ['floor', 'floorWorn', 'floorDark', 'chasm', 'chasmBed', 'water', 'carpet', 'bridgeEW', 'bridgeNS'];
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('tile dei dungeon (fase 6)', () => {
   it('i fogli esistono, sono leggeri e misurano quanto dice la geometria', async () => {
     const fs = await fileSystem();
-    let total = 0;
-    for (const theme of THEMES) {
-      const atlas = TILE_ATLASES[theme];
-      const url = new URL(atlas.url);
-      expect(url.protocol, theme).toBe('file:');
-      expect(fs.existsSync(url), theme).toBe(true);
-      const bytes = fs.readFileSync(url);
-      total += bytes.length;
-      expect(pngSize(bytes), theme).toEqual({ width: atlas.width, height: atlas.height });
+    // I fogli a un pixel per unita' hanno quattro volte i pixel di quelli classici.
+    for (const [atlases, limit] of [[TILE_ATLASES, 40 * 1024], [TILE_ATLASES_IA, 600 * 1024]] as const) {
+      let total = 0;
+      for (const theme of THEMES) {
+        const atlas = atlases[theme];
+        const url = new URL(atlas.url);
+        expect(url.protocol, theme).toBe('file:');
+        expect(fs.existsSync(url), theme).toBe(true);
+        const bytes = fs.readFileSync(url);
+        total += bytes.length;
+        expect(pngSize(bytes), theme).toEqual({ width: atlas.width, height: atlas.height });
+      }
+      expect(total).toBeLessThan(limit);
     }
-    expect(total).toBeLessThan(40 * 1024);
   });
 
   it('ogni tile sta dentro il suo foglio e nessuno si sovrappone a un altro', () => {
-    for (const theme of THEMES) {
-      const atlas = TILE_ATLASES[theme];
-      const rects = Object.values(atlas.tiles).flat();
-      for (const r of rects) {
-        expect(r.x >= 0 && r.y >= 0 && r.x + r.w <= atlas.width && r.y + r.h <= atlas.height, `${theme} ${JSON.stringify(r)}`).toBe(true);
-      }
-      for (let i = 0; i < rects.length; i++) {
-        for (let j = i + 1; j < rects.length; j++) {
-          const a = rects[i]!;
-          const b = rects[j]!;
-          const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-          expect(overlap, `${theme}: ${JSON.stringify(a)} e ${JSON.stringify(b)}`).toBe(false);
+    for (const atlases of [TILE_ATLASES, TILE_ATLASES_IA]) {
+      for (const theme of THEMES) {
+        const atlas = atlases[theme];
+        const rects = Object.values(atlas.tiles).flat();
+        for (const grid of Object.values(atlas.grids ?? {})) {
+          rects.push({ x: grid.x, y: grid.y, w: grid.cells * grid.size, h: grid.cells * grid.size });
+        }
+        for (const r of rects) {
+          expect(r.x >= 0 && r.y >= 0 && r.x + r.w <= atlas.width && r.y + r.h <= atlas.height, `${theme} ${JSON.stringify(r)}`).toBe(true);
+        }
+        for (let i = 0; i < rects.length; i++) {
+          for (let j = i + 1; j < rects.length; j++) {
+            const a = rects[i]!;
+            const b = rects[j]!;
+            const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+            expect(overlap, `${theme}: ${JSON.stringify(a)} e ${JSON.stringify(b)}`).toBe(false);
+          }
         }
       }
     }
   });
 
-  it('ogni tema ha pozzo (3 x 3), ponti nei due versi, un riparo e la cima dei massicci; i tile di terra sono da 16 pixel', () => {
+  it('ogni tema ha pozzo (3 x 3), ponti nei due versi, un riparo e la cima dei massicci; i tile di terra coprono 32 unita\'', () => {
     for (const theme of THEMES) {
       expect(tileVariants(theme, 'chasm').length, theme).toBe(9);
       expect(tileVariants(theme, 'bridgeEW').length, theme).toBeGreaterThan(0);
@@ -75,7 +85,7 @@ describe('tile dei dungeon (fase 6)', () => {
       expect(tileVariants(theme, 'cover').length, theme).toBeGreaterThan(0);
       expect(tileVariants(theme, 'cap').length, theme).toBeGreaterThan(0);
       for (const material of [...GROUND, 'cap', 'wall'] as const) {
-        for (const tile of tileVariants(theme, material)) expect([tile.w, tile.h], `${theme} ${material}`).toEqual([16, 16]);
+        for (const tile of tileVariants(theme, material)) expect([tile.w * TILE_SCALE, tile.h * TILE_SCALE], `${theme} ${material}`).toEqual([TILE_SIZE, TILE_SIZE]);
       }
     }
     expect(TILE_SIZE).toBe(32);
@@ -87,6 +97,50 @@ describe('tile dei dungeon (fase 6)', () => {
       for (const material of GROUND) {
         for (const color of tileColors(theme, material)) expect(ground.has(color), `${theme} ${material} ${color}`).toBe(true);
       }
+    }
+  });
+
+  it('i fogli generati hanno gli stessi materiali dei classici e le rampe di terra comprese', () => {
+    for (const theme of THEMES) {
+      const classic = TILE_ATLASES[theme];
+      const generated = TILE_ATLASES_IA[theme];
+      for (const material of Object.keys(classic.tiles) as TileMaterial[]) {
+        expect(generated.tiles[material] ?? generated.grids?.[material], `${theme} ${material}`).toBeDefined();
+        // Si possono aggiungere accenti, ma i gradini della rampa restano quelli confrontati con i colpi nemici.
+        if (!GROUND.includes(material)) continue;
+        for (const color of classic.colors[material] ?? []) expect(generated.colors[material], `${theme} ${material}`).toContain(color);
+      }
+      expect(generated.tiles.chasm!.length, theme).toBe(9);
+    }
+  });
+
+  it('una superficie che ripete sceglie la cella dal punto del mondo, anche fuori dalla stanza', () => {
+    const grid = tileGrid('crypt', 'floor')!;
+    const span = grid.cells * grid.size;
+    expect(tileAt('crypt', 'floor', 0, 0, 0.5)).toEqual({ x: grid.x, y: grid.y, w: grid.size, h: grid.size });
+    expect(tileAt('crypt', 'floor', span, span, 0.1)).toEqual(tileAt('crypt', 'floor', 0, 0, 0.9));
+    expect(tileAt('crypt', 'floor', -1, -1, 0)).toEqual(tileAt('crypt', 'floor', span - 1, span - 1, 0));
+    expect(tileAt('crypt', 'floor', grid.size + 3, 0, 0)!.x).toBe(grid.x + grid.size);
+  });
+
+  it('le scenografie stanno nei loro fogli e ogni tema ha facciate larghe uguali, lesene, pilastri di ogni misura e arredi', async () => {
+    const fs = await fileSystem();
+    for (const theme of THEMES) {
+      const atlas = SCENERY_ATLASES[theme];
+      const size = pngSize(fs.readFileSync(new URL(atlas.url)));
+      for (const list of Object.values(atlas.pieces)) {
+        for (const piece of list) {
+          expect(piece.x >= 0 && piece.y >= 0 && piece.x + piece.w <= size.width && piece.y + piece.h <= size.height, `${theme} ${JSON.stringify(piece)}`).toBe(true);
+        }
+      }
+      for (const role of ['facade', 'pilaster', 'pillarS', 'pillarM', 'pillarL', 'scatter', 'gate']) {
+        expect(atlas.pieces[role]?.length ?? 0, `${theme} ${role}`).toBeGreaterThan(0);
+      }
+      const widths = new Set(atlas.pieces.facade!.map((piece) => piece.w));
+      expect(widths.size, theme).toBe(1);
+      const gate = atlas.pieces.gate![0]!;
+      expect(gate.hole, theme).toBeDefined();
+      expect(gate.hole!.w, theme).toBeGreaterThan(40);
     }
   });
 

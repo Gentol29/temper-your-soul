@@ -27,6 +27,7 @@ import { rollLoot } from './features/loot/roll-loot';
 import { Match, type PlayerIntent } from './features/match/match';
 import { BOSS_SHEETS } from './features/presentation/boss-art';
 import { preloadSheets } from './features/presentation/boss-art/sheet-images';
+import { preloadScenery } from './features/presentation/themes/scenery';
 import { preloadTiles } from './features/presentation/themes/tiles';
 import { preloadFonts } from './features/presentation/fonts';
 import { Effects } from './features/presentation/effects';
@@ -211,6 +212,7 @@ export class Game {
     // I fogli dei boss (circa 110 KB) si caricano subito: il boss entra gia' con la sua grafica.
     preloadSheets(Object.values(BOSS_SHEETS).map((sheet) => sheet.layout.url));
     preloadTiles();
+    preloadScenery();
     preloadFonts();
 
     const storage = browserStorage();
