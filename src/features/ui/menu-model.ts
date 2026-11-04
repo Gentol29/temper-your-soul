@@ -1,13 +1,12 @@
 import type { MenuSceneFocus } from '../presentation/menu-scene';
-import { NETWORK } from '../network/protocol';
 
 /** I comandi del menu principale. */
-export type MenuActionId = 'continue' | 'new_character' | 'settings' | 'dungeons' | 'characters' | 'inventory' | 'storage' | 'forge' | 'merchant' | 'coop';
+export type MenuActionId = 'continue' | 'new_character' | 'settings' | 'characters';
 
 export interface MenuEntry {
   readonly id: MenuActionId;
   readonly label: string;
-  /** Tooltip breve: dice cosa fa il comando. */
+  /** Descrizione accessibile breve: dice cosa fa il comando. */
   readonly hint: string;
   /** Il punto del rifugio che si illumina quando il comando e' selezionato. */
   readonly scene: MenuSceneFocus | null;
@@ -25,30 +24,15 @@ export interface MenuContext {
 }
 
 const NEEDS_CHARACTER = 'Crea prima un personaggio.';
-const NEEDS_COMPLETION = 'Completa prima il tuo personaggio.';
 
 /** Le tre azioni principali. Senza personaggi resta disponibile solo cio' che serve a crearne uno. */
 export function primaryEntries(context: MenuContext): readonly MenuEntry[] {
   const name = context.characterName;
   return [
     context.incomplete === true ? { id: 'continue', label: 'Completa personaggio', hint: 'Scegli nome, sesso e classe: oggetti e progressi restano.', scene: 'hero', unavailable: null } :
-    { id: 'continue', label: 'Continua', hint: name === null ? 'Entra nel rifugio.' : `Entra nel rifugio con ${name}.`, scene: 'hero', unavailable: name === null ? NEEDS_CHARACTER : null },
+    { id: 'continue', label: 'Entra', hint: name === null ? 'Entra nel rifugio.' : `Entra nel rifugio con ${name}.`, scene: 'hero', unavailable: name === null ? NEEDS_CHARACTER : null },
     { id: 'new_character', label: 'Nuovo personaggio', hint: 'Scegli nome, sesso e classe.', scene: 'hero', unavailable: null },
     { id: 'settings', label: 'Impostazioni', hint: 'Audio, schermo e comandi.', scene: null, unavailable: null },
-  ];
-}
-
-/** Gli accessi secondari: portano nei luoghi del rifugio, nello stesso ordine del ciclo di gioco. */
-export function secondaryEntries(context: MenuContext): readonly MenuEntry[] {
-  const lock = context.characterName !== null ? null : context.incomplete === true ? NEEDS_COMPLETION : NEEDS_CHARACTER;
-  return [
-    { id: 'dungeons', label: 'Scegli dungeon', hint: 'Apri il portale e scegli dove scendere.', scene: 'portal', unavailable: lock },
-    { id: 'characters', label: 'Personaggi', hint: 'Scegli o crea un personaggio.', scene: 'hero', unavailable: null },
-    { id: 'inventory', label: 'Inventario', hint: 'Equipaggiamento e zaino del personaggio.', scene: 'hero', unavailable: lock },
-    { id: 'storage', label: 'Deposito', hint: 'Conserva gli oggetti fuori dallo zaino.', scene: 'storage', unavailable: lock },
-    { id: 'forge', label: 'Forgia', hint: 'Crea equipaggiamento Non comune con l’oro.', scene: 'forge', unavailable: lock },
-    { id: 'merchant', label: 'Mercante', hint: 'Compra equipaggiamento Comune di base.', scene: 'merchant', unavailable: lock },
-    { id: 'coop', label: 'Cooperativa', hint: `Gioca in gruppo, fino a ${NETWORK.capacity} giocatori.`, scene: 'gate', unavailable: lock === null ? null : context.inviteWaiting ? 'Crea un personaggio per accettare l’invito.' : lock },
   ];
 }
 

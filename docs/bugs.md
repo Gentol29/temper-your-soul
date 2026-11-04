@@ -1,5 +1,31 @@
 # Bug e problemi rilevati
 
+## Menu principale: tooltip permanente sul comando selezionato
+
+Segnalazione dell’utente del 4 novembre 2026. Il riquadro descrittivo riproponeva sempre il testo del comando con il focus, quindi restava visibile anche spostando il mouse. Su richiesta esplicita rimosso il tooltip visuale dal menu principale, insieme al nodo HTML e ai suoi stili. Conservate le descrizioni accessibili dei pulsanti, la navigazione da tastiera, l’evidenziazione della scena e il messaggio quando si attiva un comando non disponibile. I tooltip delle strutture nell’HUB restano separati.
+
+## Forgia: tooltip disponibile soltanto in basso a destra
+
+Segnalazione dell’utente del 4 novembre 2026, dopo la revisione delle collisioni. Il raggio d’interazione era centrato nel punto (735, 305), vicino al lato destro dell’artwork: arrivando dal centro/sinistra della piazza il giocatore era davanti all’edificio ma ancora lontano da quel punto. L’interazione ora usa il punto più vicino sul fronte (652, 300) → (758, 345), mantenendo il raggio di 62 unità. Tooltip, tasto E e priorità rispetto ai visitatori usano la stessa distanza; il tooltip segue il tratto vicino al giocatore. Collisioni e punto di nascita conservati. Nomi dell’HUB ridotti di 2 px (24 → 22 px a scala 3×) e tooltip 16 → 14 px, su richiesta esplicita. Test su accessi da sinistra, centro e destra e assenza di attivazione lontano dagli edifici.
+
+Nella stessa segnalazione l’utente riferisce che le altre collisioni sembrano a posto nella sua prova. Questa conferma riguarda la geometria già provata, non il nuovo accesso della Forgia né la cooperativa.
+
+## HUB illustrato: scritte sfocate in movimento e passaggi sotto edifici o sulle mura
+
+Segnalazione dell’utente del 4 novembre 2026. Rilevati nel codice: centro di collisione 14 px sopra l’appoggio disegnato dei piedi, impronte rettangolari troppo corte per i PNG prospettici, perimetro più esterno del selciato e canvas stirato a dimensioni non multiple della scala. Nel controllo tecnico del muro est è stato rilevato anche un margine che lasciava sovrapporre i piedi al coronamento: limite rientrato di circa 8 unità lungo quel tratto.
+
+Correzione locale: posizione HUB ancorata ai piedi; collisioni circolari su sagome poligonali di edifici e pavimento, accessi sul selciato e partenze cooperative sicure. Edifici fuori dal cammino disegnati prima dei personaggi; cinta e varco restano occlusori in primo piano. Etichette DOM alla risoluzione dello schermo, senza trasformazioni, con coordinate allineate ai pixel fisici; canvas alla stessa scala sui due assi. Passo fisso e frequenze di rete invariati. Protocollo 17, salvataggi invariati. Test su 14 punti problematici, passaggi dei quattro servizi, diagonali, passi lunghi, client/server e proiezione. Dettagli delle verifiche in [hub-artwork.md](hub-artwork.md). La causa del ghosting percepito non è attribuita al refresh del monitor: la resa sullo schermo dell’utente resta da confermare.
+
+## Portale: immagini decentrate, testi piccoli e Duello oltre la card
+
+Segnalazione dell’utente con screenshot (4 novembre 2026), nella revisione locale v0.11.03. La griglia riservava 112 px al canvas mentre il canvas poteva restare alto 160 px; la larghezza minima implicita dei pulsanti allargava la colonna oltre la card. Correzione locale: colonna `minmax(0, 1fr)`, immagini centrate con rapporto 12:7 e altezza naturale, righe separate, pulsanti in due colonne contenute. Pericolo, GS e record da 8 a 10 px (+2 px richiesti); Bestiario/Discesa/Duello da 16 a 12 px. Eccezione tipografica circoscritta alle card, su richiesta del proprietario. `npm run verify` superato: 897 test, tipi e build. Controllo tecnico a 1878×922 (area del browser nello screenshot) e 1280×720: centratura delle quattro immagini, nessun contenuto fuori dai bordi, nessuna sovrapposizione con i nomi dei boss. Dettagli a 10 px e tre pulsanti a 12 px confermati dagli stili calcolati; conferma visiva dell’utente ancora necessaria.
+
+
+## Revisione del font pixel: nome, statistiche e Impostazioni su schermi stretti
+
+Rilevati durante i controlli tecnici della revisione locale della PR #14 (4 novembre 2026). Silkscreen è più largo dei font precedenti: il nome si sovrapponeva al segnaposto, le etichette delle statistiche alle barre; a 390 px le schede delle Impostazioni uscivano dal pannello e Interfaccia copriva il cursore del volume. Corretto con righe separate per nome e audio, colonne più larghe per le statistiche, schede su due colonne nelle finestre strette e righe adattabili nelle card dungeon. Verifica nel browser, non prova giocata; dettagli in [hub-artwork.md](hub-artwork.md).
+
+
 ## Hub: personaggi sopra muri e cattedrale, torce attraversabili
 
 Segnalazione dell'utente (2 novembre 2026). Case, cattedrale, muri e casse erano disegnati sul pavimento: chi passava dietro il muro di cinta sembrava camminare sui merli e veniva disegnato sopra guglie e tetti. Il tetto della cattedrale copriva la facciata della casa sopra e i gradini finivano sul tetto della casa sotto, con un vicolo largo esattamente quanto il personaggio. Le torce non erano solide e venivano disegnate sopra chiunque.

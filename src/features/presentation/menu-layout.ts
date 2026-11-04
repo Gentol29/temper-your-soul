@@ -21,6 +21,8 @@ export interface MenuModule {
   readonly height: number;
   /** La riga dello sprite che tocca terra: decide chi copre chi. */
   readonly base: number;
+  /** Cinta e portale d'ingresso possono coprire chi cammina dietro; gli edifici sono fuori dal selciato. */
+  readonly foreground?: boolean;
   readonly flames: readonly MenuFlame[];
   /** Il punto del rifugio che questo pezzo rappresenta per i comandi del menu. */
   readonly focus?: MenuSceneFocus;
@@ -39,17 +41,17 @@ export const MENU_MODULES: readonly MenuModule[] = [
     flames: [{ x: 100, y: 124, size: 5 }, { x: 108, y: 128, size: 5 }, { x: 116, y: 124, size: 4 }, { x: 83, y: 100, size: 2 }, { x: 25, y: 90, size: 2 }, { x: 31, y: 90, size: 2 }] },
   { id: 'merchant', url: url('merchant'), width: 172, height: 136, base: 130, focus: 'merchant',
     flames: [{ x: 76, y: 66, size: 2 }, { x: 112, y: 66, size: 3 }, { x: 72, y: 118, size: 3 }, { x: 56, y: 104, size: 2 }] },
-  { id: 'gate', url: url('gate'), width: 210, height: 149, base: 143, focus: 'gate',
+  { id: 'gate', url: url('gate'), width: 210, height: 149, base: 143, focus: 'gate', foreground: true,
     flames: [{ x: 49, y: 96, size: 5 }, { x: 159, y: 96, size: 5 }] },
-  { id: 'wall_west', url: url('wall_west'), width: 180, height: 112, base: 106, flames: [] },
-  { id: 'wall_east', url: url('wall_east'), width: 169, height: 182, base: 176, flames: [] },
+  { id: 'wall_west', url: url('wall_west'), width: 180, height: 112, base: 106, flames: [], foreground: true },
+  { id: 'wall_east', url: url('wall_east'), width: 169, height: 182, base: 176, flames: [], foreground: true },
 ];
 
 /** Dove sta l'angolo alto a sinistra di un pezzo, in pixel di mondo. */
 export type MenuLayout = Readonly<Record<MenuModuleId | 'hero', { readonly x: number; readonly y: number }>>;
 
 /** La disposizione della scena scelta dall'utente. Per impaginare diversamente bastano questi numeri. */
-const WIDE_LAYOUT: MenuLayout = {
+export const REFUGE_LAYOUT: MenuLayout = {
   cathedral: { x: 378, y: 93 },
   storage: { x: 216, y: 93 },
   forge: { x: 629, y: 135 },
@@ -57,18 +59,8 @@ const WIDE_LAYOUT: MenuLayout = {
   gate: { x: 408, y: 376 },
   wall_west: { x: 246, y: 425 },
   wall_east: { x: 604, y: 355 },
-  hero: { x: 700, y: 332 },
+  hero: { x: 512, y: 332 },
 };
 
-/** Telefono in verticale: gli edifici laterali si stringono attorno al portale, per restare inquadrati. */
-const TALL_LAYOUT: MenuLayout = {
-  ...WIDE_LAYOUT,
-  storage: { x: 320, y: 130 },
-  forge: { x: 540, y: 160 },
-  merchant: { x: 350, y: 305 },
-  hero: { x: 560, y: 332 },
-};
-
-export function menuLayoutFor(viewWidth: number, viewHeight: number): MenuLayout {
-  return viewWidth / viewHeight >= 0.85 ? WIDE_LAYOUT : TALL_LAYOUT;
-}
+/** Stessa geometria a ogni formato: su telefono cambia la vista, mai la posizione degli edifici. */
+export function menuLayoutFor(_viewWidth: number, _viewHeight: number): MenuLayout { return REFUGE_LAYOUT; }

@@ -25,10 +25,10 @@ import type { Loadout } from '../skills/skill-definition';
 import type { SnapshotFrame } from './snapshot-codec';
 
 /**
- * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 14: età dell'oro emesso,
+ * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 17: appoggio dei piedi e collisioni prospettiche sul selciato del rifugio. Età dell'oro emesso,
  * volo e assorbimento automatico; conserva classi, discesa e servitori compatti.
  */
-export const NETWORK = { protocolVersion: 14, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 17, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';

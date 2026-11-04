@@ -18,6 +18,9 @@ async function fileSystem(): Promise<FileSystem> {
 const FONTS = new URL('../../assets/fonts/', import.meta.url);
 const STYLE = new URL('../../style.css', import.meta.url);
 const MENU_STYLE = new URL('./forge-menu.css', import.meta.url);
+const CHARACTER_STYLE = new URL('./character-page.css', import.meta.url);
+const PIXEL_STYLE = new URL('./pixel-type.css', import.meta.url);
+const DUNGEON_STYLE = new URL('./dungeon-cards.css', import.meta.url);
 const text = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 
 describe('caratteri dell\'interfaccia (stile unico)', () => {
@@ -50,12 +53,12 @@ describe('caratteri dell\'interfaccia (stile unico)', () => {
     }
   });
 
-  it('nel CSS Silkscreen si usa solo a 8 o 16 pixel, le misure a cui resta nitido', async () => {
+  it('nel CSS Silkscreen si usa ai multipli di 8 pixel, le misure a cui resta nitido', async () => {
     const fs = await fileSystem();
-    const css = `${text(fs.readFileSync(STYLE))}\n${text(fs.readFileSync(MENU_STYLE))}`;
+    const css = [STYLE, MENU_STYLE, CHARACTER_STYLE, PIXEL_STYLE, DUNGEON_STYLE].map(path => text(fs.readFileSync(path))).join('\n');
     const uses = css.split('\n').filter((line) => /font:[^;]*var\(--relic-pixel\)/.test(line));
     expect(uses.length).toBeGreaterThan(5);
-    for (const line of uses) expect(line, line.trim()).toMatch(/font:\s*(?:bold\s+|700\s+)?(8|16)px[\s/]/);
+    for (const line of uses) expect(line, line.trim()).toMatch(/font:\s*(?:bold\s+|700\s+)?(8|16|24|32|40|48|56|64)px[\s/]/);
     // Anche le regole che piu' avanti cambiano solo la misura di quegli elementi (classi e id, anche negli schermi piccoli).
     const rules = css.split('}').map((rule) => rule.split('{')).filter((parts) => parts.length >= 2).map((parts) => ({ selector: parts[parts.length - 2]!.trim(), body: parts[parts.length - 1]! }));
     const lastToken = (selector: string): string | undefined => selector.split(',').map((part) => part.trim().split(/\s+/).pop()!).map((compound) => compound.match(/[.#][\w-]+$/)?.[0]).find((token) => token !== undefined);
@@ -65,22 +68,24 @@ describe('caratteri dell\'interfaccia (stile unico)', () => {
       const size = rule.body.match(/font-size:\s*(\d+)px/)?.[1];
       const token = lastToken(rule.selector);
       if (size === undefined || token === undefined || !pixel.has(token)) continue;
-      expect(['8', '16'], `${rule.selector}: ${size}px`).toContain(size);
+      // Eccezione richiesta dal proprietario: dettagli 8 → 10 px e comandi compatti a 12 px nelle sole card del portale.
+      if (['10', '12'].includes(size) && rule.selector.split(',').every(part => part.trim().startsWith('#screen-dungeons '))) continue;
+      expect(['8', '16', '24', '32', '40', '48', '56', '64'], `${rule.selector}: ${size}px`).toContain(size);
     }
   });
 
-  it('il CSS dichiara ogni file con @font-face e usa le tre variabili del tema invece di Georgia e monospace', async () => {
+  it('il CSS dichiara ogni file con @font-face e usa Silkscreen in tutte le tre variabili del tema', async () => {
     const fs = await fileSystem();
     const css = text(fs.readFileSync(STYLE));
     for (const credit of Object.values(FONT_CREDITS)) {
       expect(css, credit.title).toContain(`font-family: '${credit.title}'`);
       for (const file of credit.files) expect(css, file).toContain(`url('./assets/fonts/${file}')`);
     }
-    expect(css).toMatch(/--relic-title: 'Grenze Gotisch'/);
+    expect(css).toMatch(/--relic-title: 'Silkscreen'/);
     expect(css).toMatch(/--relic-pixel: 'Silkscreen'/);
-    // Georgia resta solo come riserva del titolo; monospace solo come riserva e nel pannello FPS (strumento di sviluppo).
-    expect(css.match(/Georgia/g)?.length).toBe(1);
-    const monospace = css.split('\n').filter((line) => /\bmonospace\b/.test(line) && !line.includes('--relic-pixel:') && !line.includes('performance-'));
+    // Monospace resta una riserva delle famiglie pixel e del pannello FPS di sviluppo.
+    expect(css).toMatch(/--relic-text: 'Silkscreen'/);
+    const monospace = css.split('\n').filter((line) => /\bmonospace\b/.test(line) && !/--relic-(pixel|text|title):/.test(line) && !line.includes('performance-'));
     expect(monospace).toEqual([]);
   });
 
@@ -106,10 +111,11 @@ describe('caratteri dell\'interfaccia (stile unico)', () => {
   });
 
   it('il canvas usa le stesse famiglie del CSS', () => {
-    expect(CANVAS_FONTS.title).toContain('Grenze Gotisch');
+    expect(CANVAS_FONTS.title).toContain('Silkscreen');
     expect(CANVAS_FONTS.pixel).toContain('Silkscreen');
     expect(canvasFont(8, 'pixel', 'bold')).toBe("bold 8px 'Silkscreen', monospace");
-    expect(canvasFont(9, 'text')).toBe('9px system-ui, sans-serif');
+    expect(canvasFont(9, 'text')).toBe("8px 'Silkscreen', monospace");
+    expect(canvasFont(27, 'title')).toBe("24px 'Silkscreen', monospace");
     // Silkscreen solo ai multipli di 8.
     expect(canvasFont(11, 'pixel')).toBe("8px 'Silkscreen', monospace");
     expect(canvasFont(13, 'pixel', 'bold')).toBe("bold 16px 'Silkscreen', monospace");

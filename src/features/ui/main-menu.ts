@@ -6,7 +6,7 @@ import { renderPixelIcon } from './pixel-icon';
 import { FORGE_EMBLEM, MENU_ICONS } from '../presentation/menu-icons';
 import { GOLD_COIN_SPRITE } from '../presentation/currency-sprites';
 import type { MenuSceneFocus } from '../presentation/menu-scene';
-import { isNavigationKey, moveSelection, primaryEntries, secondaryEntries, type MenuActionId, type MenuContext, type MenuEntry } from './menu-model';
+import { isNavigationKey, moveSelection, primaryEntries, type MenuActionId, type MenuContext, type MenuEntry } from './menu-model';
 
 /** I dati del personaggio mostrati nel riquadro del menu. */
 export interface MenuCharacter {
@@ -45,10 +45,8 @@ function renderPlate(entry: MenuEntry, onAction: (id: MenuActionId) => void, onB
 export class MainMenu {
   private readonly hero = requireElement('menu-hero');
   private readonly primary = requireElement('menu-primary');
-  private readonly secondary = requireElement('menu-secondary');
   private readonly saveBox = requireElement('menu-save');
   private readonly connectionBox = requireElement('menu-connection');
-  private readonly hint = requireElement('menu-hint');
   private rows: readonly (readonly string[])[] = [];
   private entries: readonly MenuEntry[] = [];
 
@@ -57,6 +55,7 @@ export class MainMenu {
     readonly onBlocked: (reason: string) => void;
     readonly onSceneFocus: (scene: MenuSceneFocus | null) => void;
   }) {
+    this.hero.addEventListener('click', () => this.handlers.onAction('characters'));
     requireElement('menu-version').textContent = GAME_VERSION_LABEL;
     requireElement('menu-emblem').append(renderPixelIcon(FORGE_EMBLEM));
     const notes = requireElement('menu-changelog-content');
@@ -82,31 +81,22 @@ export class MainMenu {
     requireElement('screen-menu').querySelector<HTMLElement>(`[data-menu-action="${id}"]`)?.focus();
   }
 
-  /** Il tooltip di un comando sta in un solo punto libero; lasciato il mouse torna quello del comando selezionato. */
+  /** Mantiene soltanto l’evidenziazione della scena per mouse e selezione da tastiera. */
   private showEntry(entry: MenuEntry | null): void {
     const selected = document.activeElement instanceof HTMLElement ? this.entries.find((item) => item.id === (document.activeElement as HTMLElement).dataset.menuAction) : undefined;
     const shown = entry ?? selected ?? null;
-    this.hint.textContent = shown === null ? '' : shown.unavailable ?? shown.hint;
-    this.hint.classList.toggle('is-blocked', shown?.unavailable != null);
     this.handlers.onSceneFocus(shown?.scene ?? null);
   }
 
   /** Ridisegna il menu; la prima azione disponibile diventa la principale e riceve la selezione. */
   render(character: MenuCharacter | null, context: MenuContext): void {
     this.renderHero(character, context.incomplete === true);
-    const primary = primaryEntries(context), secondary = secondaryEntries(context);
+    const primary = primaryEntries(context);
     const main = primary.find((entry) => entry.unavailable === null)?.id;
-    this.entries = [...primary, ...secondary];
+    this.entries = primary;
     const plate = (entry: MenuEntry, isMain: boolean) => renderPlate(entry, this.handlers.onAction, this.handlers.onBlocked, (focused) => this.showEntry(focused), isMain);
     this.primary.replaceChildren(...primary.map((entry) => plate(entry, entry.id === main)));
-    this.secondary.replaceChildren(...secondary.map((entry) => plate(entry, false)));
-    // Gli accessi stanno su due colonne: le frecce seguono la griglia che si vede.
-    const griglia: string[][] = [];
-    secondary.forEach((entry, index) => {
-      if (index % 2 === 0) griglia.push([entry.id]);
-      else griglia[griglia.length - 1]!.push(entry.id);
-    });
-    this.rows = [...primary.map((entry) => [entry.id]), ...griglia];
+    this.rows = primary.map(entry => [entry.id]);
     // Con le impostazioni aperte la selezione resta nella loro finestra.
     if (main !== undefined && document.querySelector('#settings-panel:not(.hidden)') === null) this.select(main);
   }

@@ -11,8 +11,8 @@
 /* La compagnia. */
 #screen-characters .character-profiles { margin: 0; }
 #screen-characters .profiles-heading { display: block; margin-bottom: 8px; }
-#screen-characters .profiles-heading h2 { margin: 0 0 8px; color: var(--forge-copper-light); font: 400 22px var(--relic-title); }
-#screen-characters .profile-new { display: block; width: 100%; padding: 10px; font: 400 19px var(--relic-title); }
+#screen-characters .profiles-heading h2 { margin: 0 0 8px; color: var(--forge-copper-light); font: 400 24px var(--relic-title); }
+#screen-characters .profile-new { display: block; width: 100%; padding: 10px; font: 400 16px var(--relic-title); }
 #screen-characters .profile-new:disabled { color: var(--forge-disabled); opacity: 1; background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px); box-shadow: inset 0 0 0 1px var(--forge-iron); cursor: not-allowed; }
 #screen-characters .profile-row { position: relative; display: block; margin: 0 0 6px; }
 #screen-characters .profile-select { display: grid; grid-template-columns: 48px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center; width: 100%; min-height: 60px; padding: 6px 30px 6px 6px; text-align: left; background: var(--forge-corners), #1b181c; box-shadow: inset 0 0 0 1px var(--forge-iron-light); border: 0; border-radius: 0; }
@@ -21,13 +21,13 @@
 #screen-characters .roster-figure { grid-row: 1 / span 2; display: block; width: 48px; height: 48px; overflow: hidden; background: var(--forge-ink); box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #screen-characters .roster-figure svg { display: block; width: 72px; height: 72px; margin: -6px 0 0 -12px; }
 #screen-characters .profile-select[aria-pressed=true] .roster-figure { box-shadow: inset 0 0 0 1px var(--forge-copper-light); }
-#screen-characters .profile-select strong { align-self: end; min-width: 0; overflow: hidden; color: var(--forge-text); font: 400 20px/1.1 var(--relic-title); text-overflow: ellipsis; white-space: nowrap; }
-#screen-characters .profile-select small { align-self: start; color: var(--forge-muted); font-size: 12px; line-height: 1.25; }
-#screen-characters .profile-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; color: var(--forge-muted); font-size: 13px; line-height: 1; background: none; border: 0; box-shadow: none; }
+#screen-characters .profile-select strong { align-self: end; min-width: 0; overflow: hidden; color: var(--forge-text); font: 400 16px/1.1 var(--relic-title); text-overflow: ellipsis; white-space: nowrap; }
+#screen-characters .profile-select small { align-self: start; color: var(--forge-muted); font-size: 16px; line-height: 1.25; }
+#screen-characters .profile-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; color: var(--forge-muted); font-size: 16px; line-height: 1; background: none; border: 0; box-shadow: none; }
 #screen-characters .profile-remove:hover { color: #fff; background: #5a1a22; }
 #screen-characters .profile-row.is-draft { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 48px; padding: 8px 8px 8px 12px; background: #2a1317; box-shadow: inset 0 0 0 1px var(--forge-copper), inset 3px 0 0 var(--forge-amber); }
-#screen-characters .profile-row.is-draft strong { color: var(--forge-text); font: 400 19px/1.1 var(--relic-title); }
-#screen-characters .profile-cancel { padding: 6px 8px; font-size: 12px; }
+#screen-characters .profile-row.is-draft strong { color: var(--forge-text); font: 400 16px/1.1 var(--relic-title); }
+#screen-characters .profile-cancel { padding: 6px 8px; font-size: 16px; }
 #screen-characters .admin-menu { margin: 0; max-width: none; padding: 6px 10px; color: var(--forge-muted); border-color: var(--forge-iron-light); border-radius: 0; }
 #screen-characters .admin-menu summary { color: var(--forge-copper-light); }
 #screen-characters .admin-menu-body { grid-template-columns: minmax(0, 1fr); }
@@ -38,27 +38,27 @@
 #screen-characters .altar-frame { position: relative; line-height: 0; }
 #screen-characters .altar-frame::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--forge-corners), var(--forge-rivets); box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5080; }
 #screen-characters canvas.altar-scene { position: static; inset: auto; display: block; width: calc(130px * var(--altar-scale)); max-width: 100%; height: auto; aspect-ratio: 130 / 150; cursor: var(--cursor-default); image-rendering: pixelated; }
-#screen-characters .altar-banner { position: absolute; z-index: 1; top: 0; left: 50%; transform: translateX(-50%); min-width: 124px; padding: 6px 16px 14px; color: var(--forge-text); font: 400 23px/1 var(--relic-title); text-align: center; background: linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px); clip-path: polygon(0 0, 100% 0, 100% 100%, 75% calc(100% - 7px), 50% 100%, 25% calc(100% - 7px), 0 100%); }
+#screen-characters .altar-banner { position: absolute; z-index: 1; top: 0; left: 50%; transform: translateX(-50%); min-width: 124px; padding: 6px 16px 14px; color: var(--forge-text); font: 400 24px/1 var(--relic-title); text-align: center; background: linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px); clip-path: polygon(0 0, 100% 0, 100% 100%, 75% calc(100% - 7px), 50% 100%, 25% calc(100% - 7px), 0 100%); }
 
 /* La targa del nome. */
 #screen-characters .name-plate { position: relative; display: block; padding: 7px 12px 5px; text-align: center; background: var(--forge-corners), var(--forge-rivets), linear-gradient(#4a382b 0 2px, #2c211a 2px calc(100% - 3px), #17110d calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
 #screen-characters .name-plate:focus-within { box-shadow: inset 0 0 0 2px var(--forge-amber), 0 2px 0 var(--forge-ink); }
-#screen-characters .name-plate-label { position: absolute; top: 8px; left: 14px; color: var(--forge-copper-light); font: 400 15px var(--relic-title); }
-#screen-characters .name-plate-count { position: absolute; top: 10px; right: 14px; color: var(--forge-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-#screen-characters .name-plate input { display: block; width: 100%; margin: 0; padding: 1px 48px; color: #f4e3c4; font: 400 27px/1.15 var(--relic-title); text-align: center; background: none; border: 0; outline: 0; box-shadow: none; }
+#screen-characters .name-plate-label { position: absolute; top: 8px; left: 14px; color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
+#screen-characters .name-plate-count { position: absolute; top: 10px; right: 14px; color: var(--forge-muted); font-size: 8px; font-variant-numeric: tabular-nums; }
+#screen-characters .name-plate input { display: block; width: 100%; margin: 0; padding: 1px 48px; color: #f4e3c4; font: 400 24px/1.15 var(--relic-title); text-align: center; background: none; border: 0; outline: 0; box-shadow: none; }
 #screen-characters .name-plate input::placeholder { color: #bda88f; opacity: 1; }
-#screen-characters .name-plate-static strong { display: block; overflow: hidden; color: #f4e3c4; font: 400 30px/1.2 var(--relic-title); text-overflow: ellipsis; white-space: nowrap; }
-#screen-characters .creation-error { margin: 0; color: #ff9d8f; font-size: 13px; line-height: 1.35; }
+#screen-characters .name-plate-static strong { display: block; overflow: hidden; color: #f4e3c4; font: 400 24px/1.2 var(--relic-title); text-overflow: ellipsis; white-space: nowrap; }
+#screen-characters .creation-error { margin: 0; color: #ff9d8f; font-size: 16px; line-height: 1.35; }
 #screen-characters .creation-error:empty { display: none; }
-#screen-characters .stage-action { justify-content: center; width: 100%; min-height: 56px; padding: 6px 14px; font-size: 28px; }
+#screen-characters .stage-action { justify-content: center; width: 100%; min-height: 56px; padding: 6px 14px; font-size: 24px; }
 
 /* Le scelte. */
 #screen-characters .stage-side { display: grid; gap: 10px; min-width: 0; }
 #screen-characters .stage-panel { display: block; min-width: 0; margin: 0; padding: 8px 10px 10px; border: 0; border-radius: 0; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#screen-characters .stage-panel > h3, #screen-characters .stage-panel > legend { float: left; width: 100%; margin: 0 0 8px; padding: 0 0 5px; color: var(--forge-copper-light); font: 400 21px/1.1 var(--relic-title); box-shadow: 0 1px 0 var(--forge-iron); }
+#screen-characters .stage-panel > h3, #screen-characters .stage-panel > legend { float: left; width: 100%; margin: 0 0 8px; padding: 0 0 5px; color: var(--forge-copper-light); font: 400 16px/1.1 var(--relic-title); box-shadow: 0 1px 0 var(--forge-iron); }
 #screen-characters .stage-panel > h3 + *, #screen-characters .stage-panel > legend + * { clear: both; }
-#screen-characters .stage-note { clear: both; margin: 8px 0 0; color: var(--forge-muted); font-size: 12px; line-height: 1.4; }
-#screen-characters .creation-warning { margin: 0; color: var(--forge-amber); font-size: 13px; line-height: 1.4; }
+#screen-characters .stage-note { clear: both; margin: 8px 0 0; color: var(--forge-muted); font-size: 16px; line-height: 1.4; }
+#screen-characters .creation-warning { margin: 0; color: var(--forge-amber); font-size: 16px; line-height: 1.4; }
 
 #screen-characters .class-card { position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr) 158px; column-gap: 10px; align-items: center; min-height: 66px; padding: 5px 10px 5px 5px; color: var(--forge-text); background: var(--forge-corners), #211e22; box-shadow: inset 0 0 0 1px var(--forge-iron-light); cursor: var(--cursor-pointer); }
 #screen-characters .class-card + .class-card { margin-top: 5px; }
@@ -71,26 +71,26 @@
 #screen-characters .class-card-figure svg { display: block; width: 84px; height: 84px; margin: -7px 0 0 -14px; }
 #screen-characters .class-card:has(input:checked) .class-card-figure { box-shadow: inset 0 0 0 1px var(--card-accent); }
 #screen-characters .class-card-text { display: grid; gap: 2px; min-width: 0; }
-#screen-characters .class-card-text b { font: 400 23px/1.05 var(--relic-title); }
-#screen-characters .class-card-text small { color: var(--forge-muted); font-size: 13px; line-height: 1.25; }
+#screen-characters .class-card-text b { font: 400 24px/1.05 var(--relic-title); }
+#screen-characters .class-card-text small { color: var(--forge-muted); font-size: 16px; line-height: 1.25; }
 
 #screen-characters .stat-list { display: grid; gap: 2px; margin: 0; --stat: var(--card-accent, var(--class-accent, var(--forge-copper-light))); }
 #screen-characters .stat-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 30px; align-items: center; column-gap: 6px; }
-#screen-characters .stat-row dt { color: var(--forge-muted); font-size: 12px; }
-#screen-characters .stat-row dd { margin: 0; color: var(--forge-text); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+#screen-characters .stat-row dt { color: var(--forge-muted); font-size: 16px; }
+#screen-characters .stat-row dd { margin: 0; color: var(--forge-text); font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; }
 #screen-characters .stat-bar { display: block; height: 6px; background: var(--forge-ink); box-shadow: inset 0 0 0 1px var(--forge-iron); }
 #screen-characters .stat-bar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--stat) 0 4px, transparent 4px 6px); }
 
 #screen-characters .creation-bodies > legend { margin-bottom: 8px; }
 #screen-characters .creation-bodies { display: flow-root; }
-#screen-characters .body-choice { position: relative; float: left; display: flex; align-items: center; justify-content: center; width: calc(50% - 3px); min-height: 38px; color: var(--forge-text); font: 400 20px var(--relic-title); background: var(--forge-corners), #211e22; box-shadow: inset 0 0 0 1px var(--forge-iron-light); cursor: var(--cursor-pointer); }
+#screen-characters .body-choice { position: relative; float: left; display: flex; align-items: center; justify-content: center; width: calc(50% - 3px); min-height: 38px; color: var(--forge-text); font: 400 16px var(--relic-title); background: var(--forge-corners), #211e22; box-shadow: inset 0 0 0 1px var(--forge-iron-light); cursor: var(--cursor-pointer); }
 #screen-characters .body-choice + .body-choice { margin-left: 6px; }
 #screen-characters .body-choice:hover { background: var(--forge-corners), #2c282b; box-shadow: inset 0 0 0 1px var(--class-accent); }
 #screen-characters .body-choice:has(input:checked) { background: var(--forge-corners), #2a1317; box-shadow: inset 0 0 0 1px var(--class-accent), inset 0 -3px 0 var(--class-accent); }
 
 #screen-characters .equipment-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; clear: both; }
 #screen-characters .equipment-cell { display: grid; justify-items: center; gap: 3px; min-width: 0; }
-#screen-characters .equipment-cell small { color: var(--forge-muted); font-size: 11px; line-height: 1.15; text-align: center; }
+#screen-characters .equipment-cell small { color: var(--forge-muted); font-size: 8px; line-height: 1.15; text-align: center; }
 #screen-characters .equipment-cell .item-slot, #screen-characters .equipment-empty { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 2px; color: var(--forge-muted); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--rarity, var(--forge-iron)); }
 #screen-characters .equipment-cell .item-slot:hover { background: var(--forge-surface); }
 #screen-characters .equipment-cell .item-slot .pixel-icon { width: 32px; height: 32px; }
@@ -102,7 +102,7 @@
 @media (max-height: 740px), (max-width: 1180px) {
   #screen-characters { --altar-scale: 2; }
   #screen-characters .stage-action { min-height: 48px; font-size: 24px; }
-  #screen-characters .name-plate input { font-size: 23px; }
+  #screen-characters .name-plate input { font-size: 24px; }
 }
 @media (max-width: 980px) {
   #screen-characters .characters-layout, #screen-characters .character-stage { grid-template-columns: minmax(0, 1fr); }
@@ -118,15 +118,15 @@
   #screen-characters .screen-card.wide { width: min(1600px, 100%); }
   #screen-characters .characters-layout { grid-template-columns: 300px minmax(0, 1fr); }
   #screen-characters .class-card { grid-template-columns: 56px minmax(0, 1fr) 220px; min-height: 84px; }
-  #screen-characters .class-card-text b { font-size: 28px; }
-  #screen-characters .class-card-text small, #screen-characters .stat-row dt, #screen-characters .stat-row dd { font-size: 14px; }
-  #screen-characters .stage-panel > h3, #screen-characters .stage-panel > legend { font-size: 26px; }
+  #screen-characters .class-card-text b { font-size: 24px; }
+  #screen-characters .class-card-text small, #screen-characters .stat-row dt, #screen-characters .stat-row dd { font-size: 16px; }
+  #screen-characters .stage-panel > h3, #screen-characters .stage-panel > legend { font-size: 24px; }
   #screen-characters .equipment-cell .item-slot, #screen-characters .equipment-empty { width: 68px; height: 68px; }
   #screen-characters .equipment-cell .item-slot .pixel-icon { width: 48px; height: 48px; }
 }
 
 /* Le vecchie regole dei pulsanti del modulo di creazione non valgono per le placche. */
-#screen-characters .character-creation button.forge-plate { color: var(--forge-text); font: 400 28px/1.05 var(--relic-title); border: 0; border-radius: 0; background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
+#screen-characters .character-creation button.forge-plate { color: var(--forge-text); font: 400 24px/1.05 var(--relic-title); border: 0; border-radius: 0; background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
 #screen-characters .character-creation button.forge-plate:hover { background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px)); }
 #screen-characters .character-creation button.forge-plate[aria-disabled=true] { color: var(--forge-disabled); cursor: not-allowed; background: var(--forge-corners), repeating-linear-gradient(135deg, #1b181c 0 4px, #231f23 4px 8px); box-shadow: inset 0 0 0 1px var(--forge-iron), 0 2px 0 var(--forge-ink); }
 @media (max-height: 740px), (max-width: 1180px) {
@@ -136,5 +136,5 @@
 /* Scheda di un personaggio creato: i numeri grandi dicono piu' di una barra sempre piena. */
 #screen-characters .stat-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; clear: both; margin: 0; }
 #screen-characters .stat-tile { padding: 6px 8px; text-align: center; background: var(--forge-ink); box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#screen-characters .stat-tile dt { color: var(--forge-muted); font-size: 12px; }
+#screen-characters .stat-tile dt { color: var(--forge-muted); font-size: 16px; }
 #screen-characters .stat-tile dd { margin: 2px 0 0; color: var(--forge-text); font: 16px var(--relic-pixel); }

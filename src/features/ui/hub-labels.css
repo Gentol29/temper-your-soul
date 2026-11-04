@@ -1,0 +1,17 @@
+.hub-map-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hub-map-label {
+  position: absolute;
+  display: block;
+  width: max-content;
+  white-space: nowrap;
+  padding: 3px 6px;
+  color: #e9c99a;
+  background: #08070ad9;
+  border: 1px solid #5a5357;
+  font: 14px/1.5 var(--relic-pixel);
+  letter-spacing: 0;
+  text-shadow: 1px 1px #08070a;
+  transform: none;
+  transition: none;
+}
+.hub-screen .hub-interaction-tooltip { font-size: 14px; }

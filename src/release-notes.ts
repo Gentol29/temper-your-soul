@@ -159,6 +159,23 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.11.3', date: '2026-11-04',
+    changes: [
+      'Rimosso il tooltip persistente delle azioni del menu principale; conservate navigazione da tastiera, descrizioni accessibili e motivi dei comandi non disponibili.',
+      'Forgia utilizzabile lungo tutto il fronte, anche arrivando da sinistra: tooltip e tasto E rilevano il tratto davanti all’edificio. Nomi dell’HUB e tooltip ridotti di 2 px (a scala 3×: 24 → 22 px; tooltip 16 → 14 px), su richiesta del proprietario.',
+      'Collisioni dell’HUB riferite ai piedi: sagome prospettiche per Cattedrale, Deposito, Forgia, Mercante e colonne; movimento limitato al bordo interno del selciato, senza camminare sulle mura o sotto gli edifici. Quattro servizi raggiungibili e partenze dei visitatori su pavimento libero.',
+      'Etichette dell’HUB e nomi dei visitatori disegnati a risoluzione schermo, allineati ai pixel fisici. Canvas con scala uniforme senza stiramento frazionario a fine zoom; eliminata una causa di sfocatura durante il movimento. Leggibilità percepita da confermare sullo schermo dell’utente.',
+      'Fabbro riunito nella Forgia: rimosso l’NPC con banco, etichetta e collisione dalla piazza. La finestra Forgia ha due schede, Forgia per creare e Fabbro per migliorare; selezione conservata dopo le operazioni, costi e regole invariati.',
+      'Card del portale corrette: immagini centrate, dettagli da 8 a 10 px (+2), Bestiario/Discesa/Duello da 16 a 12 px e pulsanti contenuti nei bordi, senza sovrapposizioni.',
+      'Revisione locale della PR #14: rimossi gli accessi in basso a destra; i servizi si raggiungono camminando nel rifugio. Il riquadro del personaggio apre la selezione dei profili.',
+      'Entra sostituisce Continua: zoom dal menu alla stessa mappa e materializzazione al centro del cortile. Animazioni ridotte rispettate; ingresso e ritorno dai servizi distinti.',
+      'Artwork del menu riutilizzato come HUB giocabile: stessa disposizione di cortile, edifici, portale e fiamme, con nuove collisioni e punti di interazione condivisi dal server.',
+      'Titoli, testi e controlli passano a Silkscreen, come XP e oro, con misure canvas a multipli di 8 pixel ed eccezioni DOM richieste per card e nomi dell’HUB. Sprite C ed equipaggiamento conservati.',
+      'Protocollo cooperativo 17: client e server devono usare lo stesso appoggio dei piedi e la stessa geometria del rifugio, senza l’ostacolo del vecchio fabbro. Salvataggio invariato. Zoom e durata della comparsa sono tarature visuali provvisorie, ancora da provare giocando.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.2', date: '2026-11-03',
     changes: [
       'Ramo feature/menu-rifugio allineato al main 0.11.1 con un merge. Nessuna novità rispetto alle voci sotto; le note dei due rami che avevano usato il numero 0.11.1 sono riunite in una sola voce.',

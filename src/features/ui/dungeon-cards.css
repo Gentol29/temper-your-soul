@@ -1,0 +1,48 @@
+/* Correzione delle card del portale: una colonna che può restringersi, righe senza sovrapposizioni. */
+#screen-dungeons .dungeon-card {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 20px minmax(40px, auto) auto minmax(48px, auto) minmax(24px, auto) minmax(32px, auto) minmax(32px, auto) minmax(48px, auto) auto 36px;
+  gap: 6px;
+}
+#screen-dungeons .dungeon-card > * { min-width: 0; max-width: 100%; }
+#screen-dungeons .dungeon-card .boss-artwork {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 12 / 7;
+  object-fit: contain;
+  justify-self: center;
+  margin: 0;
+}
+/* Richiesta esplicita: +2 px rispetto agli 8 px precedenti, solo per i dettagli delle card. */
+#screen-dungeons .dungeon-danger,
+#screen-dungeons .dungeon-minimum,
+#screen-dungeons .dungeon-record { font-size: 10px; line-height: 1.6; letter-spacing: 0; }
+#screen-dungeons .dungeon-card .dungeon-boss { line-height: 1.5; }
+#screen-dungeons .dungeon-rewards { white-space: normal; overflow-wrap: anywhere; }
+#screen-dungeons .dungeon-references {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+#screen-dungeons .dungeon-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  align-items: stretch;
+}
+#screen-dungeons .dungeon-bestiary,
+#screen-dungeons .dungeon-buttons button {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+#screen-dungeons .dungeon-buttons button { width: 100%; white-space: normal; }

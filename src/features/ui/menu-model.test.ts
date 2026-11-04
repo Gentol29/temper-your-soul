@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { connectionLabel, inviteTarget, moveSelection, parseInviteCode, partyReadiness, primaryEntries, secondaryEntries } from './menu-model';
+import { connectionLabel, inviteTarget, moveSelection, parseInviteCode, partyReadiness, primaryEntries } from './menu-model';
 
 const withCharacter = { characterName: 'Vesna', inviteWaiting: false };
 const empty = { characterName: null, inviteWaiting: false };
 
 describe('comandi del menu principale', () => {
   it('sono quelli del progetto, in italiano e nell\'ordine previsto', () => {
-    expect(primaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Continua', 'Nuovo personaggio', 'Impostazioni']);
-    expect(secondaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Scegli dungeon', 'Personaggi', 'Inventario', 'Deposito', 'Forgia', 'Mercante', 'Cooperativa']);
+    expect(primaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Entra', 'Nuovo personaggio', 'Impostazioni']);
   });
 
   it('con un personaggio sono tutti disponibili e ognuno ha un tooltip', () => {
-    for (const entry of [...primaryEntries(withCharacter), ...secondaryEntries(withCharacter)]) {
+    for (const entry of primaryEntries(withCharacter)) {
       expect(entry.unavailable, entry.id).toBeNull();
       expect(entry.hint.length, entry.id).toBeGreaterThan(0);
     }
@@ -19,9 +18,9 @@ describe('comandi del menu principale', () => {
   });
 
   it('senza personaggi restano solo creazione, elenco e impostazioni, e chi e\' bloccato dice perche\'', () => {
-    const entries = [...primaryEntries(empty), ...secondaryEntries(empty)];
+    const entries = primaryEntries(empty);
     const open = entries.filter((entry) => entry.unavailable === null).map((entry) => entry.id);
-    expect(open).toEqual(['new_character', 'settings', 'characters']);
+    expect(open).toEqual(['new_character', 'settings']);
     for (const entry of entries) if (entry.unavailable !== null) expect(entry.unavailable.length, entry.id).toBeGreaterThan(0);
   });
 
@@ -30,13 +29,9 @@ describe('comandi del menu principale', () => {
     const prima = primaryEntries(context)[0]!;
     expect(prima.label).toBe('Completa personaggio');
     expect(prima.unavailable).toBeNull();
-    expect(secondaryEntries(context).find((entry) => entry.id === 'forge')!.unavailable).toContain('Completa');
   });
 
-  it('un invito in attesa spiega che serve un personaggio per accettarlo', () => {
-    const coop = secondaryEntries({ characterName: null, inviteWaiting: true }).find((entry) => entry.id === 'coop')!;
-    expect(coop.unavailable).toContain('invito');
-  });
+
 });
 
 describe('selezione da tastiera', () => {

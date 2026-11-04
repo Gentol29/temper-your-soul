@@ -352,14 +352,10 @@ export class Game {
 
   private onMenuAction(id: MenuActionId): void {
     switch (id) {
-      case 'continue': if (this.character.created) this.openHub(); else this.openCharacters(); break;
+      case 'continue': if (this.character.created) this.openHub(true); else this.openCharacters(); break;
       case 'new_character': this.newDraft(); this.inventoryScreen.reset(); this.openCharacters(); break;
       case 'settings': this.settingsPanel.open(); break;
-      case 'dungeons': this.openDungeons('menu'); break;
       case 'characters': this.openCharacters(); break;
-      case 'inventory': this.openHub(); this.hub.openProfile(); break;
-      case 'storage': case 'forge': case 'merchant': this.openHub(); this.hub.openStation(id); break;
-      case 'coop': this.openCoop(); break;
     }
   }
 
@@ -386,16 +382,9 @@ export class Game {
           this.persist();this.showMenu();
         }
       },
-      onContinue:()=>this.openHub(),
+      onContinue:()=>this.openHub(true),
     }));
     this.adminMenu.setAvailable(this.character.created);
-  }
-
-  private openCoop(): void {
-    this.screen = 'coop';
-    this.screens.show('coop');
-    this.updateParty();
-    requireElement('coop-title').focus();
   }
 
   /** Chiude dungeon o inventario tornando da dove si era partiti. */
@@ -404,12 +393,12 @@ export class Game {
     else this.openHub();
   }
 
-  private openHub(): void {
+  private openHub(arrive = false): void {
     if(!this.character.created){this.showMenu();return;}
     if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
     this.screen='hub';this.input.releaseAll();this.clearBattleFeedback();this.overlay.hide();this.screens.show(null);
-    document.body.classList.add('in-menu');this.hub.show(this.character,this.roster);this.updateParty();
+    document.body.classList.add('in-menu');this.hub.show(this.character,this.roster,arrive,this.clock);this.updateParty();
   }
 
   private openPlayerProfile(): void {
@@ -959,7 +948,7 @@ export class Game {
     if (this.screen === 'menu') this.showMenu();
     // Durante la creazione non si ridisegna la pagina: il nome che si sta scrivendo andrebbe perso.
     else if (this.screen === 'characters' && this.draft === null) this.renderCharacters();
-    else if (this.screen === 'hub') this.hub.show(this.character,this.roster);
+    else if (this.screen === 'hub') this.hub.show(this.character,this.roster,false,this.clock);
     else if (this.screen === 'dungeons') this.dungeonSelect.render(this.character);
     else if (this.screen === 'bestiary') this.bestiaryScreen.render(this.character);
     else if (this.screen === 'inventory') {
@@ -1051,7 +1040,7 @@ export class Game {
     const { match } = this;
     if(this.screen==='hub'){
       const move=this.input.getVector('move_left','move_right','move_up','move_down');this.hub.step(STEP,move);
-      if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.dialogOpen?Vec2.ZERO:move});}
+      if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.inputLocked?Vec2.ZERO:move});}
     }
     if (this.screen === 'playing' || this.screen === 'ended') {
       this.poses.update(STEP, match.player.moving);
@@ -1102,6 +1091,7 @@ export class Game {
       this.step();
       this.accumulator -= STEP;
     }
+    if (this.screen === 'hub') this.hub.render(delta);
     if (this.pendingEnd !== null) {
       this.pendingEnd.remaining -= delta;
       if (this.pendingEnd.remaining <= 0) {
@@ -1176,7 +1166,7 @@ export class Game {
       ...(nextVein === undefined ? {} : { nextVein: veinName(views.run.dungeonId, nextVein) }),
     };
     if (inRefuge) {
-      this.menuScene.draw(this.clock, this.character.created ? (this.renderAppearance ??= this.character.appearance()) : null, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      this.menuScene.draw(this.clock, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     } else renderScene(this.ctx, {
       match: renderedMatch,
       effects: this.effects,

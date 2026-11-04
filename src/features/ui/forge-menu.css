@@ -121,7 +121,7 @@
 .menu-emblem .pixel-icon { display: block; width: 48px; height: 48px; }
 .menu-logo .brand {
   margin: 0;
-  font: 500 clamp(38px, 5.4vw, 72px)/1 var(--relic-title);
+  font: 500 32px/1 var(--relic-title);
   letter-spacing: .05em;
   text-transform: uppercase;
   color: #f4e3c4;
@@ -129,8 +129,8 @@
 }
 
 .menu-hero { position: absolute; left: 16px; top: 16px; width: min(280px, calc(100vw - 32px)); padding: 12px 16px; }
-.menu-hero-name { margin: 0; color: var(--forge-text); font: 400 28px/1.1 var(--relic-title); overflow-wrap: anywhere; }
-.menu-hero-line { margin: 4px 0 0; color: var(--forge-muted); font-size: 14px; line-height: 1.35; }
+.menu-hero-name { margin: 0; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); overflow-wrap: anywhere; }
+.menu-hero-line { margin: 4px 0 0; color: var(--forge-muted); font-size: 16px; line-height: 1.35; }
 .menu-hero-stats { display: flex; gap: 16px; margin: 8px 0 0; }
 .menu-hero-stat { display: inline-flex; align-items: center; gap: 6px; }
 .menu-hero-stat .pixel-icon { width: 16px; height: 16px; }
@@ -148,34 +148,13 @@
   gap: 6px;
   padding: 10px;
 }
-.menu-secondary {
-  position: absolute;
-  left: 50%;
-  bottom: 44px;
-  transform: translateX(-50%);
-  width: min(1000px, calc(100vw - 32px));
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-}
-.menu-secondary .forge-plate {
-  flex: 1 1 0;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  min-width: 0;
-  min-height: 60px;
-  padding: 3px 4px;
-  font-size: 18px;
-  text-align: center;
-}
 
 /* --- Versione e stato ---------------------------------------------------------------------------------------------- */
 .menu-release-footer { background: none; }
 .menu-version { color: var(--forge-text); font: 8px var(--relic-pixel); letter-spacing: 0; text-shadow: 1px 1px 0 var(--forge-ink); }
 .menu-changelog summary, .menu-status-item {
   color: var(--forge-text);
-  font-size: 12px;
+  font-size: 16px;
   background: #121014e6;
   border: 0;
   border-radius: 0;
@@ -196,8 +175,8 @@
 /* --- Pagine: personaggi, cooperativa, dungeon -------------------------------------------------------------------- */
 .forge-page { background: #08070ac7; backdrop-filter: none; padding: 32px 16px 24px; }
 .forge-screen .screen-card.wide { width: min(1040px, 100%); margin: auto; padding: 24px 28px; border: 0; border-radius: 0; background: var(--forge-corners), var(--forge-rivets), #121014f2; }
-.forge-screen .screen-head h2 { margin: 2px 0 0; color: var(--forge-text); font: 400 34px/1.1 var(--relic-title); }
-.forge-screen .eyebrow { color: var(--forge-copper-light); font: 600 12px var(--relic-text); letter-spacing: .14em; }
+.forge-screen .screen-head h2 { margin: 2px 0 0; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); }
+.forge-screen .eyebrow { color: var(--forge-copper-light); font: 600 16px var(--relic-text); letter-spacing: .14em; }
 
 .forge-screen .screen-head button, .forge-screen .relic-button, .forge-screen .profile-new, .forge-screen .profile-cancel,
 #settings-panel .relic-button, .profile-delete-dialog button {
@@ -234,25 +213,25 @@
 /* Personaggi. */
 .characters-layout { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 1.7fr); gap: 24px; align-items: start; margin-top: 16px; }
 .forge-screen .profiles-heading h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
-.forge-screen .profile-new { padding: 8px 10px; font-size: 13px; }
+.forge-screen .profile-new { padding: 8px 10px; font-size: 16px; }
 .forge-screen .profile-select { color: var(--forge-text); background: #1b181c; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 .forge-screen .profile-select:hover { background: #2a2529; box-shadow: inset 0 0 0 1px var(--forge-copper-light); }
 .forge-screen .profile-select[aria-pressed=true] { background: #2a1317; box-shadow: inset 0 0 0 1px var(--forge-copper), inset 3px 0 0 var(--forge-amber); }
-.forge-screen .profile-select strong { color: var(--forge-text); font: 400 20px var(--relic-title); }
+.forge-screen .profile-select strong { color: var(--forge-text); font: 400 16px var(--relic-title); }
 .forge-screen .profile-select small { color: var(--forge-muted); }
 .forge-screen .profile-remove { color: #f1cfc8; background: #2a1014; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px #8a3c3f; }
 .forge-screen .profile-remove:hover { background: #3f151b; }
 
 .forge-screen .character-creation { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px 20px; margin: 0; max-width: none; text-align: left; }
 .forge-screen .character-creation > h2, .forge-screen .character-creation > .creation-warning, .forge-screen .character-creation > .creation-error, .forge-screen .character-creation > button { grid-column: 1 / -1; }
-.forge-screen .character-creation > h2 { margin: 0; color: var(--forge-text); font: 400 26px var(--relic-title); }
+.forge-screen .character-creation > h2 { margin: 0; color: var(--forge-text); font: 400 24px var(--relic-title); }
 .forge-screen .character-creation > label, .forge-screen .creation-bodies, .forge-screen .creation-classes { grid-column: 1; }
-.forge-screen .character-creation legend, .forge-screen .character-creation > label { color: var(--forge-copper-light); font: 400 18px var(--relic-title); }
+.forge-screen .character-creation legend, .forge-screen .character-creation > label { color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
 .forge-screen .character-creation fieldset { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 10px; border: 0; border-radius: 0; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
 .forge-screen .character-creation input[type=text] { display: block; width: 100%; margin-top: 6px; padding: 10px; color: var(--forge-text); font-size: 16px; background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 .forge-screen .character-creation input[type=radio] { accent-color: var(--forge-copper); }
-.forge-screen .creation-warning { color: var(--forge-amber); font-size: 13px; }
-.forge-screen .creation-error { margin: 0; color: #ff9d8f; font-size: 14px; }
+.forge-screen .creation-warning { color: var(--forge-amber); font-size: 16px; }
+.forge-screen .creation-error { margin: 0; color: #ff9d8f; font-size: 16px; }
 .forge-screen .character-creation:not(:has(.creation-error:not(:empty))) .creation-error { display: none; }
 .forge-screen .admin-menu { margin: 16px 0 0; max-width: none; color: var(--forge-muted); border-color: var(--forge-iron-light); border-radius: 0; }
 .forge-screen .admin-menu summary { color: var(--forge-copper-light); }
@@ -264,16 +243,16 @@
 #party-panel.is-docked .party-open { font: 400 24px var(--relic-title); }
 .party-readiness { color: var(--forge-amber); }
 .coop-join { display: grid; gap: 8px; padding: 14px; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-.coop-join label { color: var(--forge-copper-light); font: 400 20px var(--relic-title); }
+.coop-join label { color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
 .coop-join-row { display: flex; gap: 8px; }
-.coop-join input { flex: 1; min-width: 0; padding: 10px; color: var(--forge-text); font-size: 14px; background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+.coop-join input { flex: 1; min-width: 0; padding: 10px; color: var(--forge-text); font-size: 16px; background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 .coop-join input:disabled { color: var(--forge-disabled); }
-.coop-join .relic-button { padding: 8px 16px; font: 400 20px var(--relic-title); }
-.coop-invite-message { min-height: 18px; margin: 0; color: var(--forge-amber); font-size: 13px; }
+.coop-join .relic-button { padding: 8px 16px; font: 400 16px var(--relic-title); }
+.coop-invite-message { min-height: 18px; margin: 0; color: var(--forge-amber); font-size: 16px; }
 .coop-invite-message:empty { display: none; }
 .coop-steps { display: grid; gap: 10px; margin: 16px 0 0; padding: 0 0 0 20px; color: var(--forge-copper-light); }
-.coop-steps li b { display: block; color: var(--forge-text); font: 400 20px/1.15 var(--relic-title); }
-.coop-steps li span { color: var(--forge-muted); font-size: 14px; line-height: 1.4; }
+.coop-steps li b { display: block; color: var(--forge-text); font: 400 16px/1.15 var(--relic-title); }
+.coop-steps li span { color: var(--forge-muted); font-size: 16px; line-height: 1.4; }
 
 /* Scelta del dungeon: stesse placche, nessuna regola nuova. */
 #screen-dungeons { background: #08070aa6; backdrop-filter: none; }
@@ -290,21 +269,21 @@
 /* Impostazioni: nel menu si aprono al centro, con il rifugio velato dietro. */
 #settings-panel { color-scheme: dark; color: var(--forge-text); background: var(--forge-corners), var(--forge-rivets), var(--forge-panel); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink); padding: 20px; }
 .initial-menu #settings-panel { top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: min(540px, calc(100vw - 32px)); max-height: min(86dvh, 640px); overflow-y: auto; outline: 100vmax solid #08070acc; }
-#settings-panel h2 { margin: 0; color: var(--forge-text); font: 400 30px var(--relic-title); }
-#settings-panel .settings-tab { color: var(--forge-text); font: 400 20px var(--relic-title); background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
+#settings-panel h2 { margin: 0; color: var(--forge-text); font: 400 24px var(--relic-title); }
+#settings-panel .settings-tab { color: var(--forge-text); font: 400 16px var(--relic-title); background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #settings-panel .settings-tab[aria-selected=true] { background: #2a1317; box-shadow: inset 0 0 0 1px var(--forge-copper), inset 0 -3px 0 var(--forge-amber); }
 #settings-panel .audio-panel-close { color: var(--forge-text); background: #211e22; border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #settings-panel .binding-button, #settings-panel .controls-reset { color: var(--forge-text); background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #settings-panel .controls-message { color: var(--forge-amber); }
 #settings-panel .controls-fixed, #settings-panel .settings-storage { color: var(--forge-muted); }
-.settings-screen-action { display: block; width: 100%; padding: 10px; font-size: 14px; }
+.settings-screen-action { display: block; width: 100%; padding: 10px; font-size: 16px; }
 .settings-pane > .settings-screen-action:not(:first-child) { margin-top: 16px; }
 .settings-pane > p { color: var(--forge-muted); }
 
 /* Conferme. */
 .profile-delete-dialog { color: var(--forge-text); background: var(--forge-corners), var(--forge-rivets), var(--forge-panel); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-copper), 0 3px 0 var(--forge-ink); }
 .profile-delete-dialog::backdrop { background: #08070acc; }
-.profile-delete-dialog h2 { color: var(--forge-text); font: 400 28px var(--relic-title); }
+.profile-delete-dialog h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
 .profile-delete-dialog p { color: var(--forge-muted); }
 
 /* Caricamento iniziale. */
@@ -316,40 +295,29 @@
 
 /* --- Finestre piu' piccole ---------------------------------------------------------------------------------------- */
 @media (max-height: 700px), (max-width: 899px) and (max-height: 840px) {
-  .menu-logo .brand { font-size: clamp(32px, 4.6vw, 48px); }
+  .menu-logo .brand { font-size: 32px; }
   .menu-emblem .pixel-icon { width: 32px; height: 32px; }
   .menu-primary { gap: 4px; padding: 8px; }
-  .menu-primary .forge-plate { min-height: 40px; font-size: 22px; padding: 4px 12px; }
-  .menu-secondary { bottom: 44px; }
-  .menu-secondary .forge-plate { flex-direction: row; min-height: 40px; font-size: 16px; }
-  .menu-secondary .forge-plate .pixel-icon { display: none; }
+  .menu-primary .forge-plate { min-height: 40px; font-size: 24px; padding: 4px 12px; }
   .menu-hero { padding: 8px 12px; }
-  .menu-hero-name { font-size: 22px; }
+  .menu-hero-name { font-size: 24px; }
 }
 @media (max-width: 1260px) {
   .menu-hero { width: 220px; }
 }
 @media (max-width: 1100px) {
-  .menu-logo .brand { font-size: clamp(30px, 4.6vw, 46px); }
+  .menu-logo .brand { font-size: 32px; }
   .menu-logo { left: auto; right: 16px; transform: none; }
-  .menu-secondary .forge-plate { font-size: 16px; }
 }
 @media (max-width: 899px) {
-  .menu-secondary { flex-wrap: wrap; }
-  .menu-secondary .forge-plate { flex: 1 1 22%; flex-direction: row; min-height: 40px; }
-  .menu-secondary .forge-plate .pixel-icon { display: none; }
 }
 @media (max-width: 760px), (max-height: 560px) {
   #screen-menu:not(.hidden) { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 64px; overflow-y: auto; }
-  .menu-logo, .menu-hero, .menu-primary, .menu-secondary, .menu-hint { position: static; transform: none; width: 100%; max-width: none; flex: none; }
-  .menu-hint:empty { display: none; }
-  .menu-secondary .forge-plate .pixel-icon { display: block; }
+  .menu-logo, .menu-hero, .menu-primary { position: static; transform: none; width: 100%; max-width: none; flex: none; }
   .menu-logo { justify-content: center; white-space: normal; }
-  .menu-logo .brand { font-size: 34px; text-align: center; }
+  .menu-logo .brand { font-size: 24px; text-align: center; }
   .menu-primary { top: auto; }
-  .menu-secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .menu-secondary .forge-plate { min-height: 48px; }
-  .menu-status-item { padding: 4px 6px; font-size: 11px; }
+  .menu-status-item { padding: 4px 6px; font-size: 8px; }
   .menu-version { left: auto; right: 16px; bottom: 42px; transform: none; }
   .characters-layout, .coop-layout { grid-template-columns: minmax(0, 1fr); }
   .forge-screen .character-creation { grid-template-columns: minmax(0, 1fr); }
@@ -359,35 +327,17 @@
 
 /* Rifiniture emerse dalle prove nel browser. */
 .initial-menu #settings-panel > .relic-button { display: none; }
-#screen-dungeons .dungeon-boss { color: var(--forge-copper-light); font: 400 18px/1.15 var(--relic-title); letter-spacing: 0; text-transform: none; }
+#screen-dungeons .dungeon-boss { color: var(--forge-copper-light); font: 400 16px/1.15 var(--relic-title); letter-spacing: 0; text-transform: none; }
 .forge-screen .character-creation > h2 { font-size: 24px; }
 @media (max-height: 820px) {
   .forge-page { padding-top: 12px; padding-bottom: 12px; }
   .forge-screen .screen-card.wide { padding: 14px 20px; }
-  .forge-screen .screen-head h2 { font-size: 28px; }
+  .forge-screen .screen-head h2 { font-size: 24px; }
   .characters-layout { margin-top: 8px; }
   #screen-dungeons .boss-artwork { height: 112px; }
   #screen-dungeons .dungeon-references { margin-bottom: 8px; }
 }
 
-/* Il tooltip dei comandi: un solo punto libero, a sinistra delle azioni, con mouse e tastiera. */
-.menu-hint {
-  position: absolute;
-  top: calc(50% - 60px);
-  right: calc(50% + 182px);
-  width: max-content;
-  max-width: min(240px, calc(50vw - 198px));
-  margin: 0;
-  padding: 8px 10px;
-  color: var(--forge-text);
-  font-size: 13px;
-  line-height: 1.35;
-  background: #121014f2;
-  box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink);
-}
-.menu-hint:empty { display: none; }
-.menu-hint { pointer-events: none; }
-.menu-hint.is-blocked { color: var(--forge-amber); }
 .forge-screen-reader { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Focus delle schede e dei titoli di pagina. */
@@ -406,8 +356,8 @@
 /* Il riquadro del party dentro la pagina Cooperativa: i membri sono il contenuto principale. */
 #party-panel.is-docked .party-slot { background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #party-panel.is-docked .party-slot-empty { color: var(--forge-muted); background: #17151a; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#party-panel.is-docked .party-member-name { font-size: 14px; line-height: 18px; }
-#party-panel.is-docked :is(.party-member-status, .party-leader, .party-widget-status, .party-local-badge) { font-size: 12px; }
+#party-panel.is-docked .party-member-name { font-size: 16px; line-height: 18px; }
+#party-panel.is-docked :is(.party-member-status, .party-leader, .party-widget-status, .party-local-badge) { font-size: 16px; }
 #party-panel.is-docked .party-link { color: var(--forge-text); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 
 /* Cursori dell'audio: binario scuro e cursore quadrato di rame. */
@@ -422,19 +372,15 @@
 
 /* Schermi grandi: la scena ingrandisce di 3 volte, i comandi la seguono. */
 @media (min-width: 1700px) and (min-height: 950px) {
-  .menu-logo .brand { font-size: 84px; }
+  .menu-logo .brand { font-size: 64px; }
   .menu-emblem .pixel-icon { width: 64px; height: 64px; }
   .menu-hero { width: 380px; padding: 16px 20px; }
-  .menu-hero-name { font-size: 38px; }
-  .menu-hero-line { font-size: 18px; }
+  .menu-hero-name { font-size: 32px; }
+  .menu-hero-line { font-size: 16px; }
   .menu-primary { width: 460px; gap: 8px; padding: 14px; }
-  .menu-primary .forge-plate { min-height: 64px; font-size: 32px; }
+  .menu-primary .forge-plate { min-height: 64px; font-size: 24px; }
   .menu-primary .forge-plate .pixel-icon { width: 48px; height: 48px; }
-  .menu-secondary { width: min(1380px, calc(100vw - 32px)); gap: 8px; }
-  .menu-secondary .forge-plate { min-height: 104px; font-size: 25px; }
-  .menu-secondary .forge-plate .pixel-icon { width: 48px; height: 48px; }
-  .menu-hint { max-width: 320px; font-size: 16px; }
-  .menu-status-item, .menu-changelog summary { font-size: 14px; }
+  .menu-status-item, .menu-changelog summary { font-size: 16px; }
 }
 
 /* --- Tutto cio che viene prima della partita parla lo stesso linguaggio ---------------------------------------------
@@ -487,13 +433,13 @@
 }
 .profile-modal::backdrop, .trade-confirm::backdrop { background: #08070ae0; }
 .hub-dialog-head { padding-bottom: 10px; box-shadow: 0 1px 0 var(--forge-iron-light); }
-.hub-dialog-head h2 { color: var(--forge-text); font: 400 32px var(--relic-title); }
-.hub-dialog-compact .hub-dialog-head h2 { font-size: 26px; }
+.hub-dialog-head h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+.hub-dialog-compact .hub-dialog-head h2 { font-size: 24px; }
 .hub-service-wallet { color: var(--forge-amber); font: 16px var(--relic-pixel); }
-.hub-service-note, .hub-offer p, .storage-help { color: var(--forge-muted); font-size: 14px; }
+.hub-service-note, .hub-offer p, .storage-help { color: var(--forge-muted); font-size: 16px; }
 .hub-offer, .storage-panel, .storage-backpack, .trade-side { background: #1b181c; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
 .hub-offer h3, .storage-panel h3, .trade-side h3 { color: var(--forge-text); }
-.hub-offer .hub-service-action { color: var(--forge-text); font: 400 18px var(--relic-title); }
+.hub-offer .hub-service-action { color: var(--forge-text); font: 400 16px var(--relic-title); }
 .hub-offer .hub-service-action:not(:disabled) { background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
 .hub-offer .hub-service-action:not(:disabled):hover { background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px)); }
 .storage-cell, .trade-cell, .profile-cell { background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
@@ -516,8 +462,8 @@
 
 #screen-bestiary { background: #08070ad9; backdrop-filter: none; }
 #screen-bestiary .screen-card.wide { background: var(--forge-corners), var(--forge-rivets), #121014f7; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink); }
-#screen-bestiary .screen-head h2 { color: var(--forge-text); font: 400 32px var(--relic-title); }
-#screen-bestiary .eyebrow { color: var(--forge-copper-light); font: 600 12px var(--relic-text); letter-spacing: .14em; }
+#screen-bestiary .screen-head h2 { color: var(--forge-text); font: 400 24px var(--relic-title); }
+#screen-bestiary .eyebrow { color: var(--forge-copper-light); font: 600 16px var(--relic-text); letter-spacing: .14em; }
 
 /* Logo: lettere di metallo a bande nette. */
 .menu-logo .brand {
@@ -559,29 +505,18 @@
   #screen-menu .menu-hero-name, #screen-menu .menu-hero-line, #screen-menu .menu-hero-stat b { text-shadow: 1px 2px 0 var(--forge-ink); }
   #screen-menu .menu-hero-line, #screen-menu .menu-hero-stat small { color: var(--forge-text); }
   #screen-menu .menu-primary { top: auto; bottom: 52px; left: 24px; transform: none; width: 300px; gap: 4px; background: none; box-shadow: none; padding: 0; }
-  #screen-menu .menu-secondary { z-index: 1; left: auto; right: 24px; bottom: 52px; transform: none; width: min(440px, calc(100vw - 372px)); display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
-  #screen-menu .menu-secondary .forge-plate { flex-direction: row; justify-content: flex-start; min-height: 40px; padding: 0 6px; font-size: 19px; }
-  #screen-menu .menu-secondary .forge-plate .pixel-icon { display: block; width: 16px; height: 16px; }
-  #screen-menu .menu-secondary .forge-plate, #screen-menu .menu-primary .forge-plate:not(.is-primary) {
+  #screen-menu .menu-primary .forge-plate:not(.is-primary) {
     background: none;
     box-shadow: inset 0 -1px 0 #b67a5066;
     text-shadow: 1px 2px 0 var(--forge-ink);
   }
-  #screen-menu .menu-secondary .forge-plate:not([aria-disabled=true]):hover, #screen-menu .menu-primary .forge-plate:not(.is-primary):not([aria-disabled=true]):hover {
+  #screen-menu .menu-primary .forge-plate:not(.is-primary):not([aria-disabled=true]):hover {
     color: #fff6e6;
     background: linear-gradient(transparent, #93282f99);
     box-shadow: inset 0 -2px 0 var(--forge-amber);
   }
   #screen-menu .forge-plate[aria-disabled=true], #screen-menu .forge-plate[aria-disabled=true]:hover { color: var(--forge-disabled); background: none; box-shadow: none; }
-  #screen-menu .menu-hint { z-index: 2; top: auto; right: auto; left: 336px; bottom: 56px; max-width: min(220px, calc(100vw - 372px - 340px)); }
   .menu-status-item, .menu-changelog summary { background: #121014b3; box-shadow: none; }
-}
-/* Spazio stretto fra i due blocchi: il tooltip sale sopra le azioni, invece di finire sugli accessi. */
-@media (min-width: 761px) and (min-height: 561px) and (max-width: 1100px) {
-  #screen-menu .menu-hint { left: 24px; bottom: 216px; max-width: 300px; }
-}
-@media (min-width: 761px) and (min-height: 561px) and (max-height: 700px) {
-  #screen-menu .menu-hint { bottom: 188px; left: 24px; max-width: 300px; }
 }
 @media (min-width: 1700px) and (min-height: 950px) {
   .menu-lintel { height: 150px; }
@@ -589,10 +524,6 @@
   #screen-menu .menu-hero { top: 16px; left: 24px; }
   #screen-menu .menu-primary { bottom: 64px; left: 32px; width: 440px; gap: 8px; }
   #screen-menu .menu-primary .forge-plate { min-height: 64px; }
-  #screen-menu .menu-secondary { bottom: 64px; right: 32px; width: 640px; }
-  #screen-menu .menu-secondary .forge-plate { min-height: 58px; font-size: 26px; gap: 10px; }
-  #screen-menu .menu-secondary .forge-plate .pixel-icon { width: 32px; height: 32px; }
-  #screen-menu .menu-hint { left: 496px; bottom: 72px; max-width: 320px; font-size: 16px; }
 }
 /* Il riquadro del personaggio non invade il logo centrato, nemmeno con un nome lungo. */
 @media (min-width: 1101px) and (max-width: 1480px) and (min-height: 561px) {
@@ -605,8 +536,4 @@
 }
 @media (min-width: 761px) and (min-height: 561px) and (max-width: 1100px) {
   #screen-menu .menu-hero:has(.menu-hero-empty) { width: 280px; }
-}
-/* A colonna il tooltip e' una riga fra i comandi, non un riquadro sopra di essi. */
-@media (max-width: 760px), (max-height: 560px) {
-  .menu-hint { position: static; width: 100%; max-width: none; }
 }

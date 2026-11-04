@@ -4,7 +4,7 @@ import {CharacterRoster,serializeRoster,deserializeRoster} from './character-ros
 import {deserializeCharacter,serializeCharacter} from './save-format';
 import {acquireBasic,upgradeItem,depositItem,withdrawItem} from './hub-services';
 import {resolveCombatStats} from '../classes/class-stats';
-import {HubState} from './hub-state';
+import {HubState, HUB_MAP, hubApproachPoint, hubBlocked} from './hub-state';
 import {Vec2} from '../../core/vec2';
 function hero(){const c=Character.createStarter();c.completeCreation('Anima','female','mage');return c;}
 describe('oro e servizi del rifugio',()=>{
@@ -41,6 +41,6 @@ describe('oro e servizi del rifugio',()=>{
   expect(b.maxHealth-a.maxHealth).toBe(3);expect(b.maxMana-a.maxMana).toBe(2);expect(b.armor-a.armor).toBe(1);expect(b.abilityPower-a.abilityPower).toBeCloseTo(.01);
  });
  it('le strutture si attivano solo nelle vicinanze e il movimento resta nella mappa',()=>{
-  const state=new HubState();expect(state.nearest()).toBeUndefined();state.position=new Vec2(480,300);expect(state.nearest()!.id).toBe('portal');state.step(100,new Vec2(1,1));expect(state.position.x).toBeLessThan(960);expect(state.position.y).toBeLessThan(640);
+  const state=new HubState();expect(state.nearest()).toBeUndefined();state.position=hubApproachPoint('portal');expect(state.nearest()!.id).toBe('portal');state.step(100,new Vec2(1,1));expect(state.position.x).toBeLessThan(HUB_MAP.width);expect(state.position.y).toBeLessThan(HUB_MAP.height);expect(hubBlocked(state.position)).toBe(false);
  });
 });
