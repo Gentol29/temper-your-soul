@@ -2,7 +2,8 @@ import type { Character } from '../character/character';
 import { DUNGEONS } from '../dungeons/dungeons';
 import { VEIN_MINIONS, type VeinId } from '../minions/minion-catalog';
 import type { MinionDefinition } from '../minions/minion-definition';
-import { bossArt } from '../presentation/boss-art';
+import { bossSheet } from '../presentation/boss-art';
+import { sheetImage, sheetSilhouette, whenSheetReady } from '../presentation/boss-art/sheet-images';
 import { minionArt } from '../presentation/minion-art';
 import { drawSprite } from '../presentation/sprites';
 import { LIEUTENANT_LORE, MINION_LORE } from '../run/bestiary-lore';
@@ -106,20 +107,25 @@ function thumbnail(visual: string, open: boolean): HTMLCanvasElement {
   return canvas;
 }
 
-/** Miniatura del luogotenente: la posa d'attacco, a scala intera, nella stessa altezza delle altre. */
+/** Miniatura del luogotenente: il primo fotogramma del suo foglio, sagoma scura se la pagina e' chiusa. Altezza pari alle altre. */
 function lieutenantThumbnail(id: string, open: boolean): HTMLCanvasElement {
-  const art = bossArt(id);
-  const frame = art.casting;
-  const scale = Math.max(1, Math.floor(36 / frame.length));
   const canvas = document.createElement('canvas');
   canvas.className = 'bestiary-thumb';
-  canvas.width = Math.max(...frame.map((row) => row.length)) * scale;
-  canvas.height = frame.length * scale;
-  const ctx = canvas.getContext('2d');
-  if (ctx !== null) {
-    const colors = art.palette(false, false);
-    const palette = open ? colors : Object.fromEntries(Object.keys(colors).map((key) => [key, '#2a2230']));
-    drawSprite(ctx, frame, canvas.width / 2, canvas.height / 2, scale, palette);
-  }
+  const sheet = bossSheet(id);
+  if (sheet === null) return canvas;
+  const { cell, clips } = sheet.layout;
+  canvas.width = cell.width;
+  canvas.height = cell.height;
+  const paint = (image: HTMLImageElement): void => {
+    const ctx = canvas.getContext('2d');
+    if (ctx === null) return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, cell.width, cell.height);
+    const source = open ? image : sheetSilhouette(sheet.layout.url, image, '#2a2230');
+    ctx.drawImage(source, 0, clips.walk.row * cell.height, cell.width, cell.height, 0, 0, cell.width, cell.height);
+  };
+  const image = sheetImage(sheet.layout.url);
+  if (image !== null) paint(image);
+  else whenSheetReady(sheet.layout.url).then(paint, () => undefined);
   return canvas;
 }

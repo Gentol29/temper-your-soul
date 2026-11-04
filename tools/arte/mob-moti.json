@@ -1,0 +1,10 @@
+{
+  "crypt_skeleton": {"moto": "bipede", "buchi": true, "spalla": 0.5},
+  "crypt_candle": {"moto": "fiamma", "fiamma_da": 0.34},
+  "crypt_bat": {"moto": "ali", "occhi": {"colore": "#ff5a42", "punti": [[0.44, 0.60], [0.54, 0.60]], "lato": 2}},
+  "swamp_toad": {"moto": "rimbalzo"},
+  "forge_anvil": {"moto": "bipede", "buchi": true},
+  "glacier_bear": {"moto": "bipede"},
+  "forge_blade": {"moto": "dondolo", "ruota": 270},
+  "swamp_tadpole": {"moto": "striscia", "buchi": true}
+}

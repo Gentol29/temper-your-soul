@@ -4,9 +4,11 @@ import { Vec2 } from '../../core/vec2';
 import { createQuietMatch, STEP } from '../../testing';
 import { DUNGEONS } from '../dungeons/dungeons';
 import { ART_CREDITS, ART_LICENSES, VFX_CREDIT_IDS } from './art-credits';
-import { BOSS_SHEETS, DEATH_ANIMATION_SHARE, sheetFrame, type BossSheet, type SheetState } from './boss-art';
+import { BOSS_SHEETS, CLASSIC_BOSS_SHEETS, DEATH_ANIMATION_SHARE, sheetFrame, type BossSheet, type SheetState } from './boss-art';
 import { Effects, FEEDBACK } from './effects';
 import { ActorPoses } from './poses';
+import { LIEUTENANTS } from '../run/lieutenants';
+import { VEIN_LIEUTENANTS } from '../run/vein-lieutenants';
 import { TILE_CREDITS } from './themes/tiles';
 
 /** Il minimo di `node:fs` che serve ai test (il progetto non include i tipi di Node e non li aggiunge per questo). */
@@ -32,17 +34,35 @@ const clipsOf = (sheet: BossSheet) => Object.values(sheet.layout.clips).filter((
 
 const STILL: SheetState = { enraged: false, slowed: false, time: 0, cast: null, transform: null, death: null };
 const GUARDIAN = BOSS_SHEETS.guardian!;
-const WARDEN = BOSS_SHEETS.frost_warden!;
+// L'unico foglio senza trasformazione e' fra quelli di terzi.
+const WARDEN = CLASSIC_BOSS_SHEETS.frost_warden!;
 
 describe('fogli di sprite dei boss', () => {
   it('ogni boss dei dungeon ha un foglio', () => {
     for (const dungeon of DUNGEONS) expect(BOSS_SHEETS[dungeon.boss.art], `${dungeon.id}: ${dungeon.boss.art}`).toBeDefined();
   });
 
+  it('anche ogni luogotenente ha un foglio, con tutte le animazioni e i piedi sulla sua ombra', () => {
+    const lieutenants = [...Object.values(LIEUTENANTS), ...Object.values(VEIN_LIEUTENANTS).flatMap((veins) => Object.values(veins))];
+    expect(lieutenants.length).toBe(12);
+    for (const figure of [...lieutenants, ...DUNGEONS.map((dungeon) => dungeon.boss)]) {
+      const sheet = BOSS_SHEETS[figure.art];
+      expect(sheet, figure.art).toBeDefined();
+      expect(sheet!.scale, figure.art).toBe(1);
+      expect(sheet!.layout.clips.transform, figure.art).toBeDefined();
+      expect(sheet!.layout.clips.death.frames, figure.art).toBeGreaterThan(1);
+      // La figura copre il cerchio di colpo: non piu' stretta del raggio, non piu' larga di 3 volte il diametro.
+      expect(sheet!.layout.cell.width, figure.art).toBeGreaterThanOrEqual(figure.stats.hitRadius * 1.3);
+      expect(sheet!.layout.cell.width, figure.art).toBeLessThanOrEqual(figure.stats.hitRadius * 6);
+      expect(sheet!.feetY, figure.art).toBeGreaterThan(0);
+    }
+  });
+
   it('i PNG esistono, sono leggeri e misurano esattamente celle per righe e colonne', async () => {
     const fs = await fileSystem();
     let total = 0;
-    for (const [id, sheet] of Object.entries(BOSS_SHEETS)) {
+    const tutti = [...Object.entries(CLASSIC_BOSS_SHEETS), ...Object.entries(BOSS_SHEETS)];
+    for (const [id, sheet] of tutti) {
       const url = new URL(sheet.layout.url);
       expect(url.protocol, id).toBe('file:');
       expect(fs.existsSync(url), id).toBe(true);
@@ -55,7 +75,7 @@ describe('fogli di sprite dei boss', () => {
         height: clips.length * sheet.layout.cell.height,
       });
     }
-    expect(total).toBeLessThan(300 * 1024);
+    expect(total).toBeLessThan(1500 * 1024);
   });
 
   it('righe distinte, fotogrammi validi, piedi dentro la cella e ingrandimento intero', () => {
@@ -78,7 +98,7 @@ describe('fogli di sprite dei boss', () => {
   });
 
   it('ogni foglio ha i crediti, con una licenza ammessa; nessun credito resta senza uso', () => {
-    const used = new Set([...VFX_CREDIT_IDS, ...Object.values(BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(TILE_CREDITS).flat()]);
+    const used = new Set([...VFX_CREDIT_IDS, ...Object.values(BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(CLASSIC_BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(TILE_CREDITS).flat()]);
     for (const [id, sheet] of Object.entries(BOSS_SHEETS)) {
       expect(sheet.credits.length, id).toBeGreaterThan(0);
       for (const credit of sheet.credits) expect(ART_CREDITS[credit], `${id}: ${credit}`).toBeDefined();

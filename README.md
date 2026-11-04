@@ -420,3 +420,7 @@ Scheda **Cursore** nelle Impostazioni: sette colori provvisori in `features/sett
 ### Release v0.11.00 · attacchi base e premi leggibili
 
 Solo le primarie perdono le particelle casuali al lancio e nella scia; sangue, impatti, uccisioni, buff, secondarie e gli altri effetti restano attivi. Nuovi sprite Hi-bit per fendente, freccia con onda del tiro e quattro elementi del Mago; XP e testo di oro assorbito a 16 px Silkscreen, con righe distanziate. Requisito Hi-bit/palette esplicito in AGENTS.md e richiamato in CLAUDE.md. Incremento isolato dal lavoro parallelo sulla camera e riallineato alle PR #12 e #13. [Specifiche, 862 test e prova tecnica del browser](docs/attacchi-base-hi-bit.md). Anteprima: `/vfx-preview.html`; prova giocata ancora da fare.
+
+### Boss e luogotenenti con il generatore locale · v0.11.04, proposta
+
+Sedici figure nuove fatte in locale con SDXL e Pixel Art XL, a fogli con camminata, attacco, furia, passaggio di fase e morte. Solo aspetto. Grafica generata con l'IA: da confermare con il proprietario. I vecchi boss si vedono con `?boss=classici`. Dettagli in [compito-grafica](docs/compito-grafica.md). Prova giocata ancora da fare.

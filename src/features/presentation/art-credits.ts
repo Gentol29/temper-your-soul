@@ -46,6 +46,15 @@ export const ART_CREDITS: Readonly<Record<string, ArtCredit>> = {
     use: 'cortile e strutture dello sfondo del menu; soglia della pagina Personaggi',
     changes: 'ricreato da una tavola dell\'utente, strutture scontornate, palette comune e schiarita; vedi src/assets/art/menu/LEGGIMI.md',
   },
+  'local-sdxl-boss': {
+    title: 'Boss e luogotenenti',
+    author: 'Temper your soul · generato in locale con SDXL 1.0 e Pixel Art XL (nerijs)',
+    source: 'https://huggingface.co/nerijs/pixel-art-xl',
+    license: 'Generato-locale',
+    retrieved: '2026-11-03',
+    use: 'boss e luogotenenti',
+    changes: 'un disegno per figura, ridotto a pixel veri da tools/arte/prepara_boss_ia.py; animazioni, furia, passaggio di fase e morte ricavati da quel disegno',
+  },
   'oga-animated-statue': {
     title: 'Animated Statue',
     author: 'Calciumtrice',
