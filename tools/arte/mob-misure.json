@@ -2,6 +2,10 @@
  "crypt_wisp": {
   "larghezza": 24,
   "altezza": 24,
+  "moto": "fiamma",
+  "fiamma_da": 1,
+  "scelta": 4,
+  "fluttua": true,
   "comportamento": "kamikaze",
   "velocita": 120,
   "raggio": 10,
@@ -11,7 +15,32 @@
   "larghezza": 24,
   "altezza": 36,
   "moto": "fiamma",
-  "fiamma_da": 0.34,
+  "fiamma_da": 0.14,
+  "scelta": 1,
+  "tinte": [
+   {
+    "da": [
+     180,
+     260
+    ],
+    "a": 24,
+    "sat": 1.1
+   }
+  ],
+  "occhi": {
+   "colore": "#ffb648",
+   "punti": [
+    [
+     0.5,
+     0.06
+    ],
+    [
+     0.5,
+     0.13
+    ]
+   ],
+   "lato": 3
+  },
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 8,
@@ -35,6 +64,7 @@
    ],
    "lato": 2
   },
+  "scelta": 0,
   "comportamento": "flyer",
   "velocita": 150,
   "raggio": 7,
@@ -46,6 +76,8 @@
   "moto": "bipede",
   "buchi": true,
   "spalla": 0.5,
+  "scelta": 1,
+  "mani": 0.74,
   "comportamento": "chaser",
   "velocita": 82,
   "raggio": 9,
@@ -54,6 +86,22 @@
  "crypt_gargoyle": {
   "larghezza": 36,
   "altezza": 30,
+  "moto": "rimbalzo",
+  "scelta": 1,
+  "occhi": {
+   "colore": "#ffb648",
+   "punti": [
+    [
+     0.41,
+     0.31
+    ],
+    [
+     0.53,
+     0.31
+    ]
+   ],
+   "lato": 2
+  },
   "comportamento": "charger",
   "velocita": 95,
   "raggio": 11,
@@ -62,6 +110,21 @@
  "crypt_acolyte": {
   "larghezza": 30,
   "altezza": 36,
+  "moto": "veste",
+  "buchi": true,
+  "scelta": 7,
+  "tinte": [
+   {
+    "da": [
+     340,
+     44
+    ],
+    "a": 292,
+    "sat": 0.8,
+    "fino_a": 0.8
+   }
+  ],
+  "parte": null,
   "comportamento": "shooter",
   "velocita": 72,
   "raggio": 9,
@@ -70,6 +133,18 @@
  "crypt_bell": {
   "larghezza": 36,
   "altezza": 36,
+  "moto": "oscilla",
+  "scelta": 1,
+  "tinte": [
+   {
+    "da": [
+     60,
+     190
+    ],
+    "a": 34,
+    "sat": 1
+   }
+  ],
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 14,
@@ -78,6 +153,10 @@
  "crypt_reliquary": {
   "larghezza": 36,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 9,
+  "cucitura": 0.5,
+  "buchi": false,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 15,
@@ -86,6 +165,22 @@
  "crypt_skull": {
   "larghezza": 21,
   "altezza": 21,
+  "moto": "rimbalzo",
+  "scelta": 3,
+  "occhi": {
+   "colore": "#6dffa0",
+   "punti": [
+    [
+     0.34,
+     0.42
+    ],
+    [
+     0.66,
+     0.42
+    ]
+   ],
+   "lato": 2
+  },
   "comportamento": "leaper",
   "velocita": 70,
   "raggio": 7,
@@ -94,6 +189,11 @@
  "crypt_rat": {
   "larghezza": 27,
   "altezza": 15,
+  "moto": "quadrupede",
+  "lato": true,
+  "scelta": 6,
+  "specchia": false,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 135,
   "raggio": 6,
@@ -102,6 +202,9 @@
  "crypt_gravedigger": {
   "larghezza": 30,
   "altezza": 33,
+  "moto": "veste",
+  "buchi": true,
+  "scelta": 4,
   "comportamento": "burrower",
   "velocita": 80,
   "raggio": 11,
@@ -110,6 +213,8 @@
  "crypt_lantern": {
   "larghezza": 18,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 4,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 9,
@@ -118,6 +223,8 @@
  "crypt_mourner": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 1,
   "comportamento": "shooter",
   "velocita": 65,
   "raggio": 9,
@@ -126,6 +233,10 @@
  "crypt_bone_colossus": {
   "larghezza": 36,
   "altezza": 36,
+  "moto": "bipede",
+  "buchi": true,
+  "spalla": 0.28,
+  "scelta": 13,
   "comportamento": "charger",
   "velocita": 55,
   "raggio": 16,
@@ -134,6 +245,18 @@
  "crypt_mass_grave": {
   "larghezza": 42,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 0,
+  "tinte": [
+   {
+    "da": [
+     120,
+     200
+    ],
+    "a": 200,
+    "sat": 0.45
+   }
+  ],
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -142,6 +265,9 @@
  "crypt_choir_ghost": {
   "larghezza": 21,
   "altezza": 27,
+  "moto": "veste",
+  "fluttua": true,
+  "scelta": 0,
   "comportamento": "chaser",
   "velocita": 80,
   "raggio": 8,
@@ -150,6 +276,8 @@
  "crypt_psalter": {
   "larghezza": 27,
   "altezza": 18,
+  "moto": "ali",
+  "scelta": 1,
   "comportamento": "flyer",
   "velocita": 150,
   "raggio": 7,
@@ -158,6 +286,18 @@
  "crypt_organ_pipe": {
   "larghezza": 18,
   "altezza": 42,
+  "moto": "respiro",
+  "scelta": 4,
+  "tinte": [
+   {
+    "da": [
+     335,
+     35
+    ],
+    "a": 285,
+    "sat": 1
+   }
+  ],
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 10,
@@ -166,6 +306,8 @@
  "crypt_cantor": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 3,
   "comportamento": "shooter",
   "velocita": 65,
   "raggio": 9,
@@ -174,6 +316,8 @@
  "crypt_chapel_master": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 3,
   "comportamento": "support",
   "velocita": 60,
   "raggio": 9,
@@ -182,6 +326,18 @@
  "crypt_eagle": {
   "larghezza": 42,
   "altezza": 36,
+  "moto": "rimbalzo",
+  "tinte": [
+   {
+    "da": [
+     60,
+     190
+    ],
+    "a": 34,
+    "sat": 1
+   }
+  ],
+  "scelta": 2,
   "comportamento": "leaper",
   "velocita": 50,
   "raggio": 15,
@@ -190,6 +346,8 @@
  "crypt_choir_stall": {
   "larghezza": 42,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 6,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -198,6 +356,8 @@
  "swamp_sporeling": {
   "larghezza": 24,
   "altezza": 24,
+  "moto": "rimbalzo",
+  "scelta": 6,
   "comportamento": "chaser",
   "velocita": 72,
   "raggio": 11,
@@ -206,6 +366,8 @@
  "swamp_puffball": {
   "larghezza": 30,
   "altezza": 27,
+  "moto": "rimbalzo",
+  "scelta": 3,
   "comportamento": "kamikaze",
   "velocita": 70,
   "raggio": 10,
@@ -214,6 +376,9 @@
  "swamp_gnat": {
   "larghezza": 21,
   "altezza": 15,
+  "moto": "ali",
+  "scelta": 10,
+  "tronco": 0.3,
   "comportamento": "flyer",
   "velocita": 175,
   "raggio": 6,
@@ -223,6 +388,7 @@
   "larghezza": 36,
   "altezza": 24,
   "moto": "rimbalzo",
+  "scelta": 1,
   "comportamento": "leaper",
   "velocita": 55,
   "raggio": 12,
@@ -231,6 +397,9 @@
  "swamp_flower": {
   "larghezza": 33,
   "altezza": 36,
+  "moto": "respiro",
+  "scelta": 2,
+  "taglia_fondo": 0.14,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 11,
@@ -239,6 +408,9 @@
  "swamp_worm": {
   "larghezza": 27,
   "altezza": 30,
+  "moto": "striscia",
+  "testa": "su",
+  "scelta": 7,
   "comportamento": "burrower",
   "velocita": 85,
   "raggio": 12,
@@ -247,6 +419,11 @@
  "swamp_snail": {
   "larghezza": 42,
   "altezza": 30,
+  "moto": "respiro",
+  "lato": true,
+  "testa": "sinistra",
+  "scelta": 3,
+  "specchia": true,
   "comportamento": "chaser",
   "velocita": 38,
   "raggio": 15,
@@ -255,6 +432,10 @@
  "swamp_fairy_ring": {
   "larghezza": 42,
   "altezza": 27,
+  "moto": "respiro",
+  "buchi": true,
+  "scelta": 11,
+  "tinte": null,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -263,6 +444,10 @@
  "swamp_leech": {
   "larghezza": 24,
   "altezza": 12,
+  "moto": "striscia",
+  "lato": true,
+  "testa": "destra",
+  "scelta": 8,
   "comportamento": "chaser",
   "velocita": 105,
   "raggio": 6,
@@ -271,6 +456,9 @@
  "swamp_drowned": {
   "larghezza": 24,
   "altezza": 33,
+  "moto": "bipede",
+  "scelta": 9,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 50,
   "raggio": 10,
@@ -279,6 +467,12 @@
  "swamp_pike": {
   "larghezza": 42,
   "altezza": 18,
+  "moto": "striscia",
+  "lato": true,
+  "testa": "sinistra",
+  "scelta": 8,
+  "ruota": 0,
+  "specchia": true,
   "comportamento": "charger",
   "velocita": 70,
   "raggio": 12,
@@ -287,6 +481,8 @@
  "swamp_lily": {
   "larghezza": 36,
   "altezza": 24,
+  "moto": "respiro",
+  "scelta": 2,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 11,
@@ -295,6 +491,8 @@
  "swamp_washer": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 1,
   "comportamento": "shooter",
   "velocita": 62,
   "raggio": 9,
@@ -303,6 +501,9 @@
  "swamp_bloated": {
   "larghezza": 39,
   "altezza": 39,
+  "moto": "rimbalzo",
+  "scelta": 3,
+  "buchi": true,
   "comportamento": "kamikaze",
   "velocita": 42,
   "raggio": 16,
@@ -311,6 +512,8 @@
  "swamp_spawn": {
   "larghezza": 36,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 6,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 15,
@@ -321,6 +524,20 @@
   "altezza": 12,
   "moto": "striscia",
   "buchi": true,
+  "scelta": 0,
+  "ruota": 270,
+  "lato": true,
+  "testa": "destra",
+  "occhi": {
+   "colore": "#c8d8a0",
+   "punti": [
+    [
+     0.74,
+     0.34
+    ]
+   ],
+   "lato": 2
+  },
   "comportamento": "chaser",
   "velocita": 145,
   "raggio": 6,
@@ -329,6 +546,10 @@
  "swamp_ant": {
   "larghezza": 24,
   "altezza": 18,
+  "moto": "quadrupede",
+  "lato": false,
+  "scelta": 15,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 120,
   "raggio": 7,
@@ -337,6 +558,9 @@
  "swamp_moth": {
   "larghezza": 27,
   "altezza": 18,
+  "moto": "ali",
+  "scelta": 10,
+  "tronco": 0.26,
   "comportamento": "flyer",
   "velocita": 140,
   "raggio": 7,
@@ -345,6 +569,9 @@
  "swamp_beetle": {
   "larghezza": 30,
   "altezza": 24,
+  "moto": "quadrupede",
+  "scelta": 6,
+  "buchi": true,
   "comportamento": "shooter",
   "velocita": 60,
   "raggio": 10,
@@ -353,6 +580,19 @@
  "swamp_spider": {
   "larghezza": 30,
   "altezza": 27,
+  "moto": "quadrupede",
+  "scelta": 1,
+  "tinte": [
+   {
+    "da": [
+     185,
+     250
+    ],
+    "a": 95,
+    "sat": 0.5
+   }
+  ],
+  "buchi": true,
   "comportamento": "shooter",
   "velocita": 70,
   "raggio": 10,
@@ -361,6 +601,9 @@
  "swamp_cicada": {
   "larghezza": 27,
   "altezza": 21,
+  "moto": "ali",
+  "scelta": 5,
+  "tronco": 0.3,
   "comportamento": "orbiter",
   "velocita": 120,
   "raggio": 8,
@@ -369,6 +612,10 @@
  "swamp_stag": {
   "larghezza": 42,
   "altezza": 39,
+  "moto": "quadrupede",
+  "scelta": 14,
+  "buchi": true,
+  "lato": false,
   "comportamento": "charger",
   "velocita": 60,
   "raggio": 16,
@@ -377,6 +624,8 @@
  "swamp_anthill": {
   "larghezza": 42,
   "altezza": 27,
+  "moto": "respiro",
+  "scelta": 0,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -385,6 +634,9 @@
  "forge_imp": {
   "larghezza": 24,
   "altezza": 24,
+  "moto": "rimbalzo",
+  "scelta": 6,
+  "buchi": true,
   "comportamento": "kamikaze",
   "velocita": 165,
   "raggio": 9,
@@ -393,6 +645,9 @@
  "forge_spark": {
   "larghezza": 18,
   "altezza": 18,
+  "moto": "sobbalzo",
+  "scelta": 0,
+  "fluttua": true,
   "comportamento": "flyer",
   "velocita": 200,
   "raggio": 6,
@@ -401,6 +656,8 @@
  "forge_pebble": {
   "larghezza": 24,
   "altezza": 21,
+  "moto": "rimbalzo",
+  "scelta": 3,
   "comportamento": "chaser",
   "velocita": 95,
   "raggio": 8,
@@ -409,6 +666,21 @@
  "forge_bellows": {
   "larghezza": 36,
   "altezza": 30,
+  "moto": "respiro",
+  "scelta": 13,
+  "occhi": null,
+  "buchi": true,
+  "tinte": [
+   {
+    "da": [
+     170,
+     235
+    ],
+    "a": 28,
+    "sat": 1.3
+   }
+  ],
+  "bianco_a": "#6a4630",
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 13,
@@ -417,6 +689,9 @@
  "forge_devil": {
   "larghezza": 30,
   "altezza": 33,
+  "moto": "bipede",
+  "scelta": 1,
+  "buchi": true,
   "comportamento": "shooter",
   "velocita": 95,
   "raggio": 9,
@@ -427,6 +702,7 @@
   "altezza": 33,
   "moto": "bipede",
   "buchi": true,
+  "scelta": 0,
   "comportamento": "chaser",
   "velocita": 45,
   "raggio": 16,
@@ -435,6 +711,9 @@
  "forge_slag": {
   "larghezza": 36,
   "altezza": 27,
+  "moto": "rimbalzo",
+  "scelta": 1,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 55,
   "raggio": 13,
@@ -443,6 +722,18 @@
  "forge_droplet": {
   "larghezza": 18,
   "altezza": 15,
+  "moto": "rimbalzo",
+  "scelta": 0,
+  "tinte": [
+   {
+    "da": [
+     130,
+     210
+    ],
+    "a": 28,
+    "sat": 1
+   }
+  ],
   "comportamento": "chaser",
   "velocita": 95,
   "raggio": 7,
@@ -451,6 +742,8 @@
  "forge_crucible": {
   "larghezza": 36,
   "altezza": 36,
+  "moto": "respiro",
+  "scelta": 3,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 15,
@@ -459,8 +752,10 @@
  "forge_blade": {
   "larghezza": 27,
   "altezza": 9,
-  "moto": "dondolo",
+  "moto": "sobbalzo",
   "ruota": 270,
+  "scelta": 0,
+  "fluttua": true,
   "comportamento": "chaser",
   "velocita": 120,
   "raggio": 7,
@@ -469,6 +764,9 @@
  "forge_page": {
   "larghezza": 24,
   "altezza": 30,
+  "moto": "bipede",
+  "scelta": 7,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 85,
   "raggio": 8,
@@ -477,6 +775,9 @@
  "forge_crossbow": {
   "larghezza": 33,
   "altezza": 24,
+  "moto": "respiro",
+  "buchi": true,
+  "scelta": 10,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 11,
@@ -485,6 +786,12 @@
  "forge_flail": {
   "larghezza": 30,
   "altezza": 30,
+  "moto": "sobbalzo",
+  "scelta": 14,
+  "buchi": false,
+  "tinte": null,
+  "bianco_a": null,
+  "fluttua": true,
   "comportamento": "orbiter",
   "velocita": 110,
   "raggio": 10,
@@ -493,6 +800,19 @@
  "forge_armor": {
   "larghezza": 36,
   "altezza": 42,
+  "moto": "bipede",
+  "scelta": 1,
+  "buchi": true,
+  "tinte": [
+   {
+    "da": [
+     245,
+     310
+    ],
+    "a": 232,
+    "sat": 0.55
+   }
+  ],
   "comportamento": "charger",
   "velocita": 60,
   "raggio": 15,
@@ -501,6 +821,9 @@
  "forge_armorer": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "bipede",
+  "scelta": 7,
+  "buchi": true,
   "comportamento": "support",
   "velocita": 60,
   "raggio": 9,
@@ -509,6 +832,9 @@
  "forge_rack": {
   "larghezza": 42,
   "altezza": 30,
+  "moto": "respiro",
+  "buchi": false,
+  "scelta": 11,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -517,6 +843,8 @@
  "forge_canary": {
   "larghezza": 18,
   "altezza": 18,
+  "moto": "ali",
+  "scelta": 3,
   "comportamento": "flyer",
   "velocita": 150,
   "raggio": 6,
@@ -525,6 +853,9 @@
  "forge_miner": {
   "larghezza": 24,
   "altezza": 33,
+  "moto": "bipede",
+  "scelta": 9,
+  "buchi": true,
   "comportamento": "chaser",
   "velocita": 60,
   "raggio": 9,
@@ -533,6 +864,8 @@
  "forge_mole": {
   "larghezza": 30,
   "altezza": 24,
+  "moto": "rimbalzo",
+  "scelta": 5,
   "comportamento": "burrower",
   "velocita": 85,
   "raggio": 11,
@@ -541,6 +874,9 @@
  "forge_blaster": {
   "larghezza": 27,
   "altezza": 33,
+  "moto": "bipede",
+  "scelta": 8,
+  "buchi": false,
   "comportamento": "shooter",
   "velocita": 62,
   "raggio": 9,
@@ -549,6 +885,11 @@
  "forge_cart": {
   "larghezza": 36,
   "altezza": 27,
+  "moto": "sobbalzo",
+  "lato": true,
+  "scelta": 2,
+  "fluttua": false,
+  "buchi": true,
   "comportamento": "charger",
   "velocita": 70,
   "raggio": 13,
@@ -557,6 +898,9 @@
  "forge_ore_giant": {
   "larghezza": 42,
   "altezza": 42,
+  "moto": "bipede",
+  "scelta": 7,
+  "buchi": true,
   "comportamento": "leaper",
   "velocita": 45,
   "raggio": 17,
@@ -565,6 +909,9 @@
  "forge_shaft": {
   "larghezza": 36,
   "altezza": 36,
+  "moto": "respiro",
+  "scelta": 12,
+  "buchi": false,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 16,
@@ -573,6 +920,8 @@
  "glacier_sentinel": {
   "larghezza": 24,
   "altezza": 24,
+  "moto": "respiro",
+  "scelta": 3,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 12,
@@ -581,6 +930,16 @@
  "glacier_flake": {
   "larghezza": 21,
   "altezza": 21,
+  "moto": "sobbalzo",
+  "angoli": [
+   0,
+   15,
+   30,
+   45
+  ],
+  "buchi": true,
+  "scelta": 3,
+  "fluttua": true,
   "comportamento": "flyer",
   "velocita": 170,
   "raggio": 6,
@@ -589,6 +948,11 @@
  "glacier_wolf": {
   "larghezza": 39,
   "altezza": 24,
+  "moto": "quadrupede",
+  "lato": true,
+  "scelta": 12,
+  "specchia": false,
+  "buchi": false,
   "comportamento": "charger",
   "velocita": 140,
   "raggio": 9,
@@ -597,6 +961,8 @@
  "glacier_apprentice": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 1,
   "comportamento": "shooter",
   "velocita": 80,
   "raggio": 9,
@@ -605,6 +971,10 @@
  "glacier_spirit": {
   "larghezza": 27,
   "altezza": 24,
+  "moto": "fiamma",
+  "fiamma_da": 1,
+  "fluttua": true,
+  "scelta": 1,
   "comportamento": "orbiter",
   "velocita": 125,
   "raggio": 9,
@@ -613,6 +983,8 @@
  "glacier_ice_block": {
   "larghezza": 36,
   "altezza": 33,
+  "moto": "rimbalzo",
+  "scelta": 2,
   "comportamento": "chaser",
   "velocita": 42,
   "raggio": 15,
@@ -621,6 +993,8 @@
  "glacier_crystal": {
   "larghezza": 27,
   "altezza": 36,
+  "moto": "respiro",
+  "scelta": 7,
   "comportamento": "support",
   "velocita": 50,
   "raggio": 11,
@@ -629,6 +1003,10 @@
  "glacier_ram": {
   "larghezza": 39,
   "altezza": 30,
+  "moto": "quadrupede",
+  "lato": true,
+  "scelta": 15,
+  "specchia": false,
   "comportamento": "charger",
   "velocita": 70,
   "raggio": 13,
@@ -637,6 +1015,10 @@
  "glacier_ermine": {
   "larghezza": 27,
   "altezza": 12,
+  "moto": "quadrupede",
+  "lato": true,
+  "scelta": 18,
+  "specchia": true,
   "comportamento": "chaser",
   "velocita": 150,
   "raggio": 6,
@@ -645,6 +1027,9 @@
  "glacier_lemming": {
   "larghezza": 18,
   "altezza": 15,
+  "moto": "rimbalzo",
+  "lato": true,
+  "scelta": 1,
   "comportamento": "kamikaze",
   "velocita": 135,
   "raggio": 7,
@@ -653,6 +1038,8 @@
  "glacier_owl": {
   "larghezza": 27,
   "altezza": 27,
+  "moto": "ali",
+  "scelta": 3,
   "comportamento": "orbiter",
   "velocita": 130,
   "raggio": 9,
@@ -661,6 +1048,10 @@
  "glacier_fox": {
   "larghezza": 30,
   "altezza": 18,
+  "moto": "quadrupede",
+  "lato": true,
+  "scelta": 16,
+  "specchia": true,
   "comportamento": "chaser",
   "velocita": 95,
   "raggio": 9,
@@ -670,6 +1061,7 @@
   "larghezza": 42,
   "altezza": 36,
   "moto": "bipede",
+  "scelta": 0,
   "comportamento": "chaser",
   "velocita": 55,
   "raggio": 16,
@@ -678,6 +1070,8 @@
  "glacier_den": {
   "larghezza": 36,
   "altezza": 24,
+  "moto": "respiro",
+  "scelta": 3,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 15,
@@ -686,6 +1080,8 @@
  "glacier_homunculus": {
   "larghezza": 18,
   "altezza": 24,
+  "moto": "bipede",
+  "scelta": 17,
   "comportamento": "chaser",
   "velocita": 110,
   "raggio": 6,
@@ -694,6 +1090,9 @@
  "glacier_snowball": {
   "larghezza": 15,
   "altezza": 15,
+  "moto": "sobbalzo",
+  "scelta": 0,
+  "fluttua": false,
   "comportamento": "chaser",
   "velocita": 160,
   "raggio": 6,
@@ -702,6 +1101,10 @@
  "glacier_astrolabe": {
   "larghezza": 36,
   "altezza": 36,
+  "moto": "sobbalzo",
+  "buchi": true,
+  "scelta": 2,
+  "fluttua": false,
   "comportamento": "turret",
   "velocita": 0,
   "raggio": 12,
@@ -710,6 +1113,8 @@
  "glacier_star_reader": {
   "larghezza": 24,
   "altezza": 36,
+  "moto": "veste",
+  "scelta": 1,
   "comportamento": "shooter",
   "velocita": 60,
   "raggio": 9,
@@ -718,6 +1123,8 @@
  "glacier_snowman": {
   "larghezza": 42,
   "altezza": 42,
+  "moto": "rimbalzo",
+  "scelta": 3,
   "comportamento": "chaser",
   "velocita": 36,
   "raggio": 17,
@@ -726,6 +1133,8 @@
  "glacier_alembic": {
   "larghezza": 30,
   "altezza": 36,
+  "moto": "respiro",
+  "scelta": 3,
   "comportamento": "nest",
   "velocita": 0,
   "raggio": 14,

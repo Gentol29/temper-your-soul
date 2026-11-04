@@ -6,7 +6,8 @@ import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
-import { drawTile, pickVariant, tileColors, tileSheet, tileVariants, TILE_SIZE } from './tiles';
+import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
+import { drawTile, tileAt, tileColors, tileSheet, TILE_SIZE } from './tiles';
 
 /**
  * Il ghiacciaio: lastre di ghiaccio azzurro con crepe e riflessi che scorrono, banchi di neve, cristalli che brillano,
@@ -25,7 +26,7 @@ const GLACIER_DECOR = {
 };
 
 /** Faccia del muro in alto: una parete di ghiaccio con colate chiare e scure. */
-const GLACIER_WALL_FACE: WallFaceStyle = { face: '#7fb0d3', dark: '#5f8fb8', light: '#e4f4fc', pattern: 'ice' };
+const GLACIER_WALL_FACE: WallFaceStyle = { face: '#7fb0d3', dark: '#5f8fb8', light: '#e4f4fc', pattern: 'ice', tiles: 'glacier' };
 
 /** Tre sfumature di lastra, dalla piu' scura alla piu' chiara. */
 const SLAB_COLORS = ['#17344f', '#1b3c5a', '#214566'] as const;
@@ -46,14 +47,16 @@ function drawSlab(ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.fillRect(x, y, size, size);
   if (sheet !== null) {
     // Una lastra su tre di ghiaccio piu' scuro, come i tre toni delle lastre disegnate nel codice.
-    const variants = tileVariants('glacier', h < 0.34 ? 'floorDark' : 'floor');
+    const material = h < 0.34 ? 'floorDark' : 'floor';
     for (let ty = y; ty < y + size; ty += TILE_SIZE) {
       for (let tx = x; tx < x + size; tx += TILE_SIZE) {
-        const tile = pickVariant(variants, cellValue(tx, ty, 3));
+        const tile = tileAt('glacier', material, tx, ty, cellValue(tx, ty, 3));
         if (tile !== undefined) drawTile(ctx, sheet, tile, tx, ty);
       }
     }
   }
+  // Con le scenografie giunture e crepe stanno gia' nella superficie.
+  if (sceneryReady('glacier')) return;
   // Giunture tra le lastre e bordo illuminato in alto a sinistra.
   ctx.fillStyle = '#0d2238';
   ctx.fillRect(x, y, size, 2);
@@ -151,8 +154,11 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
   const sheet = tileSheet('glacier');
   forVisibleCells(arena, camera, decor.slabSize, 0, (x, y) => drawSlab(ctx, x, y, decor.slabSize, sheet));
 
+  drawFloorScenery(ctx, arena, camera, 'glacier');
+  const scenic = sceneryReady('glacier');
+
   // Banchi di neve: macchie chiare e basse, piu' fitte lungo il muro.
-  forVisibleCells(arena, camera, decor.snowCell, 80, (cx, cy) => {
+  if (!scenic) forVisibleCells(arena, camera, decor.snowCell, 80, (cx, cy) => {
     const h = cellValue(cx, cy, 11);
     if (h < 0.5) return;
     const x = cx + cellValue(cx, cy, 12) * decor.snowCell;
@@ -181,6 +187,7 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
   ctx.fillRect(0, arena.height - 6, arena.width, 6);
   ctx.fillRect(arena.width - 6, 0, 6, arena.height);
   drawTopWallFace(ctx, arena, camera, GLACIER_WALL_FACE);
+  if (scenic) return;
   const face = wallFaceHeight(arena);
 
   const spacing = decor.toothSpacing;
@@ -223,13 +230,15 @@ const floorCache = new FloorCache(drawStaticFloor);
 
 function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, clock: number): void {
   const decor = GLACIER_DECOR;
-  floorCache.draw(ctx, arena, camera, tileSheet('glacier') === null ? '' : 'tiles');
+  floorCache.draw(ctx, arena, camera, floorVersion('glacier'));
+  drawFloorSceneryLights(ctx, arena, camera, 'glacier', clock);
+  const scenic = sceneryReady('glacier');
 
   // Riflessi sulle lastre, sotto banchi di neve e cristalli come prima (i riflessi sono tenui).
-  forVisibleCells(arena, camera, decor.slabSize, 0, (x, y) => drawSlabShine(ctx, x, y, decor.slabSize, clock));
+  if (!scenic) forVisibleCells(arena, camera, decor.slabSize, 0, (x, y) => drawSlabShine(ctx, x, y, decor.slabSize, clock));
 
   // Cristalli a terra: scintillano a turno.
-  forVisibleCells(arena, camera, decor.crystalCell, 60, (cx, cy) => {
+  if (!scenic) forVisibleCells(arena, camera, decor.crystalCell, 60, (cx, cy) => {
     const h = cellValue(cx, cy, 21);
     if (h < 0.45) return;
     const x = cx + 40 + cellValue(cx, cy, 22) * (decor.crystalCell - 80);
@@ -256,6 +265,7 @@ function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
     if (!camera.isVisible(spot, 130)) continue;
     const shine = Math.sin(clock * 2.2 + spot.x * 0.02) * 0.5 + 0.5;
     drawLight(ctx, spot.x, spot.y, '#7fd8ff', 120, 0.3 + 0.3 * shine);
+    if (scenic) continue;
     ctx.fillStyle = '#3f7fb0';
     ctx.beginPath();
     ctx.moveTo(spot.x, spot.y - 9);
@@ -276,6 +286,7 @@ function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
 
 /** Colonna di cristallo: prisma esagonale a faccette con un nucleo luminoso che pulsa e due schegge alla base. */
 function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera, clock: number): void {
+  if (drawScenicPillar(ctx, pillar, camera, 'glacier', clock)) return;
   if (!camera.isVisible(pillar.position, pillar.radius + 30)) return;
   const { x, y } = pillar.position;
   const r = pillar.radius;
@@ -326,7 +337,7 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const glacierTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, '#b4d6ea', '#e4f4fc', ambient),
+  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, '#b4d6ea', '#e4f4fc', ambient, 'glacier'),
   ambient: '#3e4c64',
   // Pavimento chiaro: i proiettili nemici, quasi tutti chiari, hanno bisogno di un contorno piu' spesso.
   projectileRim: 4.5,

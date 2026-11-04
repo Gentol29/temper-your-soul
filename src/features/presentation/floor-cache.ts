@@ -2,7 +2,7 @@ import { Camera } from '../../core/camera';
 import { Vec2 } from '../../core/vec2';
 import type { ArenaDefinition } from '../arena/arena';
 
-/** Cache limitata a 8 MiB per arena, senza prerenderizzare una mappa intera. */
+/** Cache limitata a 8 MiB per arena, senza prerenderizzare una mappa intera; di piu' solo se la vista ne richiede di piu'. */
 export const FLOOR_CACHE = { chunkSize: 256, maxChunks: 32 } as const;
 type PaintFloor = (ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera) => void;
 
@@ -36,7 +36,8 @@ export class FloorCache {
         this.paint(painter, arena, view);
       }
       chunks.set(key, tile);
-      if (chunks.size > FLOOR_CACHE.maxChunks) chunks.delete(chunks.keys().next().value!);
+      // Con una finestra grande la vista copre piu' tasselli del limite: buttarli la farebbe ridipingere a ogni fotogramma.
+      if (chunks.size > Math.max(FLOOR_CACHE.maxChunks, (x1 - x0 + 1) * (y1 - y0 + 1) + 4)) chunks.delete(chunks.keys().next().value!);
       ctx.drawImage(tile, cx * size, cy * size);
     }
   }

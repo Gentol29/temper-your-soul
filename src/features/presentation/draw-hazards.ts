@@ -4,7 +4,9 @@ import type { ArenaDefinition, ArenaThemeId, Bridge, Solid } from '../arena/aren
 import type { CoverState } from '../match/match';
 import { FEEDBACK } from './effects';
 import { drawLight } from './lights';
-import { drawTile, tileSheet, tileVariants, TILE_SCALE, TILE_SIZE } from './themes/tiles';
+import { sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
+import { pixelEllipse } from './themes/scenery';
+import { ACTIVE_TILE_ATLASES, drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SCALE, TILE_SIZE } from './themes/tiles';
 
 /*
  * Pozzi, ponti e ripari delle stanze della fase 5. Solo aspetto: le regole sono in `arena.ts` e `match.ts`. I tile
@@ -81,6 +83,16 @@ function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaTh
   const sheet = tileSheet(theme);
   const pieces = tileVariants(theme, 'chasm');
   if (sheet !== null && pieces.length === 9) {
+    // Il fondo che ripete, allineato al mondo; i nove pezzi sono solo l'orlo.
+    const hasBed = tileGrid(theme, 'chasmBed') !== undefined;
+    if (hasBed) {
+      for (let y = Math.floor(view.y / TILE_SIZE) * TILE_SIZE; y < view.y + view.height; y += TILE_SIZE) {
+        for (let x = Math.floor(view.x / TILE_SIZE) * TILE_SIZE; x < view.x + view.width; x += TILE_SIZE) {
+          const tile = tileAt(theme, 'chasmBed', x, y, 0);
+          if (tile !== undefined) drawTile(ctx, sheet, tile, x, y);
+        }
+      }
+    }
     // L'ultima colonna e l'ultima riga si appoggiano al bordo: il rettangolo puo' non essere un multiplo dei tile.
     const cols = Math.max(2, Math.ceil(rect.width / TILE_SIZE));
     const rows = Math.max(2, Math.ceil(rect.height / TILE_SIZE));
@@ -95,6 +107,7 @@ function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaTh
       for (const i of columns) {
         const column = i === 0 ? 0 : i === cols - 1 ? 2 : 1;
         const row = j === 0 ? 0 : j === rows - 1 ? 2 : 1;
+        if (hasBed && column === 1 && row === 1) continue;
         const x = i === cols - 1 ? rect.x + rect.width - TILE_SIZE : rect.x + i * TILE_SIZE;
         const y = j === rows - 1 ? rect.y + rect.height - TILE_SIZE : rect.y + j * TILE_SIZE;
         drawTile(ctx, sheet, pieces[row * 3 + column]!, x, y);
@@ -175,10 +188,20 @@ function drawChasm(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaTheme
     case 'mist':
       // Nebbia fredda che sale dal fondo del crepaccio.
       ctx.fillStyle = look.motionColor;
-      for (let x = Math.floor(inner.x / 72) * 72; x < inner.x + inner.width; x += 72) {
+      if (tileGrid(theme, 'chasmBed') === undefined) {
+        for (let x = Math.floor(inner.x / 72) * 72; x < inner.x + inner.width; x += 72) {
+          const h = noise(x, rect.y);
+          ctx.globalAlpha = 0.06 + 0.05 * Math.sin(clock * 0.9 + h * 7);
+          ctx.fillRect(x + Math.sin(clock * 0.4 + h * 5) * 10, inner.y + inner.height * 0.35, 60, inner.height * 0.4);
+        }
+        break;
+      }
+      // Con i fogli nuovi a fiocchi, a pixel interi: niente fasce sfumate.
+      for (let x = Math.floor(inner.x / 28) * 28; x < inner.x + inner.width; x += 28) {
         const h = noise(x, rect.y);
-        ctx.globalAlpha = 0.06 + 0.05 * Math.sin(clock * 0.9 + h * 7);
-        ctx.fillRect(x + Math.sin(clock * 0.4 + h * 5) * 10, inner.y + inner.height * 0.35, 60, inner.height * 0.4);
+        const t = (clock * (0.12 + h * 0.1) + h) % 1;
+        ctx.globalAlpha = 0.55 * (1 - t);
+        ctx.fillRect(Math.round(x + h * 20 + Math.sin(clock * 0.8 + h * 9) * 4), Math.round(inner.y + inner.height * (1 - t)), 2, 2);
       }
       break;
   }
@@ -202,8 +225,17 @@ function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaT
   ctx.rect(deck.x, deck.y, deck.width, deck.height);
   ctx.clip();
   const sheet = tileSheet(theme);
-  const plank = tileVariants(theme, ns ? 'bridgeNS' : 'bridgeEW')[0];
-  if (sheet !== null && plank !== undefined) {
+  const material = ns ? 'bridgeNS' : 'bridgeEW';
+  const plank = tileVariants(theme, material)[0];
+  if (sheet !== null && plank !== undefined && tileGrid(theme, material) !== undefined) {
+    // Una superficie che ripete, allineata al mondo: fra una tavola e l'altra non si vede il tile.
+    for (let y = Math.floor(deck.y / TILE_SIZE) * TILE_SIZE; y < deck.y + deck.height; y += TILE_SIZE) {
+      for (let x = Math.floor(deck.x / TILE_SIZE) * TILE_SIZE; x < deck.x + deck.width; x += TILE_SIZE) {
+        const tile = tileAt(theme, material, x, y, 0);
+        if (tile !== undefined) drawTile(ctx, sheet, tile, x, y);
+      }
+    }
+  } else if (sheet !== null && plank !== undefined) {
     for (let y = deck.y; y < deck.y + deck.height; y += TILE_SIZE) {
       for (let x = deck.x; x < deck.x + deck.width; x += TILE_SIZE) drawTile(ctx, sheet, plank, x, y);
     }
@@ -219,6 +251,36 @@ function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaT
   ctx.fillStyle = '#00000066';
   if (ns) ctx.fillRect(deck.x, deck.y + deck.height, deck.width, 6);
   else ctx.fillRect(deck.x, deck.y + deck.height, deck.width, 8);
+  const railPiece = tileVariants(theme, ns ? 'railNS' : 'railEW')[0];
+  const postPiece = tileVariants(theme, 'post')[0];
+  if (sheet !== null && railPiece !== undefined && postPiece !== undefined) {
+    // Corrimano e pali del foglio: stessa grana delle assi.
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (ns) {
+      for (const x of [deck.x - 2, deck.x + deck.width - railPiece.w + 2]) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, deck.y, railPiece.w, deck.height);
+        ctx.clip();
+        for (let y = deck.y; y < deck.y + deck.height; y += railPiece.h) drawTile(ctx, sheet, railPiece, x, y);
+        ctx.restore();
+        for (let y = deck.y; y <= deck.y + deck.height - postPiece.h; y += 64) drawTile(ctx, sheet, postPiece, x - 2, y);
+      }
+    } else {
+      for (const y of [deck.y - 2, deck.y + deck.height - railPiece.h + 2]) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(deck.x, y, deck.width, railPiece.h);
+        ctx.clip();
+        for (let x = deck.x; x < deck.x + deck.width; x += railPiece.w) drawTile(ctx, sheet, railPiece, x, y);
+        ctx.restore();
+        for (let x = deck.x; x <= deck.x + deck.width - postPiece.w; x += 64) drawTile(ctx, sheet, postPiece, x, y - 4);
+      }
+    }
+    ctx.restore();
+    return;
+  }
   const rails = ns
     ? [{ x: deck.x, y: deck.y, width: 4, height: deck.height }, { x: deck.x + deck.width - 4, y: deck.y, width: 4, height: deck.height }]
     : [{ x: deck.x, y: deck.y, width: deck.width, height: 4 }, { x: deck.x, y: deck.y + deck.height - 4, width: deck.width, height: 4 }];
@@ -243,10 +305,15 @@ function drawCover(ctx: CanvasRenderingContext2D, solid: Solid, left: number, th
   if (!visible(camera, solid)) return;
   const look = HAZARD_LOOKS[theme];
   const shake = flash > 0 ? Math.sin(flash * 90) * 2 : 0;
-  ctx.fillStyle = '#00000059';
-  ctx.beginPath();
-  ctx.ellipse(solid.x + solid.width / 2 + 4, solid.y + solid.height - 2, solid.width / 2 + 4, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const scenic = tileGrid(theme, 'chasmBed') !== undefined;
+  if (scenic) {
+    pixelEllipse(ctx, solid.x + solid.width / 2 + 4, solid.y + solid.height - 2, solid.width / 2 + 4, 9, '#00000059');
+  } else {
+    ctx.fillStyle = '#00000059';
+    ctx.beginPath();
+    ctx.ellipse(solid.x + solid.width / 2 + 4, solid.y + solid.height - 2, solid.width / 2 + 4, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   const sheet = tileSheet(theme);
   const sprite = tileVariants(theme, 'cover')[0];
   const pieces: Solid[] = [];
@@ -274,13 +341,23 @@ function drawCover(ctx: CanvasRenderingContext2D, solid: Solid, left: number, th
   const cracks = left < 1 / 3 ? 3 : left < 2 / 3 ? 1 : 0;
   for (const piece of pieces) {
     if (left < 1 / 3) {
-      ctx.fillStyle = '#00000038';
-      ctx.fillRect(piece.x, piece.y, piece.width, piece.height);
+      if (scenic && sheet !== null && sprite !== undefined) {
+        // Scurisce solo la sagoma: i ripari nuovi sono trasparenti attorno.
+        ctx.globalAlpha = 0.24;
+        ctx.drawImage(sheetSilhouette(ACTIVE_TILE_ATLASES[theme].url, sheet, '#000000'), sprite.x, sprite.y, sprite.w, sprite.h, piece.x, piece.y, piece.width, piece.height);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = '#00000038';
+        ctx.fillRect(piece.x, piece.y, piece.width, piece.height);
+      }
     }
     for (let c = 0; c < cracks; c++) {
       const h = noise(piece.x + c * 17, piece.y);
-      let x = piece.x + piece.width * (0.2 + ((h + c * 0.31) % 1) * 0.6);
-      for (let y = piece.y + 2; y < piece.y + piece.height - 2; y += 4) {
+      // Sui ripari nuovi le crepe stanno al centro, dove la sagoma e' piena.
+      let x = piece.x + piece.width * (scenic ? 0.34 + ((h + c * 0.31) % 1) * 0.32 : 0.2 + ((h + c * 0.31) % 1) * 0.6);
+      const crackTop = scenic ? piece.y + piece.height * 0.28 : piece.y + 2;
+      const crackEnd = scenic ? piece.y + piece.height * 0.86 : piece.y + piece.height - 2;
+      for (let y = crackTop; y < crackEnd; y += 4) {
         ctx.fillStyle = look.crack;
         ctx.fillRect(Math.round(x), y, 3, 4);
         ctx.fillStyle = look.coverEdge;
@@ -288,7 +365,7 @@ function drawCover(ctx: CanvasRenderingContext2D, solid: Solid, left: number, th
         x += noise(x, y) > 0.5 ? 2 : -2;
       }
     }
-    if (left < 1 / 3) {
+    if (left < 1 / 3 && !scenic) {
       // Pezzi mancanti sul bordo alto.
       ctx.fillStyle = look.crack;
       for (let k = 0; k < 3; k++) ctx.fillRect(Math.round(piece.x + piece.width * (0.15 + k * 0.3)), piece.y, 6, 4);
@@ -296,8 +373,13 @@ function drawCover(ctx: CanvasRenderingContext2D, solid: Solid, left: number, th
   }
   if (flash > 0) {
     ctx.globalAlpha = Math.min(1, flash / FEEDBACK.hitFlash) * 0.3;
-    ctx.fillStyle = '#fff6e0';
-    for (const piece of pieces) ctx.fillRect(piece.x, piece.y, piece.width, piece.height);
+    if (scenic && sheet !== null && sprite !== undefined) {
+      const white = sheetVariant(ACTIVE_TILE_ATLASES[theme].url, sheet, 'white');
+      for (const piece of pieces) ctx.drawImage(white, sprite.x, sprite.y, sprite.w, sprite.h, piece.x, piece.y, piece.width, piece.height);
+    } else {
+      ctx.fillStyle = '#fff6e0';
+      for (const piece of pieces) ctx.fillRect(piece.x, piece.y, piece.width, piece.height);
+    }
     ctx.globalAlpha = 1;
   }
 }

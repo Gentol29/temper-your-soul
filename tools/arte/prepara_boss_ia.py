@@ -171,6 +171,25 @@ def spostamento_arma(x, y, c, voce, angolo):
     return 0.0, 0.0
 
 
+def con_arma(m, c, voce, corpo, arma):
+    """Corpo e arma separati. Controllare l'arma nel punto d'arrivo la tagliava lungo il bordo della sua zona: lame e sfere
+    si sfaldavano. Qui si guarda da dove viene ogni pixel, cosi' l'arma resta intera a qualunque angolo."""
+    alt, larg = m.shape
+    senza = m.copy()
+    for y in range(alt):
+        for x in range(larg):
+            if senza[y, x] != pm.VUOTO and in_arma(x, y, c, voce):
+                senza[y, x] = pm.VUOTO
+    nuova = pm.deforma(senza, corpo)
+    for y in range(alt):
+        for x in range(larg):
+            dx, dy = arma(x, y)
+            sx, sy = int(round(x - dx)), int(round(y - dy))
+            if 0 <= sx < larg and 0 <= sy < alt and m[sy, sx] != pm.VUOTO and in_arma(sx, sy, c, voce):
+                nuova[y, x] = m[sy, sx]
+    return nuova
+
+
 def colpo(m, c, voce, peso):
     """Attacco di forza. `peso` > 0 carica (indietro e in alto, braccia su), < 0 scarica (avanti e in basso). Le braccia si
     muovono intere fino alla punta delle mani, attaccate alla spalla da una rampa; l'arma descrive un arco."""
@@ -183,10 +202,11 @@ def colpo(m, c, voce, peso):
     inclina = round(-max(1, c.W * 0.04) * peso)
     rampa = max(1.0, c.H * 0.10)
 
+    def arma(x, y):
+        ax, ay = spostamento_arma(x, y, c, voce, 0.13 * peso)
+        return round(inclina * 0.6 + ax), round(corpo_y + braccia_y + ay)
+
     def f(x, y):
-        if in_arma(x, y, c, voce):
-            ax, ay = spostamento_arma(x, y, c, voce, 0.13 * peso)
-            return round(inclina * 0.6 + ax), round(corpo_y + braccia_y + ay)
         fuori = abs(x - c.cx) > spalle
         if y >= anca and not (y < mani and fuori):
             return 0, 0
@@ -195,7 +215,7 @@ def colpo(m, c, voce, peso):
         if y >= spalla and fuori:
             return dx, round(corpo_y + braccia_y * morsetto((y - spalla) / rampa))
         return dx, corpo_y
-    return deforma(m, f)
+    return con_arma(m, c, voce, f, arma)
 
 
 def incanto(m, c, voce, peso):
@@ -209,15 +229,16 @@ def incanto(m, c, voce, peso):
     braccia_y = -max(2, c.H * 0.07) * peso
     rampa = max(1.0, (meta - spalla) * 0.4)
 
+    def arma(x, y):
+        ax, ay = spostamento_arma(x, y, c, voce, 0.07 * peso)
+        return round(fianco(x, c) * apre + ax), round(-su + braccia_y + ay)
+
     def f(x, y):
-        if in_arma(x, y, c, voce):
-            ax, ay = spostamento_arma(x, y, c, voce, 0.07 * peso)
-            return round(fianco(x, c) * apre + ax), round(-su + braccia_y + ay)
         if spalla <= y < meta and abs(x - c.cx) > spalle:
             sale = morsetto((y - spalla) / rampa) * morsetto((meta - y) / rampa)
             return fianco(x, c) * round(apre * sale), round(-su + braccia_y * sale)
         return 0, -su if y < meta else -(su // 2)
-    return deforma(m, f)
+    return con_arma(m, c, voce, f, arma)
 
 
 def gonfia(m, c, voce, peso):

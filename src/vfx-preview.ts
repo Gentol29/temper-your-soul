@@ -92,7 +92,7 @@ function frame(now: number): void {
     if (i !== 1 || age > 1.3) {
       const art = minionArt(visual);
       if (i === 3) drawVfx(ctx,'archer-predator',demoMatch.player.position.x,115,100,time,0,0.8);
-      else drawSprite(ctx,art.frames[Math.floor(time*5)%2],160,115,art.scale,art.palette);
+      else drawSprite(ctx,art.frames[Math.floor(time*5)%art.frames.length]!,160,115,art.scale,art.palette);
     }
     drawMinionDeaths(ctx,fx); drawCombatMotes(ctx,fx);
     count.textContent = `${fx.particles.length} particelle · ${fx.stains.length} macchie`;

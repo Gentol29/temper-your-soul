@@ -25,6 +25,10 @@ Si eseguono con il Python del generatore (`Downloads\PixelArt-AI\ComfyUI\venv`),
 
 - `genera_mob.py`: fa i candidati dai prompt, con semi riproducibili.
 - `prepara_boss_ia.py`: dai candidati ai fogli di boss e luogotenenti, con confronti (`--candidati`), animazioni e misure (`--prove`) e scrittura per il gioco (`--scrivi`).
-- `prepara_mob.py`: la riduzione a pixel, comune ai due, e la prova sugli 8 mob (`--anteprime`). I mob non sono ancora nel gioco.
+- `prepara_mob.py`: la riduzione a pixel, comune ai due, le animazioni e la scrittura degli 88 mob (`--scrivi`).
+- `genera_scenari.py`: le immagini delle mappe, da `scenari-prompts.json`; con `asse` xy o x i bordi opposti combaciano.
+- `prepara_scenari.py`: dalle immagini ai fogli delle mappe, scelte in `scenari-progetto.json` (`--anteprime`, `--scrivi`).
+
+Le texture che ripetono richiedono il nodo `comfyui/tile_circolare.py`, scritto per questo progetto e non scaricato: va copiato in `custom_nodes` di ComfyUI. Modifica il modello in memoria: prima di generare dei mob si rilancia una voce con `asse: nessuno`, altrimenti le figure escono con pezzi ripetuti ai bordi.
 
 I controlli misurano figura, colore e movimento, ma hanno gia' mancato difetti evidenti: si guardano sempre anche i fogli. Lezioni: un colore di sfondo nel prompt colora il soggetto; con "enemy sprite" gli oggetti diventano persone; togliere i buchi con tolleranza alta mangia ossa e pelo bianchi; un retino fine con il contorno rifatto sembra una rete; un'arma deve muoversi intera con il braccio (`arma`).

@@ -1,0 +1,407 @@
+{
+  "stile": "pixel art, 16-bit dark fantasy video game enemy sprite, {prompt}, only one subject, whole figure visible, centered, front view, bold black outline, strong readable silhouette, limited palette, on a plain flat {sfondo} background",
+  "stile_oggetto": "pixel art, 16-bit dark fantasy video game enemy sprite, {prompt}, only one subject, whole object visible, centered, bold black outline, strong readable silhouette, limited palette, on a plain flat {sfondo} background",
+  "sfondo": "white",
+  "negativo": "3d render, realistic, photo, blurry, gradient, text, watermark, signature, sprite sheet, character sheet, multiple characters, multiple views, grid, collage, scenery, landscape, floor, ground, ground shadow, cast shadow, pedestal, platform, puddle, frame, border",
+  "negativo_oggetto": "person, human, man, knight, warrior, body, arms, legs, helmet, armor",
+  "mob": {
+    "crypt_wisp": {
+      "tipo": "oggetto",
+      "prompt": "a floating (will-o-the-wisp ember spirit:1.5), white hot core, orange flame tail, two small dark eyes, ball of fire",
+      "evita": "candle, lantern, torch, hand"
+    },
+    "crypt_gargoyle": {
+      "prompt": "a small crouching (grey stone gargoyle:1.5) with folded wings, big horned head, amber glowing eyes, chunky body, on all fours",
+      "evita": "green, red, column, statue base, spread wings"
+    },
+    "crypt_acolyte": {
+      "prompt": "a hooded plum robed acolyte with a pale face and two dark eyes, one hand swinging a (big brass censer on a chain with orange smoke:1.5), chunky shapes, feet visible",
+      "evita": "sword, green, book"
+    },
+    "crypt_bell": {
+      "tipo": "oggetto",
+      "prompt": "a (bronze church bell:1.6) with green patina, two glowing ember eyes on it, chipped rim, visible clapper, gothic",
+      "evita": "rope, tower, wall, stand, handle"
+    },
+    "crypt_reliquary": {
+      "tipo": "oggetto",
+      "prompt": "a (stone ossuary casket:1.6) built from stacked human bones and small skulls, (glowing amber light leaking from narrow slits between the bones:1.4), gothic funerary box, no lid handle",
+      "evita": "treasure chest, wooden chest, lock, padlock, keyhole, gold coins, open lid, table, altar, metal bands"
+    },
+    "crypt_skull": {
+      "prompt": "a (hopping human skull:1.6) with cold green glowing eye sockets, cracked old bone, big jaw",
+      "tipo": "oggetto",
+      "evita": "body, neck, spine"
+    },
+    "crypt_rat": {
+      "prompt": "a chunky (grey purple rat:1.5) walking on all fours, side view facing right, four thick legs clearly separated, big head, red eyes, long tail",
+      "tipo": "lato",
+      "evita": "standing upright, mouse cute, sitting"
+    },
+    "crypt_gravedigger": {
+      "prompt": "a hunched hooded undead gravedigger in a worn brown coat, pale face with two eyes, both hands holding a (big wooden shovel with a dark iron blade:1.6) planted beside him, legs visible",
+      "evita": "scythe, sword, red, staff, white blade"
+    },
+    "crypt_lantern": {
+      "prompt": "(old iron cemetery lantern:1.7), four green glass panes, pointed iron roof with a ring on top, small green flame inside, one solid object",
+      "tipo": "oggetto",
+      "evita": "hand, wall, ground, bottle, potion"
+    },
+    "crypt_mourner": {
+      "prompt": "a tall veiled (mourning spirit woman:1.4) in a dark lilac veil, pale hands, blue tears on her face",
+      "evita": "cleavage, red, green"
+    },
+    "crypt_bone_colossus": {
+      "prompt": "a huge chunky giant skeleton, enormous skull head with dark eye sockets, very thick ivory bones, thick arm bones ending in big bony fists attached to the arms, massive ribcage, thick leg bones apart, two small skulls on the shoulders",
+      "evita": "flesh, muscles, pink, armor, weapon, green skin, ogre, thin bones, separate pieces"
+    },
+    "crypt_mass_grave": {
+      "prompt": "a (cracked stone grave slab:1.6) broken in two, cold green glow rising from the crack, bones poking out",
+      "tipo": "oggetto",
+      "evita": "cross, tombstone standing, grass, tree"
+    },
+    "crypt_choir_ghost": {
+      "prompt": "a small (ghost choir boy:1.4) in a white surplice, pale translucent, mouth wide open singing, no legs, floating",
+      "evita": "feet, book, red"
+    },
+    "crypt_psalter": {
+      "prompt": "a (flying open old book:1.7) flapping its pages like wings, leather cover, red ribbon like a tongue",
+      "tipo": "oggetto",
+      "evita": "hand, table, candle"
+    },
+    "crypt_organ_pipe": {
+      "prompt": "(single tall grey tin organ pipe:1.9), long straight metal cylinder, flat lip mouth near the bottom glowing lilac, pointed foot, plain metal",
+      "tipo": "oggetto",
+      "evita": "crystal, purple body, keyboard, several pipes, face, lamp, capsule"
+    },
+    "crypt_cantor": {
+      "prompt": "a hooded (cantor priest:1.3) in a red cassock, holding an open song book in front of his chest",
+      "evita": "sword, staff, green"
+    },
+    "crypt_chapel_master": {
+      "prompt": "a gaunt (choir master priest:1.3) in a black cassock with a golden collar, raising a thin conductor baton",
+      "evita": "sword, staff, green, book"
+    },
+    "crypt_eagle": {
+      "prompt": "a (bronze eagle lectern statue:1.6) with wings spread wide, perched, green patina",
+      "tipo": "oggetto",
+      "evita": "feathers colorful, sky, tree"
+    },
+    "crypt_choir_stall": {
+      "prompt": "(one carved gothic wooden choir stall bench:1.7) with three seats side by side and a tall pointed back, single solid piece of furniture, dark wood, front view, faint lilac glow",
+      "tipo": "oggetto",
+      "evita": "person, altar, window, several pieces, parts, sprite sheet"
+    },
+    "swamp_sporeling": {
+      "prompt": "a small chunky walking mushroom creature, wide spotted cap, (big cute dark eyes on a pale face:1.5), two stubby arms and two stubby legs clearly separated",
+      "evita": "red, tall stem"
+    },
+    "swamp_puffball": {
+      "prompt": "a (swollen puffball fungus:1.7), round pale sphere, spore holes on top, small angry eyes",
+      "tipo": "oggetto",
+      "evita": "stem, red, grass"
+    },
+    "swamp_gnat": {
+      "prompt": "a chunky (giant mosquito:1.6) with a big head, big red eyes, long thick proboscis, two wide clear wings, six thick legs clearly visible, top three-quarter view",
+      "evita": "butterfly, moth, human"
+    },
+    "swamp_toad": {
+      "prompt": "a (green bog toad:1.4) with bulging yellow eyes and pale belly, front view",
+      "evita": "yellow skin, spikes, gold"
+    },
+    "swamp_flower": {
+      "prompt": "(carnivorous purple flower monster:1.6) growing from a thick green stem with two big leaves, purple petals around a dark round mouth with small teeth at the center, whole plant visible",
+      "tipo": "oggetto",
+      "evita": "pot, vase, snow, white base, eyes, red petals"
+    },
+    "swamp_worm": {
+      "prompt": "(giant segmented earthworm:1.8) rising upright out of a mud hole, pale brown ringed body, round mouth full of small teeth at the top, no eyes, no face",
+      "tipo": "oggetto",
+      "evita": "human face, hair, tree, trunk, snake scales, arms"
+    },
+    "swamp_snail": {
+      "prompt": "a (giant moss covered snail:1.6), mossy shell, slimy grey body, eye stalks",
+      "tipo": "lato",
+      "evita": "cute, red"
+    },
+    "swamp_fairy_ring": {
+      "prompt": "(ring of ten separate big teal mushrooms:1.8) standing in a circle, seen from above at an angle, big pale caps with thick stems, bare dark ground ring",
+      "tipo": "oggetto",
+      "evita": "wreath, donut, flowers, person, house, red"
+    },
+    "swamp_leech": {
+      "prompt": "(fat black slug:1.8) crawling on the ground, wide low horizontal body with glossy rings, round red mouth at the right end, side view",
+      "tipo": "oggetto",
+      "evita": "legs, eyes, snake, upright, tombstone, standing, shell"
+    },
+    "swamp_drowned": {
+      "prompt": "a chunky drowned zombie, swollen grey green skin, pale face with two empty eyes, two thick arms hanging apart from the body, two thick legs apart, seaweed on the shoulders",
+      "evita": "weapon, red, clean clothes, water puddle"
+    },
+    "swamp_pike": {
+      "prompt": "a big chunky dark pike fish, full body side view facing right, large head with long toothy jaws and one lilac eye, thick body, big tail fin, on white background",
+      "tipo": "lato",
+      "evita": "water, waves, legs, jumping, curved, thin, bird, crow, vertical"
+    },
+    "swamp_lily": {
+      "prompt": "a (carnivorous water lily:1.6), wide round green pad, lilac flower opening like a toothy mouth",
+      "tipo": "oggetto",
+      "evita": "pond, water surface, eyes"
+    },
+    "swamp_washer": {
+      "prompt": "a veiled (ghostly night washerwoman:1.4) in dark violet rags, lilac glowing eyes, holding a white cloth",
+      "evita": "young, cleavage, bucket, red"
+    },
+    "swamp_bloated": {
+      "prompt": "a (bloated drowned corpse:1.5), huge round livid balloon body with red blotches, tiny limbs, wide open mouth",
+      "evita": "clothes, weapon"
+    },
+    "swamp_spawn": {
+      "prompt": "(low wide cluster of translucent green frog eggs:1.8), many round jelly spheres each with a black dot inside, slimy mound",
+      "tipo": "oggetto",
+      "evita": "frog, eyes, face, plate, cone, mountain, bush, leaves"
+    },
+    "swamp_tadpole": {
+      "prompt": "a cute (black tadpole:1.6), big round head with one small pale eye and a short tail, side view, simple silhouette, chibi",
+      "evita": "pink, green, legs, arms, fish fins, beetle, lizard, snake, worm, long body"
+    },
+    "swamp_ant": {
+      "prompt": "a chunky black ant seen from above, clear three body parts: big head, thorax, big round abdomen, six thick legs spread clearly, one lime green fungus growing on the head, on white background",
+      "evita": "beetle, wings, human, red, frame"
+    },
+    "swamp_moth": {
+      "prompt": "a chunky (pale moth:1.5) with a big fuzzy head, two big dark eyes, two thick feathery antennae, wide wings with lime spots, six short legs",
+      "evita": "butterfly colors, red, human"
+    },
+    "swamp_beetle": {
+      "prompt": "a big chunky green bombardier beetle top view, round shiny shell with a gold stripe, clear head with lime eyes, six very thick short legs clearly separated three on each side",
+      "evita": "human, red, frog, thin legs"
+    },
+    "swamp_spider": {
+      "prompt": "a (dark weaver spider:1.6) with white mushrooms growing on its back, eight legs spread, front view",
+      "evita": "web, red, human"
+    },
+    "swamp_cicada": {
+      "prompt": "a chunky (brown cicada:1.6) top view, big head with two bulging lilac eyes, wide transparent veined wings, six thick legs clearly visible",
+      "evita": "bat, red, human, branch"
+    },
+    "swamp_stag": {
+      "prompt": "a chunky dark stag standing, side view facing right, big head with clear muzzle and one glowing eye, four thick legs clearly separated, small antlers covered in lime green mushrooms, on white background",
+      "tipo": "lato",
+      "evita": "human, red, forest, front view, wrapped vines, frame"
+    },
+    "swamp_anthill": {
+      "prompt": "a (dirt anthill mound:1.7) full of holes, a lime green mushroom growing on top",
+      "tipo": "oggetto",
+      "evita": "ants large, face, grass"
+    },
+    "forge_imp": {
+      "prompt": "a chunky small imp made of dark slag rock with glowing ember cracks, big head with burning eyes and small horns, two stubby arms and two stubby legs clearly separated, no torch",
+      "evita": "green, cute, wings, torch, thin limbs"
+    },
+    "forge_spark": {
+      "prompt": "a (bright four pointed spark star:1.7), white yellow core, amber rays",
+      "tipo": "oggetto",
+      "evita": "face, background glow, fire"
+    },
+    "forge_pebble": {
+      "prompt": "a (small dark slag rock:1.7) with a glowing orange crack, tiny ember eyes",
+      "tipo": "oggetto",
+      "evita": "green, arms, legs"
+    },
+    "forge_bellows": {
+      "prompt": "(living wrinkled leather bag monster:1.7) with thick folds, an iron nozzle for a mouth, two glowing ember eyes, stubby wooden handles on the sides, squat",
+      "tipo": "oggetto",
+      "evita": "person, human, anvil, fire, bucket, pot, lamp, robot, bench, furniture, cabinet, several pieces"
+    },
+    "forge_devil": {
+      "prompt": "a small (red forge devil imp:1.5) with horns, yellow eyes, pointed tail, soot on the skin, legs apart",
+      "evita": "wings, weapon, cute"
+    },
+    "forge_anvil": {
+      "prompt": "an animated dark iron anvil monster with ember eyes and a burning mouth"
+    },
+    "forge_slag": {
+      "prompt": "a (bubbling molten metal creature:1.6), orange lava blob, dark crust, ember eyes",
+      "tipo": "oggetto",
+      "evita": "green, arms, legs, pot"
+    },
+    "forge_droplet": {
+      "prompt": "a (small droplet of molten metal:1.7), orange white hot teardrop, tiny eyes",
+      "tipo": "oggetto",
+      "evita": "water, blue, arms, legs"
+    },
+    "forge_crucible": {
+      "prompt": "a (black iron crucible pot:1.7) full of glowing molten metal, thick handles",
+      "tipo": "oggetto",
+      "evita": "person, face, table"
+    },
+    "forge_blade": {
+      "prompt": "a (steel longsword:1.6) pointing up, brass crossguard, simple straight blade",
+      "tipo": "oggetto",
+      "evita": "wings, feathers, ornaments, red, scabbard"
+    },
+    "forge_page": {
+      "prompt": "a small chunky suit of dented dark tin armor, big helmet with dark visor slit, two thick arms, two thick legs clearly separated, dark grey metal, rivets",
+      "evita": "sword, shield, red, cape, shiny white, chrome"
+    },
+    "forge_crossbow": {
+      "prompt": "(big heavy crossbow on a wooden tripod:1.7), thick steel bow arms, thick string, large white bolt, chunky simple shapes, front three-quarter view",
+      "tipo": "oggetto",
+      "evita": "person, hand, red, thin lines"
+    },
+    "forge_flail": {
+      "prompt": "(big black iron ball with very large thick triangular spikes:1.8), short thick chain above, chunky simple silhouette, violet glints",
+      "tipo": "oggetto",
+      "evita": "person, fire, handle, fruit, fur, hairy, small spikes"
+    },
+    "forge_armor": {
+      "prompt": "an (empty suit of dark steel plate armor:1.5), glowing violet visor slit, nobody inside, heavy legs apart",
+      "evita": "face, skin, red, gold, shield, sword"
+    },
+    "forge_armorer": {
+      "prompt": "a chunky ghoul blacksmith with a big leather apron, skull face, big iron tongs held in one hand and a big hammer in the other hand, two thick arms, two thick legs apart",
+      "evita": "horns, sword, green skin, thin"
+    },
+    "forge_rack": {
+      "prompt": "(a wide wooden weapon rack:1.7) on two feet with three steel swords hanging point down side by side, iron hooks, front view, one solid piece",
+      "tipo": "oggetto",
+      "evita": "person, shield, syringe, tube, table, several pieces, sprite sheet"
+    },
+    "forge_canary": {
+      "prompt": "a (small yellow canary bird:1.7), round body, soot stains, wings slightly spread, front view",
+      "evita": "branch, cage, red"
+    },
+    "forge_miner": {
+      "prompt": "a chunky damned undead miner, skull face, helmet with a lit lamp, dirty overalls, one hand gripping a big pickaxe held across the body, two legs apart",
+      "evita": "modern, soldier, gun, green skin"
+    },
+    "forge_mole": {
+      "prompt": "a chunky (iron armored mole:1.6), long pink snout with a steel drill tip, tiny eyes, big clawed front hands, dark fur, riveted plates on the back, front view",
+      "evita": "gorilla, ape, human, red"
+    },
+    "forge_blaster": {
+      "prompt": "a chunky undead demolition man, skull face, dark leather jacket and cap, holding a (bundle of red dynamite sticks with a sparking fuse:1.6) in front of the chest with both hands, two legs apart",
+      "evita": "wizard, robe, staff, gun, purple skin, modern hazmat suit"
+    },
+    "forge_cart": {
+      "prompt": "a (rusty mine cart full of dark ore:1.7), two angry eyes on the ore, wheels",
+      "tipo": "lato",
+      "evita": "person, rails, track, gold"
+    },
+    "forge_ore_giant": {
+      "prompt": "a chunky giant made of dark rock, small head with two glowing eyes and a rock jaw, pale iron veins, thick arms and two thick legs apart, big fists",
+      "evita": "green, lava, weapon, gorilla"
+    },
+    "forge_shaft": {
+      "prompt": "(wooden mine shaft tower:1.7), thick timber A-frame with big iron pulley wheel on top and hanging rope, black square pit opening at the base, chunky shapes, front view, one solid structure on white background",
+      "tipo": "oggetto",
+      "evita": "person, house, chimney, stool, vase, several pieces"
+    },
+    "glacier_sentinel": {
+      "prompt": "an (ice crystal sentinel:1.7) planted in the ground, one blue eye in the middle, jagged shards",
+      "tipo": "oggetto",
+      "evita": "person, arms, legs"
+    },
+    "glacier_flake": {
+      "prompt": "a (sharp snowflake crystal blade:1.7), six points, ice blue, perfectly symmetrical",
+      "tipo": "oggetto",
+      "evita": "face, person, background"
+    },
+    "glacier_wolf": {
+      "prompt": "a chunky (white snow wolf:1.5) walking, side view facing right, big head with clear muzzle and blue eye, four thick legs clearly separated, bushy tail",
+      "tipo": "lato",
+      "evita": "brown, sitting, howling, front view, trees"
+    },
+    "glacier_apprentice": {
+      "prompt": "a young (frost apprentice mage:1.3) with a pointed hat and a light blue tunic, small ice staff",
+      "evita": "fire, orange, red, beard, feet"
+    },
+    "glacier_spirit": {
+      "prompt": "a (swirling blizzard spirit:1.6), wisp made of snow and wind, pale blue eyes, swirling tail",
+      "tipo": "oggetto",
+      "evita": "person, arms, legs, fire"
+    },
+    "glacier_ice_block": {
+      "prompt": "a (living cube of blue ice:1.7) with a dark angry face inside, cracks and frost",
+      "tipo": "oggetto",
+      "evita": "arms, legs, person"
+    },
+    "glacier_crystal": {
+      "prompt": "(one tall hexagonal ice crystal pillar:1.9) standing upright, faceted sides, pale glowing core, jagged rock base, no star, no snowflake",
+      "tipo": "oggetto",
+      "evita": "snowflake, star, person, face, purple gem, sparkle rays"
+    },
+    "glacier_ram": {
+      "prompt": "a chunky white ram standing, side view facing right, big head with one blue eye, one huge curled ice horn, thick fleece, four thick legs clearly separated",
+      "tipo": "lato",
+      "evita": "brown, front view, sheep farm, skull, frame"
+    },
+    "glacier_ermine": {
+      "prompt": "a chunky (white ermine:1.6) walking on all fours, side view facing right, long body, four short thick legs clearly separated, black tail tip, dark eye",
+      "tipo": "lato",
+      "evita": "brown, standing upright, front view, red belly"
+    },
+    "glacier_lemming": {
+      "prompt": "a (small brown lemming:1.7), round and fluffy, tiny feet",
+      "tipo": "lato",
+      "evita": "cute face, white, hamster wheel"
+    },
+    "glacier_owl": {
+      "prompt": "a (white snowy owl:1.7), wings spread, golden eyes, front view",
+      "evita": "branch, brown, night sky"
+    },
+    "glacier_fox": {
+      "prompt": "a chunky (white arctic fox:1.6) walking on all fours, side view facing right, pointed ears, lilac eye, four thick legs clearly separated, big bushy tail",
+      "tipo": "lato",
+      "evita": "orange, red, sitting, front view"
+    },
+    "glacier_bear": {
+      "prompt": "a (white polar bear:1.3) standing on hind legs, front view, (wide open roaring mouth with purple inside:1.4), legs apart",
+      "evita": "brown fur, purple body, purple ground"
+    },
+    "glacier_den": {
+      "prompt": "a (snow mound burrow:1.7) with dark holes, icicles, snowy hump",
+      "tipo": "oggetto",
+      "evita": "igloo, house, person, tree"
+    },
+    "glacier_homunculus": {
+      "prompt": "a tiny chunky frost goblin wizard, midnight blue pointed hat, big round pale blue face with two dark eyes, two stubby arms, two stubby legs clearly separated, front view",
+      "evita": "beard, staff, red, thin, frame"
+    },
+    "glacier_snowball": {
+      "prompt": "a (round snowball:1.7) of packed snow with a small blue spark inside",
+      "tipo": "oggetto",
+      "evita": "snowman, face, hand"
+    },
+    "glacier_astrolabe": {
+      "prompt": "a (living brass astrolabe:1.7), concentric brass rings around a glowing pale star",
+      "tipo": "oggetto",
+      "evita": "person, hand, table, clock"
+    },
+    "glacier_star_reader": {
+      "prompt": "a hooded (star reader mystic:1.3) in a midnight blue tunic embroidered with stars",
+      "evita": "fire, red, beard, feet"
+    },
+    "glacier_snowman": {
+      "prompt": "a colossal (evil snowman:1.6) made of three snowballs, coal eyes, twig arms, jagged grin",
+      "evita": "scarf, hat, carrot, cute"
+    },
+    "glacier_alembic": {
+      "prompt": "a (frozen glass alembic flask:1.7) with boiling cyan liquid, brass stand, frost",
+      "tipo": "oggetto",
+      "evita": "person, table, hand"
+    },
+    "crypt_candle": {
+      "prompt": "a (white wax candle:1.4) with a small face, two dark eyes, lit flame on top, front view",
+      "tipo": "oggetto"
+    },
+    "crypt_bat": {
+      "prompt": "a (dark purple bat:1.3) with wide spread wings and small red eyes, front view"
+    },
+    "crypt_skeleton": {
+      "prompt": "a chibi skeleton with a big skull and (thick chunky ivory white bones:1.4), glowing orange eye sockets, front view, empty hands"
+    }
+  },
+  "stile_lato": "pixel art, 16-bit dark fantasy video game enemy sprite, {prompt}, only one subject, whole figure visible, centered, side view, facing right, full body in profile, bold black outline, strong readable silhouette, limited palette, on a plain flat {sfondo} background"
+}

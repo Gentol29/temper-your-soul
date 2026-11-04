@@ -1,43 +1,80 @@
 import type { ArenaThemeId } from '../../arena/arena';
 import { preloadSheets, sheetImage } from '../boss-art/sheet-images';
-import { TILE_ATLASES, type TileMaterial, type TileRect } from './tile-atlas';
+import { TILE_ATLASES, type TileAtlasLayout, type TileGrid, type TileMaterial, type TileRect } from './tile-atlas';
+import { TILE_ATLASES_IA } from './tile-atlas-ia';
 
 /*
- * Tile di terzi ricolorati (fase 6 dello studio grafico): un foglio per tema preparato da `tools/arte/prepara_tile.py`,
- * crediti in `art-credits.ts`. Solo aspetto. Finche' il foglio non e' caricato (o senza DOM, nei test) i temi
- * disegnano come prima, nel codice: nessuna regola dipende dai tile.
+ * Un foglio di tile per tema, preparato da `tools/arte/prepara_scenari.py` con il generatore locale, a un pixel per unita'
+ * di mondo come le figure; `?tile=classici` rimette quelli di terzi ricolorati (fase 6 dello studio grafico,
+ * `tools/arte/prepara_tile.py`), a due unita' per pixel. Stesse rampe. Crediti in `art-credits.ts`. Solo aspetto. Finche'
+ * il foglio non e' caricato (o senza DOM, nei test) i temi disegnano come prima, nel codice: nessuna regola dipende dai tile.
  */
 
-/** Crediti (`art-credits.ts`) dei tile di ogni tema. */
+export const classicTilesRequested = typeof location !== 'undefined' && new URLSearchParams(location.search).get('tile') === 'classici';
+
+/** I fogli in uso. */
+export const ACTIVE_TILE_ATLASES: Readonly<Record<ArenaThemeId, TileAtlasLayout>> = classicTilesRequested ? TILE_ATLASES : TILE_ATLASES_IA;
+
+/** Crediti (`art-credits.ts`) dei tile di ogni tema: quelli in uso e, finche' restano nel gioco, i classici. */
 export const TILE_CREDITS: Readonly<Record<ArenaThemeId, readonly string[]>> = {
-  crypt: ['itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-dungeon'],
-  swamp: ['itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
-  forge: ['itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
-  glacier: ['itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-tundra'],
+  crypt: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-dungeon'],
+  swamp: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
+  forge: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
+  glacier: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-tundra'],
 };
 
-/** Un pixel d'arte vale 2 unita' del mondo: un tile da 16 pixel copre 32 unita', come le lastre della cripta. */
-export const TILE_SCALE = 2;
-export const TILE_SIZE = 16 * TILE_SCALE;
+/** Unita' del mondo per pixel d'arte dei fogli in uso. */
+export const TILE_SCALE = classicTilesRequested ? 2 : 1;
+/** Un tile copre 32 unita', come le lastre della cripta. */
+export const TILE_SIZE = 32;
 
 /** Comincia a caricare i fogli dei tile (all'avvio, cosi' la prima stanza ha gia' i suoi). */
 export function preloadTiles(): void {
-  preloadSheets(Object.values(TILE_ATLASES).map((atlas) => atlas.url));
+  preloadSheets(Object.values(ACTIVE_TILE_ATLASES).map((atlas) => atlas.url));
 }
 
 /** Il foglio dei tile del tema se e' pronto, altrimenti null. */
 export function tileSheet(theme: ArenaThemeId): HTMLImageElement | null {
-  return sheetImage(TILE_ATLASES[theme].url);
+  return sheetImage(ACTIVE_TILE_ATLASES[theme].url);
+}
+
+const gridCells = new Map<TileGrid, readonly TileRect[]>();
+
+function cellsOf(grid: TileGrid): readonly TileRect[] {
+  let cells = gridCells.get(grid);
+  if (cells === undefined) {
+    cells = Array.from({ length: grid.cells * grid.cells }, (_, i) => ({ x: grid.x + (i % grid.cells) * grid.size, y: grid.y + Math.floor(i / grid.cells) * grid.size, w: grid.size, h: grid.size }));
+    gridCells.set(grid, cells);
+  }
+  return cells;
 }
 
 /** Le varianti di un materiale del tema (vuoto se il tema non lo ha). */
 export function tileVariants(theme: ArenaThemeId, material: TileMaterial): readonly TileRect[] {
-  return TILE_ATLASES[theme].tiles[material] ?? [];
+  const atlas = ACTIVE_TILE_ATLASES[theme];
+  const grid = atlas.grids?.[material];
+  return grid !== undefined ? cellsOf(grid) : atlas.tiles[material] ?? [];
+}
+
+/** La superficie che ripete di un materiale, se il foglio ne ha una. */
+export function tileGrid(theme: ArenaThemeId, material: TileMaterial): TileGrid | undefined {
+  return ACTIVE_TILE_ATLASES[theme].grids?.[material];
+}
+
+/**
+ * Il tile di un materiale per il punto (`x`, `y`) del mondo: la cella giusta di una superficie che ripete, oppure una
+ * variante scelta dal valore stabile `h` (vedi `pickVariant`).
+ */
+export function tileAt(theme: ArenaThemeId, material: TileMaterial, x: number, y: number, h: number): TileRect | undefined {
+  const grid = tileGrid(theme, material);
+  if (grid === undefined) return pickVariant(tileVariants(theme, material), h);
+  const wrap = (value: number): number => ((Math.floor(value / grid.size) % grid.cells) + grid.cells) % grid.cells;
+  return cellsOf(grid)[wrap(y) * grid.cells + wrap(x)];
 }
 
 /** I colori con cui sono stati ricolorati i tile di un materiale (per il confronto con i colpi nemici). */
 export function tileColors(theme: ArenaThemeId, material: TileMaterial): readonly string[] {
-  return TILE_ATLASES[theme].colors[material] ?? [];
+  return ACTIVE_TILE_ATLASES[theme].colors[material] ?? [];
 }
 
 /** Quota delle prime due varianti (le lastre lisce) fra quelle scelte. Provvisoria, solo aspetto. */

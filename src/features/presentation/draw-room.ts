@@ -1,3 +1,4 @@
+import { gateFrame } from './themes/scenery';
 import type { Camera } from '../../core/camera';
 import { TAU, Vec2 } from '../../core/vec2';
 import { drawFlyingGold } from './gold-flight';
@@ -85,11 +86,15 @@ export function drawRoomFloor(ctx: CanvasRenderingContext2D, look: RoomLook, clo
   for (const door of view.doors) {
     const open = raised > 0.5;
     // La soglia: una lastra davanti al cancello, che si accende quando il gruppo ci sta sopra.
-    ctx.save();
-    ctx.fillStyle = open ? `${gate.glow}${door.progress > 0 ? '40' : '18'}` : '#00000030';
-    ctx.fillRect(door.x - ROOM_LAYOUT.doorHalfWidth, wall, ROOM_LAYOUT.doorHalfWidth * 2, ROOM_LAYOUT.doorDepth);
-    ctx.restore();
-    drawGate(ctx, door.x, 0, wall + face, gate, raised, clock, false);
+    if (gateFrame(arena.theme) !== null) {
+      drawGothicThreshold(ctx, door.x, wall + face, wall + ROOM_LAYOUT.doorDepth, open ? gate.glow : '#000000', open ? (door.progress > 0 ? 0.42 : 0.2) : 0.3);
+    } else {
+      ctx.save();
+      ctx.fillStyle = open ? `${gate.glow}${door.progress > 0 ? '40' : '18'}` : '#00000030';
+      ctx.fillRect(door.x - ROOM_LAYOUT.doorHalfWidth, wall, ROOM_LAYOUT.doorHalfWidth * 2, ROOM_LAYOUT.doorDepth);
+      ctx.restore();
+    }
+    if (!drawGothicGate(ctx, door.x, wall + face, arena.theme, gate, raised, clock)) drawGate(ctx, door.x, 0, wall + face, gate, raised, clock, false);
     if (raised > 0) drawLight(ctx, door.x, wall + face, gate.glow, 170, (0.55 + 0.25 * door.progress) * raised);
     if (door.progress > 0) {
       ctx.save();
@@ -169,6 +174,80 @@ export function drawRoomPickups(ctx: CanvasRenderingContext2D, look: RoomLook, c
  * Un cancello alto `height` nel muro. `raised` dice quanto e' alzata la grata (0 giu', 1 tutta dentro il muro): sale e
  * scende scorrendo, con le punte in basso. Le uscite aperte brillano; l'ingresso aperto resta buio.
  */
+/**
+ * Una porta come portale gotico del tema: il vano buio, la luce quando si apre, la grata che sale e, sopra, l'arco. La
+ * soglia di gioco resta quella di `ROOM_LAYOUT`. Falso se i fogli non ci sono.
+ */
+function drawGothicGate(ctx: CanvasRenderingContext2D, x: number, base: number, theme: ArenaThemeId, gate: (typeof GATES)[ArenaThemeId], raised: number, clock: number): boolean {
+  const frame = gateFrame(theme);
+  const hole = frame?.piece.hole;
+  if (frame === null || hole === undefined) return false;
+  const { sheet, piece } = frame;
+  const left = Math.round(x - piece.w / 2);
+  const top = base - piece.h;
+  const hx = left + hole.x;
+  const hy = top + hole.y;
+  const lift = Math.max(0, Math.min(1, raised));
+  ctx.save();
+  ctx.fillStyle = '#07060a';
+  ctx.fillRect(hx, hy, hole.w, hole.h);
+  if (lift > 0) {
+    // La luce viene da oltre la porta: piu' forte in basso, a gradini come il resto.
+    const pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(clock * 4 + x));
+    ctx.fillStyle = gate.glow;
+    for (let y = 0; y < hole.h; y += 4) {
+      ctx.globalAlpha = (0.1 + 0.8 * ((y + 4) / hole.h) ** 1.4) * pulse * lift;
+      ctx.fillRect(hx, hy + y, hole.w, Math.min(4, hole.h - y));
+    }
+    ctx.globalAlpha = 1;
+  }
+  const hanging = hole.h * (1 - lift);
+  if (hanging > 0.5) {
+    for (let bx = hx + 4; bx < hx + hole.w - 2; bx += 10) {
+      ctx.fillStyle = gate.bar;
+      ctx.fillRect(bx, hy, 3, hanging);
+      ctx.fillStyle = gate.frame;
+      ctx.fillRect(bx + 3, hy, 1, hanging);
+      // Punte in fondo alle sbarre.
+      ctx.fillStyle = gate.bar;
+      ctx.fillRect(bx - 1, hy + hanging - 3, 5, 2);
+    }
+    for (const at of [0.3, 0.68]) {
+      ctx.fillStyle = gate.frame;
+      ctx.fillRect(hx, Math.round(hy + hanging * at), hole.w, 3);
+      ctx.fillStyle = gate.bar;
+      ctx.fillRect(hx, Math.round(hy + hanging * at), hole.w, 1);
+    }
+  }
+  ctx.drawImage(sheet, piece.x, piece.y, piece.w, piece.h, left, top, piece.w, piece.h);
+  ctx.restore();
+  return true;
+}
+
+/** La soglia sotto un portale: una luce che si spegne a gradini verso la stanza e due angoli che segnano dove finisce. */
+function drawGothicThreshold(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number, color: string, strength: number): void {
+  const half = ROOM_LAYOUT.doorHalfWidth;
+  const step = 6;
+  ctx.save();
+  ctx.fillStyle = color;
+  for (let y = top; y < bottom; y += step) {
+    const fade = 1 - (y - top) / (bottom - top);
+    const height = Math.min(step, bottom - y);
+    ctx.globalAlpha = strength * fade * 0.55;
+    ctx.fillRect(x - half, y, half * 2, height);
+    ctx.globalAlpha = strength * fade * 0.45;
+    ctx.fillRect(x - half + 12, y, half * 2 - 24, height);
+  }
+  ctx.globalAlpha = Math.min(1, strength * 2.2);
+  for (const side of [-1, 1]) {
+    const edge = side < 0 ? x - half : x + half - 2;
+    const foot = side < 0 ? x - half : x + half - 10;
+    ctx.fillRect(edge, bottom - 10, 2, 10);
+    ctx.fillRect(foot, bottom - 2, 10, 2);
+  }
+  ctx.restore();
+}
+
 function drawGate(
   ctx: CanvasRenderingContext2D,
   x: number,

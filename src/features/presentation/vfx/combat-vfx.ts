@@ -3,8 +3,9 @@ import type { Rng } from '../../../core/rng';
 import { TAU, Vec2 } from '../../../core/vec2';
 import type { GameEvent } from '../../combat/events';
 import type { Match } from '../../match/match';
+import { minionRaster, minionsFacingLeft } from '../draw-actors';
 import { minionArt } from '../minion-art';
-import { drawSprite } from '../sprites';
+import type { Palette } from '../sprites';
 import { isBasicAttackCast } from './basic-attack-visuals';
 
 /** Taratura estetica provvisoria; budget indipendente dal numero di nemici o giocatori. */
@@ -23,7 +24,7 @@ export interface BloodStain {
   remaining: number;
 }
 export interface MinionDeath {
-  readonly visual: string; readonly x: number; readonly y: number; readonly direction: number;
+  readonly visual: string; readonly x: number; readonly y: number; readonly direction: number; readonly left: boolean;
   remaining: number;
 }
 const BLOOD = ['#542437', '#8f3042', '#bc4650', '#e37165'] as const;
@@ -71,9 +72,10 @@ export class CombatVfx {
         this.spray(event.position, kind, color, event.revives ? 20 : COMBAT_VFX.death, this.rng.next() * TAU, TAU);
         this.spray(event.position, 'smoke', '#68586a', event.revives ? 5 : 16, 0, TAU);
         if (!event.revives) {
-          this.deaths.push({ visual: event.visual, x: event.position.x, y: event.position.y, direction: this.rng.next() < 0.5 ? -1 : 1, remaining: COMBAT_VFX.deathLife });
+          this.deaths.push({ visual: event.visual, x: event.position.x, y: event.position.y, direction: this.rng.next() < 0.5 ? -1 : 1, left: minionsFacingLeft.has(event.minionId), remaining: COMBAT_VFX.deathLife });
           if (this.deaths.length > COMBAT_VFX.deaths) this.deaths.shift();
         }
+        minionsFacingLeft.delete(event.minionId);
         this.visuals.delete(event.minionId);
         break;
       }
@@ -242,15 +244,25 @@ export function drawCombatMotes(ctx: CanvasRenderingContext2D, vfx: CombatVfx): 
   ctx.restore();
 }
 
-/** Riusa la sagoma esistente: lampo, sobbalzo, cedimento e dissolvenza. */
+const deathFlashes = new WeakMap<Palette, Palette>();
+function deathFlash(palette: Palette): Palette {
+  let flash = deathFlashes.get(palette);
+  if (!flash) {
+    flash = Object.fromEntries(Object.keys(palette).map(key => [key, '#fff2d3']));
+    deathFlashes.set(palette, flash);
+  }
+  return flash;
+}
+
+/** Riusa la sagoma esistente: lampo, sobbalzo, cedimento e dissolvenza. Da un raster: gli sprite grandi costerebbero troppo pixel per pixel. */
 export function drawMinionDeaths(ctx: CanvasRenderingContext2D, vfx: CombatVfx): void {
   for (const death of vfx.deaths) {
     const art = minionArt(death.visual), u = 1 - death.remaining / COMBAT_VFX.deathLife;
     ctx.save(); ctx.translate(Math.round(death.x), Math.round(death.y + u * 8));
-    ctx.rotate(death.direction * u * 0.35); ctx.scale(1 + u * 0.1, Math.max(0.1, 1 - u * 0.8));
+    ctx.rotate(death.direction * u * 0.35); ctx.scale((death.left ? -1 : 1) * (1 + u * 0.1), Math.max(0.1, 1 - u * 0.8));
     ctx.globalAlpha = Math.min(1, (1 - u) * 2);
-    const palette = u < 0.15 ? Object.fromEntries(Object.keys(art.palette).map(key => [key, '#fff2d3'])) : art.palette;
-    drawSprite(ctx, art.frames[0], 0, 0, art.scale, palette);
+    const raster = minionRaster(art.frames[0]!, u < 0.15 ? deathFlash(art.palette) : art.palette, art.scale);
+    ctx.drawImage(raster, -raster.width / 2, -raster.height / 2);
     ctx.restore();
   }
 }

@@ -30,8 +30,8 @@
       "evita": "human, cape, scepter, gold body"
     },
     "anvil_master": {
-      "prompt": "a hulking (blacksmith ogre:1.3) with a leather apron and a huge hammer, soot black skin, ember orange eyes, muscular arms, legs apart",
-      "evita": "horns, armor, sword, green skin"
+      "prompt": "a hulking (blacksmith ogre:1.3) with a leather apron, (carrying a heavy black iron anvil on one shoulder:1.5) and a huge hammer in the other hand, soot black skin, ember orange eyes, legs apart",
+      "evita": "horns, armor, sword, green skin, cape"
     },
     "first_apprentice": {
       "prompt": "a hooded (ice sorceress apprentice:1.3) in a deep blue robe, wooden staff topped by a cyan crystal, pale face",
@@ -50,16 +50,16 @@
       "evita": "young, cleavage, red, green, bucket"
     },
     "colony_queen": {
-      "prompt": "a giant (ant queen:1.5) with a swollen abdomen infested by lime green fungus, big mandibles, six legs, front view",
-      "evita": "human, woman, crown, wings, red"
+      "prompt": "(front view of a giant ant queen facing the viewer:1.5), big head with huge mandibles and compound eyes, antennae, lime green fungus growing from her head and back, swollen abdomen behind, six legs spread on the sides",
+      "evita": "top view, from above, dorsal view, human, woman, crown, wings, red"
     },
     "hollow_champion": {
       "prompt": "an empty (suit of dark steel plate armor:1.4), huge greatsword held down, glowing violet visor slit, nobody inside, tattered cape",
       "evita": "face, skin, red, gold, shield"
     },
     "iron_foreman": {
-      "prompt": "a huge (undead mine foreman:1.4) in dented iron armor, helmet with a lit headlamp, a big pickaxe, dirty overalls, legs apart",
-      "evita": "sword, demon horns, green skin, cape"
+      "prompt": "a huge (undead medieval mine foreman:1.4), rotting skull face, rusty iron mining helmet with a lit lantern, torn leather apron over dented iron plates, holding a (big iron pickaxe across his chest with both hands:1.5), legs apart",
+      "evita": "modern, soldier, military, vest, shirt, gun, sword, demon horns, green skin, cape"
     },
     "mother_bear": {
       "prompt": "a massive (white snow bear:1.4) standing on hind legs, frost on the fur, wide open roaring mouth with lilac inside, claws raised, legs apart",
