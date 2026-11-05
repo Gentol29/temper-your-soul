@@ -6,6 +6,7 @@ import type { Boss } from '../boss/boss';
 import type { Minion } from '../minions/minion';
 import { bossFx } from './boss-fx';
 import { minionArt } from './minion-art';
+import { directionSeries } from './minion-art/minion-directions';
 import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
 import { sheetImage, sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
@@ -325,7 +326,7 @@ export function minionRaster(frame: SpriteFrame, palette: Palette, scale: number
 }
 
 /** Dove era ogni servitore all'ultimo disegno, quando si e' mosso l'ultima volta e verso dove: solo per l'aspetto, non per le regole. */
-const minionSteps = new WeakMap<Minion, { x: number; y: number; movedAt: number; left: boolean }>();
+const minionSteps = new WeakMap<Minion, { x: number; y: number; movedAt: number; left: boolean; series: number }>();
 /** Chi, fra i servitori disegnati di profilo, guarda a sinistra: la morte (`combat-vfx.ts`) ha solo l'id. */
 export const minionsFacingLeft = new Set<number>();
 const STILL_AFTER = 0.14;
@@ -335,13 +336,15 @@ function minionIsMoving(minion: Minion, time: number, view: SceneView): boolean 
   const { x, y } = minion.position;
   const step = minionSteps.get(minion);
   if (step === undefined) {
-    minionSteps.set(minion, { x, y, movedAt: time, left: false });
+    minionSteps.set(minion, { x, y, movedAt: time, left: false, series: 0 });
     return true;
   }
   if (Math.abs(x - step.x) + Math.abs(y - step.y) > 0.05) {
     // Chi sale o scende quasi dritto non si volta a ogni minimo scarto.
     const d = view.delta(x - step.x, y - step.y);
     if (Math.abs(d.x) > 0.25 * Math.abs(d.y)) step.left = d.x < 0;
+    // Gli sprite a 8 direzioni guardano dove si va sullo schermo (con un margine ai confini, contro il tremolio).
+    step.series = directionSeries(view.angle(x - step.x, y - step.y), step.series);
     step.x = x;
     step.y = y;
     step.movedAt = time;
@@ -429,7 +432,8 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
   const stands = art.walks === true && !moving;
   const count = art.frames.length;
   const frameIndex = dormant || stands ? 0 : ((Math.floor(time * (art.fps ?? 6) + minion.id) % count) + count) % count;
-  const sprite = art.frames[frameIndex]!;
+  const series = art.directions?.[minionSteps.get(minion)?.series ?? 0] ?? art.frames;
+  const sprite = series[frameIndex]!;
   const bob = dormant || art.bob === false ? 0 : Math.sin(time * 8 + minion.id) * 1.5;
   const palette = dormant ? stonePalette(art.palette) : art.palette;
   const outline = dormant ? '' : rim;

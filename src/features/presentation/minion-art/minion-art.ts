@@ -20,6 +20,11 @@ export interface MinionArt {
   readonly walks?: boolean;
   /** Disegnato di profilo, verso destra: si specchia quando va a sinistra. */
   readonly faces?: boolean;
+  /**
+   * 8 serie di fotogrammi, una per direzione sullo schermo, nell'ordine S, SE, E, NE, N, NW, W, SW (`minion-directions.ts`).
+   * Se c'e', il servitore mostra la serie della direzione in cui va e `frames` e' solo la serie di riferimento (SE).
+   */
+  readonly directions?: readonly (readonly SpriteFrame[])[];
 }
 
 /** Una copia del fotogramma con alcune righe cambiate (per il secondo fotogramma). */

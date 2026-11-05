@@ -37,6 +37,12 @@ const entry = (minion: MinionDefinition, role: BestiaryRole, health: number, cos
 });
 
 /**
+ * L'Ossario sta in tutte e tre le vene della Cripta (Navata, Catacombe, Cantoria): e' una voce sola, condivisa, perche'
+ * `bestiaryEntry` deve restituire la stessa voce da qualunque vena.
+ */
+const OSSUARY_ENTRY = entry(OSSUARY_SKELETON, 'swarm', 22, 1);
+
+/**
  * I servitori delle stanze per dungeon (la vena A, quella di sempre). Valori provvisori: la vita e' quella della
  * cripta, il costo e' in punti.
  */
@@ -44,7 +50,7 @@ export const ROOM_BESTIARY: Readonly<Record<string, readonly BestiaryEntry[]>> =
   crypt: [
     entry(WAX_CANDLE, 'swarm', 22, 1),
     entry(BELFRY_BAT, 'swarm', 14, 1),
-    entry(OSSUARY_SKELETON, 'swarm', 22, 1),
+    OSSUARY_ENTRY,
     entry(CINDER_WISP, 'swarm', 40, 2),
     entry(CENSER_ACOLYTE, 'threat', 45, 3),
     entry(GARGOYLE, 'threat', 70, 3, 1),
@@ -123,6 +129,7 @@ export const VEIN_BESTIARY: Readonly<Record<string, Readonly<Record<VeinId, read
     b: [
       entry(HOPPING_SKULL, 'swarm', 14, 1),
       entry(CRYPT_RAT, 'swarm', 10, 1),
+      OSSUARY_ENTRY,
       entry(GRAVE_LANTERN, 'threat', 50, 3),
       entry(VEILED_MOURNER, 'threat', 45, 3),
       entry(GRAVEDIGGER, 'threat', 60, 3, 1),
@@ -132,6 +139,7 @@ export const VEIN_BESTIARY: Readonly<Record<string, Readonly<Record<VeinId, read
     c: [
       entry(CHOIR_GHOST, 'swarm', 14, 1),
       entry(FLYING_PSALTER, 'swarm', 12, 1),
+      OSSUARY_ENTRY,
       entry(ORGAN_PIPE, 'threat', 70, 3),
       entry(VESPER_CANTOR, 'threat', 50, 3, 1),
       entry(LECTERN_EAGLE, 'heavy', 170, 6, 1),
