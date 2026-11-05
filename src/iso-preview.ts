@@ -16,6 +16,7 @@ import { FORGE } from './features/dungeons/forge/forge';
 import { GLACIER } from './features/dungeons/glacier/glacier';
 import { SWAMP } from './features/dungeons/swamp/swamp';
 import { Match } from './features/match/match';
+import { MINIONS } from './features/minions/minion-catalog';
 import { preloadSheets } from './features/presentation/boss-art/sheet-images';
 import { BOSS_SHEETS } from './features/presentation/boss-art/boss-sheets';
 import { Effects } from './features/presentation/effects';
@@ -50,6 +51,11 @@ const match = new Match({
 if (match.boss !== null) match.boss.attackTimer = Number.POSITIVE_INFINITY;
 const px = number('px'), py = number('py');
 if (px !== null && py !== null) match.player.position = new Vec2(px, py);
+// `minions=n`: n Ossari in fila vicino al giocatore (la partita non avanza: restano fermi sul primo fotogramma).
+const minionCount = number('minions') ?? 0;
+for (let i = 0; i < minionCount; i++) {
+  match.spawnMinion(MINIONS.ossuary_skeleton!, new Vec2(match.player.position.x + 70 + (i % 4) * 44, match.player.position.y - 60 + Math.floor(i / 4) * 56));
+}
 
 const canvas = document.querySelector<HTMLCanvasElement>('#view')!;
 const ctx = canvas.getContext('2d')!;

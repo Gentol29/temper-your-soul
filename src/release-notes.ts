@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.13.1', date: '2026-11-05',
+    changes: [
+      'Lo scheletro della Cripta (Ossario) ha un aspetto nuovo: nero carbonizzato con braci nel petto, nelle ginocchia, nella lama e nello scudo, teschio di cenere calda e contorno rosso brace dove brilla. È un modello 3D reso con Blender (camera isometrica 2:1, toni a gradini, nessuna sfumatura), non una grafica generata con l’IA.',
+      'Sprite di 26×36 px con quattro fotogrammi di camminata, di profilo verso destra e specchiato a sinistra. Solo aspetto: vita, danni, comportamento e rialzata dell’Ossario non cambiano. Con ?mob=classici si rivede la grafica di prima.',
+      'Nuovi strumenti in tools/arte/blender: rendono un personaggio 3D in 8 direzioni isometriche a 64×64 (posa ferma, camminata, attacco, colpo subito, morte) con contorno e palette Hi-bit, e ne esportano la camminata come sprite di mob. Il gioco oggi usa solo la camminata in una direzione: le altre animazioni non sono ancora collegate.',
+      'Ambiente ComfyUI locale per gli sprite con SDXL e Pixel Art XL (installa-comfyui.ps1, genera_isometrico.py): scarica i modelli solo su richiesta e li tiene fuori dal repository.',
+      'Anteprima di sviluppo: iso-preview.html?minions=n fa comparire n Ossari (il parametro era documentato ma non implementato). Il test degli sprite dei mob riconosce anche i contorni colorati.',
+      'Prova giocata ancora da fare: camminata in movimento, specchio a sinistra, leggibilità del corpo nero sui fondi della Cripta.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.13.0', date: '2026-11-05',
     changes: [
       'HUB isometrico annullato: il rifugio torna la schermata principale con l’artwork del cortile come mappa giocabile, come prima della v0.12.00. Rimossi piazza, edifici generati e script dell’HUB isometrico.',
