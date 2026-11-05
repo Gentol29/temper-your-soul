@@ -8,6 +8,8 @@ import { minionArt } from '../minion-art';
 import type { Palette } from '../sprites';
 import { isBasicAttackCast } from './basic-attack-visuals';
 import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
+import { drawDissolvingDeaths } from './minion-dissolve';
+import { isMeteorImpact, meteorImpactReady } from './meteor-impact';
 
 /** Nessuno spostamento (vista dall'alto). */
 const ZERO_SHIFT = Vec2.ZERO;
@@ -15,7 +17,7 @@ const ZERO_SHIFT = Vec2.ZERO;
 /** Taratura estetica provvisoria; budget indipendente dal numero di nemici o giocatori. */
 export const COMBAT_VFX = {
   particles: 2400, stains: 180, deaths: 48, hit: 24, death: 64,
-  buffRate: 54, rushRate: 100, statusRate: 20, stainLife: 14, deathLife: 0.48,
+  buffRate: 54, rushRate: 100, statusRate: 20, stainLife: 14, deathLife: 0.8,
 } as const;
 type MoteKind = 'blood' | 'chip' | 'smoke' | 'glow';
 export interface CombatMote {
@@ -113,6 +115,8 @@ export class CombatVfx {
         this.spray(event.position, event.struck === 'obstacle' ? 'chip' : 'glow', event.struck === 'obstacle' ? '#b9a68d' : '#ffe8bf', 28, 0, TAU);
         break;
       case 'zone_detonated':
+        // La meteora ha fumo e schegge nel suo impatto isometrico (`meteor-impact.ts`): niente spruzzi doppi.
+        if (isMeteorImpact(event) && meteorImpactReady()) break;
         this.spray(event.position, 'glow', /water|frost|veil/.test(event.visual ?? '') ? '#b0e4ed' : '#ffd099', 110, 0, TAU);
         this.spray(event.position, 'smoke', '#6b596c', 24, 0, TAU);
         break;
@@ -262,17 +266,48 @@ function deathFlash(palette: Palette): Palette {
   return flash;
 }
 
-/** Riusa la sagoma esistente: lampo, sobbalzo, cedimento e dissolvenza. Da un raster: gli sprite grandi costerebbero troppo pixel per pixel. */
+/** Un servitore abbattuto in questo istante: dove cade, quanto e' inclinato, con quale sagoma e a che punto della morte. */
+export interface DeathPose {
+  readonly raster: HTMLCanvasElement;
+  readonly x: number;
+  readonly y: number;
+  readonly rotation: number;
+  /** -1 se la figura guardava a sinistra. */
+  readonly flip: number;
+  /** 0 appena abbattuto, 1 alla fine. */
+  readonly progress: number;
+  readonly matter: ReturnType<typeof impactKind>;
+}
+
+/** Riusa la sagoma esistente: lampo, sobbalzo e inclinazione. In isometria cade dove stava, piedi sul punto proiettato. */
+export function deathPose(death: MinionDeath, view: SceneView = TOP_DOWN_VIEW): DeathPose {
+  const art = minionArt(death.visual), u = 1 - death.remaining / COMBAT_VFX.deathLife;
+  const shift = view.shift(death.x, death.y, Math.round((art.frames[0]!.length * art.scale) / 2 - 2));
+  return {
+    raster: minionRaster(art.frames[0]!, u < 0.15 ? deathFlash(art.palette) : art.palette, art.scale),
+    x: Math.round(death.x) + shift.x,
+    y: Math.round(death.y + u * 8) + shift.y,
+    rotation: death.direction * u * 0.35,
+    flip: death.left ? -1 : 1,
+    progress: u,
+    matter: impactKind(death.visual),
+  };
+}
+
+/**
+ * Le morti dei servitori. Con WebGL la figura si sfalda a rumore (`minion-dissolve.ts`); senza, il disegno Canvas 2D di
+ * sempre: cedimento e dissolvenza in trasparenza. Da un raster: gli sprite grandi costerebbero troppo pixel per pixel.
+ */
 export function drawMinionDeaths(ctx: CanvasRenderingContext2D, vfx: CombatVfx, view: SceneView = TOP_DOWN_VIEW): void {
-  for (const death of vfx.deaths) {
-    const art = minionArt(death.visual), u = 1 - death.remaining / COMBAT_VFX.deathLife;
-    // In isometria cade dove stava il servitore: piedi sul punto proiettato, come la sua figura.
-    const shift = view.shift(death.x, death.y, Math.round((art.frames[0]!.length * art.scale) / 2 - 2));
-    ctx.save(); ctx.translate(Math.round(death.x) + shift.x, Math.round(death.y + u * 8) + shift.y);
-    ctx.rotate(death.direction * u * 0.35); ctx.scale((death.left ? -1 : 1) * (1 + u * 0.1), Math.max(0.1, 1 - u * 0.8));
+  if (vfx.deaths.length === 0) return;
+  const poses = vfx.deaths.map((death) => deathPose(death, view));
+  if (drawDissolvingDeaths(ctx, poses)) return;
+  for (const pose of poses) {
+    const u = pose.progress;
+    ctx.save(); ctx.translate(pose.x, pose.y);
+    ctx.rotate(pose.rotation); ctx.scale(pose.flip * (1 + u * 0.1), Math.max(0.1, 1 - u * 0.8));
     ctx.globalAlpha = Math.min(1, (1 - u) * 2);
-    const raster = minionRaster(art.frames[0]!, u < 0.15 ? deathFlash(art.palette) : art.palette, art.scale);
-    ctx.drawImage(raster, -raster.width / 2, -raster.height / 2);
+    ctx.drawImage(pose.raster, -pose.raster.width / 2, -pose.raster.height / 2);
     ctx.restore();
   }
 }

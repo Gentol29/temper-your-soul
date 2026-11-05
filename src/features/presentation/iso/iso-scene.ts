@@ -7,9 +7,13 @@ import { drawBossIndicator, drawDecals, drawFloatingTexts, drawGlowEffects, draw
 import { drawClassCombat } from '../draw-class-combat';
 import { drawPersistentVfx } from '../vfx/sprite-effects';
 import { drawBloodStains, drawCombatMotes, drawMinionDeaths } from '../vfx/combat-vfx';
+import { pixiLayer } from '../webgl-renderer';
+import { drawProjectileTrails } from '../vfx/trail-layer';
+import { drawMeteorGlow } from '../vfx/glow-layer';
+import { drawMeteorImpact, impactBox, meteorImpactReady } from '../vfx/meteor-impact';
 import { FEEDBACK } from '../effects';
 import { drawLight, drawVignette, LIGHT, LightMap } from '../lights';
-import { moodAmbient, ROOM_MOOD } from '../room-mood';
+import { moodAmbient, moodAmbientBlend, ROOM_MOOD } from '../room-mood';
 import { minionArt } from '../minion-art';
 import { ARENA_THEMES } from '../themes';
 import { projectileLook } from '../visuals';
@@ -70,7 +74,11 @@ export function renderIsometricScene(ctx: CanvasRenderingContext2D, scene: Scene
   const { player, boss } = match;
   const theme = ARENA_THEMES[match.arena.theme];
   const view = sceneViewFor(camera.projection);
+  // Prepara lo strato WebGL gia' al primo fotogramma del dungeon, non alla prima morte.
+  pixiLayer();
+  meteorImpactReady();
   const ambient = scene.mood === undefined ? theme.ambient : moodAmbient(theme.ambient, scene.mood);
+  const ambientBlend = scene.mood === undefined ? null : moodAmbientBlend(theme.ambient, scene.mood);
 
   ctx.clearRect(0, 0, camera.width, camera.height);
   ctx.fillStyle = art.void;
@@ -80,7 +88,7 @@ export function renderIsometricScene(ctx: CanvasRenderingContext2D, scene: Scene
   const left = Math.round(camera.position.x + camera.shakeOffset.x);
   const top = Math.round(camera.position.y + camera.shakeOffset.y);
   ctx.translate(-left, -top);
-  const frame: IsoArtFrame = { arena: match.arena, view, camera, clock, covers: match.covers, coverFlashes: effects.coverFlashes, ambient };
+  const frame: IsoArtFrame = { arena: match.arena, view, camera, clock, covers: match.covers, coverFlashes: effects.coverFlashes, ambient, ambientBlend };
 
   // L'ambiente illuminato: pavimento, muri di fondo, porte, tracce a terra, pozzi, arredi e ostacoli in piedi.
   lightMap.begin(true);
@@ -158,6 +166,10 @@ export function renderIsometricScene(ctx: CanvasRenderingContext2D, scene: Scene
       }),
     });
   }
+  // L'impatto della meteora sta sul pavimento come una figura: chi gli sta davanti lo copre, chi sta dietro ne e' coperto.
+  for (const impact of effects.meteorImpacts.impacts) {
+    figures.push({ x: impact.x, y: impact.y, box: impactBox(impact, view), draw: () => drawMeteorImpact(ctx, impact, view) });
+  }
   if (occluders.length > 0) rememberIsoScene(ctx);
   for (const step of orderWithOccluders(figures, occluders)) step();
   drawMinionDeaths(ctx, effects.combatVfx, view);
@@ -180,7 +192,10 @@ export function renderIsometricScene(ctx: CanvasRenderingContext2D, scene: Scene
     });
   }
 
-  // Colpi, particelle ed effetti: all'altezza del corpo, sopra le figure come dall'alto.
+  // Colpi, particelle ed effetti: all'altezza del corpo, sopra le figure come dall'alto. Prima le scie (PixiJS), sotto i colpi.
+  drawProjectileTrails(ctx, effects.projectileTrails, view, effects.meteorImpacts.embers);
+  // Luce additiva della meteora (PixiJS, composta con `lighter`): sopra le scie, sotto i colpi.
+  drawMeteorGlow(ctx, effects.meteorGlow, match.zones, view);
   for (const projectile of match.projectiles) {
     if (projectile.team === 'enemy') continue;
     drawProjectile(ctx, projectile, effects.trailOf(projectile), camera, match.time, undefined, view);

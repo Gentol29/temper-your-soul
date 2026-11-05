@@ -62,6 +62,27 @@ export function moodAmbient(base: string, frame: Pick<MoodFrame, 'depth' | 'warm
   return mixColor(mixColor(base, '#000000', mood.depthDarken * frame.depth), mood.warmTone, mood.clearWarmth * frame.warmth);
 }
 
+/** Il passaggio di luce in corso: il buio di partenza (stanza chiusa), quello d'arrivo (libera) e quanto si e' scaldato. */
+export interface AmbientBlend {
+  readonly from: string;
+  readonly to: string;
+  readonly t: number;
+}
+
+/**
+ * Mentre la stanza si scalda, `moodAmbient` cambia a ogni fotogramma ma resta la mescolanza lineare di due soli colori.
+ * Chi tiene in cache disegni scuriti dall'ambiente usa questi due estremi e li sfuma con `t`, invece di rifarli a ogni
+ * colore intermedio (era il calo a ~30 FPS dopo l'ultimo mostro). Null quando la luce e' ferma.
+ */
+export function moodAmbientBlend(base: string, frame: Pick<MoodFrame, 'depth' | 'warmth'>): AmbientBlend | null {
+  if (frame.warmth <= 0 || frame.warmth >= 1) return null;
+  return {
+    from: moodAmbient(base, { depth: frame.depth, warmth: 0 }),
+    to: moodAmbient(base, { depth: frame.depth, warmth: 1 }),
+    t: frame.warmth,
+  };
+}
+
 /**
  * Segue la stanza corrente e i suoi cambi. `key` identifica la stanza (cambia a ogni stanza nuova); `doorsOpen` e'
  * quello della vista. Una stanza gia' aperta all'arrivo (calma) ha le uscite alzate e la luce calda da subito.

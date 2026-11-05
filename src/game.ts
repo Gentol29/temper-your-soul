@@ -1107,10 +1107,13 @@ export class Game {
     view?.sample(performance.now());
     // La proiezione segue la mappa mostrata prima dei passi: i comandi letti in questo fotogramma usano la vista giusta.
     this.camera.setProjection(projectionFor((view?.match ?? this.match).arena.theme));
+    let steps = 0;
     while (this.accumulator >= STEP) {
       this.step();
       this.accumulator -= STEP;
+      steps++;
     }
+    const simulated = performance.now();
     if (this.screen === 'hub') this.hub.render(delta);
     if (this.pendingEnd !== null) {
       this.pendingEnd.remaining -= delta;
@@ -1186,6 +1189,8 @@ export class Game {
       ...(mood === undefined ? {} : { mood }),
       ...(nextVein === undefined ? {} : { nextVein: veinName(views.run.dungeonId, nextVein) }),
     };
+    const sceneStart = performance.now();
+    let roomMs = 0;
     if (inRefuge) {
       this.menuScene.draw(this.clock, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     } else renderScene(this.ctx, {
@@ -1198,17 +1203,22 @@ export class Game {
       allies: this.allyVisuals,
       ...(look === null ? {} : {
         drawRoom: (ctx: CanvasRenderingContext2D, layer: RoomLayer) => {
+          const roomStart = performance.now();
           if (layer === 'floor') drawRoomFloor(ctx, look, this.clock);
           else if (layer === 'objects') drawRoomPickups(ctx, look, this.clock);
           else if (layer === 'front') drawRoomFront(ctx, look, this.clock);
           else drawRoomLabels(ctx, look);
+          roomMs += performance.now() - roomStart;
         },
         drawRoomScreen: (ctx: CanvasRenderingContext2D) => drawRoomIndicators(ctx, this.camera, renderedMatch.player.position, look.view, renderedMatch.minions),
         preyId: look.view.preyId,
         ...(mood === undefined ? {} : { mood }),
       }),
     });
-    this.performancePanel.frame(time, performance.now() - frameStart, this.party.client);
+    const end = performance.now();
+    this.performancePanel.frame(time, end - frameStart, this.party.client, {
+      steps, simulation: simulated - frameStart, interface: sceneStart - simulated, scene: end - sceneStart - roomMs, room: roomMs,
+    });
     requestAnimationFrame((next) => this.frame(next));
   }
 }

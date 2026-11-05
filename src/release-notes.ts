@@ -159,6 +159,24 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.16.0', date: '2026-11-05',
+    changes: [
+      'Comincia la migrazione del disegno a WebGL con PixiJS 8.22.0, solo nello strato della rappresentazione. La scena resta in Canvas 2D; PixiJS disegna i suoi strati e li compone nel punto giusto della profondità, con la stessa camera. Senza WebGL resta il disegno di sempre.',
+      'Primo strato WebGL: i servitori abbattuti si sfaldano con uno shader a rumore, per pixel interi e dalla testa ai piedi, con un orlo in brace (creature), cenere (ossa e costrutti) o energia (spiriti). La caduta e il lampo iniziale restano quelli di prima; l’animazione della morte passa da 0,48 a 0,8 s per lasciar vedere lo sfaldamento (solo aspetto). Valori provvisori.',
+      'Il pannello Prestazioni (F2) mostra quale disegno è attivo: WebGL · PixiJS, in preparazione, oppure Canvas 2D con il motivo se WebGL non è disponibile. Lo strato WebGL si prepara all’ingresso nel dungeon, non alla prima morte.',
+      'Il gioco pesa di più: lo script passa da circa 1.449 a 1.983 KB (566 KB compressi). Prestazioni da misurare con il pannello F2 giocando.',
+      'Corretto il calo a circa 30 FPS per un secondo e mezzo dopo l’ultimo mostro di una stanza: mentre la luce della stanza liberata si scaldava, i bordi in primo piano della vista isometrica venivano ricostruiti a ogni fotogramma. Ora restano in cache le due luci estreme, sfumate durante il passaggio.',
+      'Scie di particelle con PixiJS per tutti i colpi a distanza dei giocatori: braci che salgono dietro i dardi di fuoco, gocce che cadono dall’acqua, schegge di terra, sbuffi di vento e una scia sottile per le frecce. Pixel interi con la palette dell’elemento, un solo disegno per tutte le particelle, nessun numero casuale (uguali in cooperativa). Valori provvisori.',
+      'Nuovo impatto della meteora in isometria, sul pavimento come il resto della mappa: lampo schiacciato, onda d’urto che arriva al bordo dell’area di danno, cupola di fuoco che si raffredda, fumo, fiammelle e schegge che volano ad arco e ricadono (PixiJS). 16 fotogrammi rifiniti con SDXL e Pixel Art XL in locale, animati con i 12 principi dell’animazione. Chi sta davanti al punto d’impatto copre l’esplosione, chi sta dietro ne è coperto.',
+      'Luce della meteora con PixiJS in fusione additiva: mentre cade, scintille dietro la testa, un alone attorno e una luce sul pavimento che cresce avvicinandosi; all’impatto un lampo che illumina davvero pavimento e figure (sale in fretta e cala piano) e una raffica di scintille. Aloni a gradini e pixel interi, nessun numero casuale. Valori provvisori.',
+      'Tolto il viola dalla meteora: il segnale a terra durante la caduta, la scia di ripiego e gli scoppi usano i toni del fuoco.',
+      'Aggiunte per gli agenti le skill ufficiali di PixiJS v8 utili al gioco (16 su 25), con licenza MIT.',
+      'Il pannello Prestazioni (F2) divide il tempo di ogni fotogramma fra simulazione, interfaccia, scena, stanza e lavoro del browser, e conta i fotogrammi lenti.',
+      'CLAUDE.md e AGENTS.md ora ammettono PixiJS come unica dipendenza nel browser, solo in presentation/. Regole, salvataggi e protocollo invariati.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.15.0', date: '2026-11-05',
     changes: [
       'Menù di pausa nello stile del rifugio: placca di ferro con angoli a gradino e rivetti di rame, niente sfocatura sullo sfondo, «Riprendi» in cremisi e «Abbandona» in ferro, testi in rame e avorio. Vittoria e sconfitta restano come prima.',

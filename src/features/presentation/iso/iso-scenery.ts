@@ -1,3 +1,4 @@
+import type { AmbientBlend } from '../room-mood';
 import { blockerAt, pillarAt, type ArenaDefinition, type ArenaThemeId, type Pillar } from '../../arena/arena';
 import { Vec2 } from '../../../core/vec2';
 import { Camera } from '../../../core/camera';
@@ -180,12 +181,21 @@ export function sconceAnchor(wall: BackWall, line: number, along: number): { rea
 // --- Bordi davanti ---------------------------------------------------------------------------------------------------
 
 const frontPieces = new Map<string, { readonly canvas: HTMLCanvasElement; readonly left: number; readonly top: number }>();
+/** Tratti di bordo tenuti in cache al massimo (i piu' vecchi escono): bastano per una stanza e le sue due luci. */
+const FRONT_CACHE = 64;
 
-/** Il parapetto e il dirupo di un tratto del bordo davanti, in cache per mappa, tratto e buio dell'ambiente. */
+/**
+ * Il parapetto e il dirupo di un tratto del bordo davanti, in cache per mappa, tratto e buio dell'ambiente. Il buio deve
+ * essere uno dei pochi colori fermi della scena (vedi `drawIsoFrontEdges`): ogni colore nuovo rifa' tutto il tratto.
+ */
 function frontSegment(arena: ArenaDefinition, theme: ArenaThemeId, edge: 'sw' | 'se', from: number, length: number, ambient: string): { readonly canvas: HTMLCanvasElement; readonly left: number; readonly top: number } {
   const key = `${arena.id}|${arena.width}x${arena.height}|${theme}|${edge}|${from}|${length}|${ambient}`;
   let segment = frontPieces.get(key);
-  if (segment !== undefined) return segment;
+  if (segment !== undefined) {
+    frontPieces.delete(key);
+    frontPieces.set(key, segment);
+    return segment;
+  }
   const t = arena.wallThickness;
   const { parapet, cliff } = ISO_SCENERY;
   // La cima: la fascia del muro (spessore t) dipinta dall'alto con la sua pietra, scurita come fuori dalla luce.
@@ -232,6 +242,7 @@ function frontSegment(arena: ArenaDefinition, theme: ArenaThemeId, edge: 'sw' | 
   ctx.drawImage(capTop.canvas, capTop.left - left, capTop.top - parapet - top);
   segment = { canvas: out, left, top };
   frontPieces.set(key, segment);
+  if (frontPieces.size > FRONT_CACHE) frontPieces.delete(frontPieces.keys().next().value!);
   return segment;
 }
 
@@ -246,6 +257,7 @@ const FRONT_STEP = 256;
 export function drawIsoFrontEdges(ctx: CanvasRenderingContext2D, frame: IsoArtFrame, theme: ArenaThemeId, gap?: { readonly from: number; readonly to: number }): void {
   if (tileSheet(theme) === null) return;
   const { arena, camera, ambient } = frame;
+  const blend = frame.ambientBlend ?? null;
   const viewLeft = camera.position.x - 300, viewRight = camera.position.x + camera.width + 300;
   const viewTop = camera.position.y - 300, viewBottom = camera.position.y + camera.height + 300;
   const visible = (s: { canvas: HTMLCanvasElement; left: number; top: number }): boolean =>
@@ -254,14 +266,31 @@ export function drawIsoFrontEdges(ctx: CanvasRenderingContext2D, frame: IsoArtFr
     const parts = gap === undefined ? [[from, Math.min(arena.width, from + FRONT_STEP)]] : splitAround(from, Math.min(arena.width, from + FRONT_STEP), gap);
     for (const [a, b] of parts) {
       if (b! <= a!) continue;
-      const segment = frontSegment(arena, theme, 'sw', a!, b! - a!, ambient);
-      if (visible(segment)) ctx.drawImage(segment.canvas, segment.left, segment.top);
+      drawSegment(ctx, (shade) => frontSegment(arena, theme, 'sw', a!, b! - a!, shade), ambient, blend, visible);
     }
   }
   for (let from = 0; from < arena.height; from += FRONT_STEP) {
-    const segment = frontSegment(arena, theme, 'se', from, Math.min(arena.height, from + FRONT_STEP) - from, ambient);
-    if (visible(segment)) ctx.drawImage(segment.canvas, segment.left, segment.top);
+    drawSegment(ctx, (shade) => frontSegment(arena, theme, 'se', from, Math.min(arena.height, from + FRONT_STEP) - from, shade), ambient, blend, visible);
   }
+}
+
+type FrontSegment = { readonly canvas: HTMLCanvasElement; readonly left: number; readonly top: number };
+
+/**
+ * Un tratto di bordo scurito dall'ambiente. Mentre la stanza si scalda l'ambiente cambia a ogni fotogramma: si disegnano
+ * i due tratti degli estremi (in cache) sfumando quello caldo sopra quello freddo. Scurire e' una moltiplicazione, quindi
+ * la sfumatura da' lo stesso colore del tratto rifatto con l'ambiente intermedio, senza ricostruirlo.
+ */
+function drawSegment(ctx: CanvasRenderingContext2D, segmentFor: (shade: string) => FrontSegment, ambient: string, blend: AmbientBlend | null, visible: (s: FrontSegment) => boolean): void {
+  const base = segmentFor(blend === null ? ambient : blend.from);
+  if (!visible(base)) return;
+  ctx.drawImage(base.canvas, base.left, base.top);
+  if (blend === null) return;
+  const warm = segmentFor(blend.to);
+  ctx.save();
+  ctx.globalAlpha = blend.t;
+  ctx.drawImage(warm.canvas, warm.left, warm.top);
+  ctx.restore();
 }
 
 function splitAround(a: number, b: number, gap: { readonly from: number; readonly to: number }): number[][] {

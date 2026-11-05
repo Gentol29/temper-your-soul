@@ -1,5 +1,8 @@
 import { SpriteEffects, replacesLegacy } from './vfx/sprite-effects';
 import { CombatVfx } from './vfx/combat-vfx';
+import { ProjectileTrails } from './vfx/projectile-trails';
+import { MeteorImpacts } from './vfx/meteor-impact';
+import { MeteorGlow } from './vfx/meteor-glow';
 import { isBasicAttackCast, isBasicAttackVisual } from './vfx/basic-attack-visuals';
 import type { Camera } from '../../core/camera';
 import { cosmeticRng, type Rng } from '../../core/rng';
@@ -64,7 +67,7 @@ export function damageTier(amount: number): { readonly size: number; readonly co
 const CAST_COLORS: Readonly<Record<string, string>> = {
   arcane_bolt: '#c8a7ff',
   frost_orb: '#a5efff',
-  meteor: '#cba5ff',
+  meteor: '#e77c40',
   grave_step:'#b7d5b9',ember_step:'#ff8c49',rime_step:'#9fe5ff',reed_burst:'#a8cb75',
 };
 
@@ -209,6 +212,12 @@ const SPARK_LIFE = 0.14;
 export class Effects {
   readonly spriteVfx = new SpriteEffects();
   readonly combatVfx: CombatVfx;
+  /** Scie di particelle dei colpi a distanza dei giocatori (deterministiche, disegnate con PixiJS). */
+  readonly projectileTrails = new ProjectileTrails();
+  /** Impatti isometrici della meteora e le loro schegge. */
+  readonly meteorImpacts = new MeteorImpacts();
+  /** Luce e scintille additive della meteora (PixiJS). */
+  readonly meteorGlow = new MeteorGlow();
   particles: Particle[] = [];
   waves: Wave[] = [];
   texts: FloatingText[] = [];
@@ -251,6 +260,9 @@ export class Effects {
   clear(): void {
     this.spriteVfx.clear();
     this.combatVfx.clear();
+    this.projectileTrails.clear();
+    this.meteorImpacts.clear();
+    this.meteorGlow.clear();
     this.particles = [];
     this.waves = [];
     this.texts = [];
@@ -285,6 +297,8 @@ export class Effects {
    */
   handle(event: GameEvent, localPlayerId?: string): void {
     this.spriteVfx.handle(event);
+    this.meteorImpacts.handle(event);
+    this.meteorGlow.handle(event);
     // Gli atlanti sostituiscono la vecchia sagoma, mai sangue, frammenti e particelle aggiuntive.
     this.combatVfx.handle(event);
     if (replacesLegacy(event)) return;
@@ -463,6 +477,9 @@ export class Effects {
     this.spriteVfx.update(dt);
     this.combatVfx.update(dt, match, camera);
     this.updateTrails(dt, match.projectiles, camera);
+    this.projectileTrails.update(dt, match.projectiles);
+    this.meteorImpacts.update(dt);
+    this.meteorGlow.update(dt, match.zones);
     const { boss } = match;
     if (boss !== null) {
       const charge = boss.charge;

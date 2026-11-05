@@ -1,6 +1,7 @@
 import type { Camera } from '../../../core/camera';
 import type { ArenaDefinition } from '../../arena/arena';
 import type { CoverState } from '../../match/match';
+import type { AmbientBlend } from '../room-mood';
 import type { IsoOccluder } from './occluders';
 import type { SceneView } from './scene-view';
 
@@ -17,6 +18,8 @@ export interface IsoArtFrame {
   readonly coverFlashes: ReadonlyMap<number, number>;
   /** Il buio della scena (#rrggbb): scurisce cio' che si disegna fuori dalla mappa di luce. */
   readonly ambient: string;
+  /** Durante il passaggio di luce di una stanza liberata: i due estremi di cui `ambient` e' la mescolanza. */
+  readonly ambientBlend?: AmbientBlend | null;
 }
 
 /**

@@ -67,7 +67,7 @@ describe('VFX Hi-bit di combattimento', () => {
     fx.handle({ type: 'minion_defeated', minionId: 7, visual: 'crypt_bat', position: at });
     expect(fx.deaths).toHaveLength(1); expect(fx.particles.length).toBeGreaterThan(70);
     fx.update(0.25, match, camera); expect(fx.deaths[0].remaining).toBeLessThan(COMBAT_VFX.deathLife);
-    fx.update(0.3, match, camera); expect(fx.deaths).toHaveLength(0);
+    fx.update(COMBAT_VFX.deathLife - 0.25 + 0.05, match, camera); expect(fx.deaths).toHaveLength(0);
     fx.clear(); fx.handle({ type: 'minion_defeated', minionId: 7, visual: 'crypt_skeleton', position: at, revives: true });
     expect(fx.deaths).toHaveLength(0); expect(fx.particles.some(p => p.kind === 'blood')).toBe(false);
   });

@@ -1,4 +1,5 @@
 import { drawVfx } from './vfx/assets';
+import { fallingMeteorOffset } from './vfx/meteor-glow';
 import { drawProjectileVfx } from './vfx/sprite-effects';
 import { clamp, TAU } from '../../core/vec2';
 import type { Camera } from '../../core/camera';
@@ -108,12 +109,12 @@ export function drawFallingSpell(ctx: CanvasRenderingContext2D, zone: DangerZone
   if (zone.team === 'player') {
     // Solo la meteora cade dall’alto; la marea conserva il segnale a terra.
     if (zone.spec.visual !== undefined && zone.spec.visual !== 'meteor') return;
-    const h = (1 - u) * 190;
-    const x = zone.position.x - h * 0.35;
-    const y = zone.position.y - h;
+    const head = fallingMeteorOffset(u);
+    const x = zone.position.x + head.x;
+    const y = zone.position.y + head.y;
     if (drawVfx(ctx, 'mage-fireball', x, y, 150 + u * 25, zone.spec.delay - zone.remaining, Math.atan2(1, 0.35), 0.9)) return;
     ctx.save();
-    ctx.strokeStyle = '#b798ff';
+    ctx.strokeStyle = '#cb4939';
     ctx.lineWidth = 9;
     ctx.globalAlpha = 0.3;
     ctx.beginPath();
@@ -121,10 +122,10 @@ export function drawFallingSpell(ctx: CanvasRenderingContext2D, zone: DangerZone
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.lineWidth = 3;
-    ctx.strokeStyle = '#f1daff';
+    ctx.strokeStyle = '#f0bd72';
     ctx.globalAlpha = 0.8;
     ctx.stroke();
-    ctx.fillStyle = '#b88aff';
+    ctx.fillStyle = '#e77c40';
     ctx.beginPath();
     ctx.arc(x, y, 9 + u * 5, 0, TAU);
     ctx.fill();

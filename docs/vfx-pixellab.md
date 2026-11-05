@@ -80,3 +80,28 @@ I PNG PixelLab restano solo come ripiego finché i fogli non sono caricati. Ness
 toccata. Metodo e comandi nel LEGGIMI degli strumenti esterni (README · Strumenti esterni), credito `local-zimage-vfx`. L'eccezione del 1 novembre riguardava
 PixelLab: l'uso di questo modello per gli effetti è da confermare dal proprietario. Da provare giocando: leggibilità di ogni
 effetto in volo e sul posto, nelle tre classi e in cooperativa.
+
+### Impatto isometrico della meteora · 5 novembre 2026
+
+Su richiesta dell'utente l'impatto della meteora non e' piu' lo scoppio dritto della palla di fuoco: e' un foglio di 16
+fotogrammi 192x160 a 20 fps (`src/assets/vfx/frames/meteor-impact.png`, `vfx/meteor-impact.ts`) disegnato sul pavimento
+isometrico. Pose progettate con i 12 principi dell'animazione (anticipazione del bagliore che si contrae, schiacciamento del
+lampo e allungamento della colonna, onda d'urto con uscita rallentata, completamento della cupola che sale mentre la base si
+spegne, schegge ad arco, fiammelle e braci come azioni secondarie), rifinite con SDXL 1.0 + Pixel Art XL in locale
+(img2img 0,55) e ridotte alla palette delle pose. L'onda d'urto arriva all'ellisse 2:1 del raggio di gioco: davanti al punto
+d'impatto e' ritagliata a non piu' di 2 pixel oltre l'area di danno (un test lo controlla). Il punto d'impatto del foglio sta
+sul punto del pavimento proiettato, la scala segue il raggio della zona e l'esplosione si ordina con le figure per
+profondita'. Schegge e braci con PixiJS nello stesso `ParticleContainer` delle scie: archi deterministici che atterrano
+dentro l'area di danno. Il segnale a terra durante la caduta, la scia di ripiego e gli scoppi della meteora usano i toni del
+fuoco al posto del viola predefinito delle zone del giocatore. Anteprima approvata dall'utente prima dell'integrazione;
+controllo tecnico nel gioco vero guidato in automatico. Noto: il fumo degli ultimi fotogrammi ha una trama un po' a sassi.
+Da provare giocando: leggibilita' del segnale e dell'impatto su tutti i temi e in cooperativa.
+
+Luce additiva (stesso giorno, su richiesta dell'utente): `vfx/meteor-glow.ts` (parte pura) e `vfx/glow-layer.ts` (PixiJS).
+In caduta: due scintille ogni 1/28 della caduta dietro la testa (passo fisso, non dipende dagli FPS), alone attorno alla
+testa, luce sul pavimento che cresce con l'avanzamento (anticipazione). All'impatto: lampo sull'ellisse del danno (sale in
+0,07 s, cala in modo quadratico fino a 0,6 s) e 40 scintille radiali. Aloni come sprite su trame a quattro gradini fatte nel
+codice, scintille in un `ParticleContainer`, tutto con `blendMode = 'add'`; lo strato si compone sulla scena con
+`lighter` (una fusione solo dentro PixiJS si sommerebbe al vuoto della sua tela trasparente). La geometria della caduta e'
+condivisa con il disegno della meteora (`fallingMeteorOffset`). Prova tecnica nel gioco vero: 119-165 FPS durante le
+catture, scena sotto 1 ms. Valori in `METEOR_GLOW`, provvisori.

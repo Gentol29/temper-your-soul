@@ -1,5 +1,17 @@
 # Bug e problemi rilevati
 
+## Calo di FPS dopo l'ultimo mostro di un dungeon (risolto in v0.16.00, 5 novembre 2026)
+
+Segnalato dall'utente: dopo l'ultima uccisione di una stanza gli FPS scendevano a circa 30. Riprodotto nel gioco vero
+(server di sviluppo guidato in Edge con la GPU, mostri abbattuti da una prova automatica): circa 1–2 s dopo la pulizia,
+165 → 31–34 FPS per circa 1,5 s, con la scena a 22,65 ms per fotogramma invece di 1,1 ms. Causa, dal profiler: i bordi
+in primo piano della vista isometrica (`frontSegment` in `iso/iso-scenery.ts`) stavano in cache per colore
+dell'ambiente; a stanza liberata la luce si scalda per 1,6 s (`ROOM_MOOD.warmTime`) e l'ambiente cambia a ogni
+fotogramma, quindi ogni fotogramma ricostruiva tutti i tratti (tele nuove, tile, proiezione a rombo) e la cache cresceva
+senza limite. Correzione: in cache solo i due estremi della luce (`moodAmbientBlend`), sfumati durante il passaggio
+(scurire e' una moltiplicazione, quindi il colore e' lo stesso), e cache limitata a 64 tratti. Dopo la correzione, stessa
+prova: 161–165 FPS, scena circa 1 ms. Test sulla linearita' del passaggio. Prova giocata dell'utente ancora da fare.
+
 ## Menu principale: tooltip permanente sul comando selezionato
 
 Segnalazione dell’utente del 4 novembre 2026. Il riquadro descrittivo riproponeva sempre il testo del comando con il focus, quindi restava visibile anche spostando il mouse. Su richiesta esplicita rimosso il tooltip visuale dal menu principale, insieme al nodo HTML e ai suoi stili. Conservate le descrizioni accessibili dei pulsanti, la navigazione da tastiera, l’evidenziazione della scena e il messaggio quando si attiva un comando non disponibile. I tooltip delle strutture nell’HUB restano separati.

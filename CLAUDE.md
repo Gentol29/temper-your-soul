@@ -12,7 +12,7 @@ Leggere prima [README.md](README.md), in particolare «Prima di lavorare», stat
 - Rispettare la direzione UI **C — Reliquiario** e gli sprite di gioco **C — Cacciatore d’ombre**. Per nuovi sprite, icone, VFX e revisioni grafiche seguire obbligatoriamente [AGENTS.md · Direzione grafica condivisa — Hi-bit](AGENTS.md#direzione-grafica-condivisa--hi-bit): pixel interi, contorni definiti, palette cupa carbone/cenere/grigi/cremisi e accenti elementali distinti. Conservare i font approvati. La revisione dei ritratti illustrati resta sospesa: non consumare crediti per rigenerazioni senza una nuova richiesta esplicita.
 - **Versione e changelog obbligatori:** prima di creare/aggiornare una PR o fare un commit diretto a `main` autorizzato, applicare automaticamente [docs/versioning.md](docs/versioning.md). Aggiornare `package.json`, lockfile e prima voce di `src/release-notes.ts`; riassumere tutte le modifiche dell’incremento in italiano. Per bilanciamento riportare valori prima → dopo con unità, skill/oggetto/boss, rarità/livello/fase pertinenti. Convenzione vA.BB.CC: nuovo feature branch da main a CC=01 (registrato nel primo commit), ogni commit successivo incrementa CC di 1; ogni merge/squash o commit diretto autorizzato a main incrementa BB di 1 rispetto al main aggiornato e azzera CC. A resta invariato salvo richiesta esplicita. Aggiornare note a ogni commit; la release main riassume tutta la PR. Aprire una PR o fare push senza nuovi commit non aumenta la versione. Preservare lo storico, verificare collisioni dopo il pull ed eseguire `npm run verify`. Questa regola non autorizza commit/push.
 
-Gioco d'azione 2D per browser in **TypeScript** (Canvas 2D, nessuna dipendenza runtime nel browser, nessun motore di gioco). La cooperativa usa un server Node/WebSocket: `npm run build` e `npm run server` (porta 4173); Vite in sviluppo inoltra `/party` a quel server. Vedere README per inviti, autorità della simulazione e limiti della prima versione.
+Gioco d'azione 2D per browser in **TypeScript** (Canvas 2D in migrazione verso WebGL con **PixiJS**, unica dipendenza runtime nel browser e solo in `presentation/`; nessun motore di gioco). La cooperativa usa un server Node/WebSocket: `npm run build` e `npm run server` (porta 4173); Vite in sviluppo inoltra `/party` a quel server. Vedere README per inviti, autorità della simulazione e limiti della prima versione.
 Nato come prototipo JavaScript generato con ChatGPT ("Emberfall", un mago contro un guardiano in un'arena), poi riscritto con la struttura e i principi di Ashen Realm.
 Decisioni di gioco: `docs/game-design.md`. Fasi e criteri: `docs/roadmap.md`. Problemi noti: `docs/bugs.md`.
 Repository: https://github.com/Jabbazz/temper-your-soul (remote `origin` configurato, branch `main`).
@@ -26,6 +26,7 @@ Resta in `legacy/emberfall-prototype/` (HTML + JS classico, si apre con doppio c
 - Node 22 + npm. Se `node` non e' nel PATH si puo' usare la copia portatile di Ashen Realm:
   `$env:PATH = "C:\Users\gianm\Documents\ashen-realm\.tools\node-v22.11.0-win-x64;$env:PATH"` (PowerShell). `tools/verify.ps1` la cerca da solo.
 - TypeScript 5.6 (strict), Vite 5 (sviluppo e build), Vitest 2 (test). Versioni fissate in `package.json`, come in Ashen Realm.
+- PixiJS 8 (solo `src/features/presentation/`): per scriverne codice usare le skill ufficiali `pixijs-*` in `.claude/skills` / `.agents/skills` (partire da `pixijs`; provenienza in `pixijs/ORIGINE.md`).
 - `C:\Users\gianm` e' un repository Git (senza commit): questo progetto ha un repository **dedicato** nella propria cartella; non toccare quello della home.
 
 ## Comandi (dalla radice del progetto)
@@ -67,7 +68,7 @@ src/features/
   character/     character.ts (inventario, equipaggiamento, record), save-format (serializzazione e VALIDAZIONE), save-store (localStorage)
   match/         match.ts: la partita (dungeon + loadout) senza DOM, un solo ordine di passo, emette eventi
   presentation/  visuals + looks/ (aspetti per id), themes/ (disegno delle mappe), boss-art/ (grafica dei boss), effects, poses, sprites, draw-*.ts,
-                 scene-renderer.ts
+                 scene-renderer.ts, webgl-renderer.ts + pixi-modules.ts (strato PixiJS composto nella scena; solo qui si importa PixiJS)
   ui/            hud, overlay (pausa e fine), screens, main-menu, dungeon-select, inventory-screen + inventory-view (ordinamento/filtri, testabile),
                  item-card, loot-view, fullscreen, dom
   audio/         audio-player.ts (Web Audio, ascolta gli eventi)

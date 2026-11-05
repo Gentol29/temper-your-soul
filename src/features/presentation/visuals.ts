@@ -44,7 +44,11 @@ export function projectileLook(visual: string): ProjectileLook {
   return PROJECTILE_LOOKS[visual] ?? FALLBACK_PROJECTILE;
 }
 
-/** Aspetto di una zona: quello del suo `visual` se esiste, altrimenti il predefinito della squadra. */
+/**
+ * Aspetto di una zona: quello del suo `visual` se esiste, altrimenti il predefinito della squadra. Una zona del giocatore
+ * senza `visual` e' la meteora (come in `sprite-effects.ts` e `meteor-impact.ts`): prende i toni del fuoco, non il viola.
+ */
 export function zoneLook(team: Team, visual?: string): ZoneLook {
-  return (visual !== undefined ? ZONE_LOOKS[visual] : undefined) ?? ZONE_LOOKS[team]!;
+  const id = visual ?? (team === 'player' ? 'meteor' : undefined);
+  return (id !== undefined ? ZONE_LOOKS[id] : undefined) ?? ZONE_LOOKS[team]!;
 }

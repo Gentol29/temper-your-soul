@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { litColor, mixColor } from './lights';
-import { entranceDrop, moodAmbient, ROOM_MOOD, RoomMood } from './room-mood';
+import { entranceDrop, moodAmbient, moodAmbientBlend, ROOM_MOOD, RoomMood } from './room-mood';
 
 const brightness = (hex: string): number => [1, 3, 5].reduce((sum, i) => sum + parseInt(hex.slice(i, i + 2), 16), 0);
 
@@ -72,5 +72,30 @@ describe('atmosfera della stanza', () => {
     expect(mixColor('#000000', '#ffffff', 0.5)).toBe('#808080');
     expect(mixColor('#102030', '#ffffff', -1)).toBe('#102030');
     expect(mixColor('#102030', '#000000', 2)).toBe('#000000');
+  });
+});
+
+describe('passaggio di luce della stanza liberata', () => {
+  const channels = (hex: string): number[] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
+  it("fuori dal passaggio non c'e' nulla da sfumare", () => {
+    expect(moodAmbientBlend('#30323a', { depth: 0.5, warmth: 0 })).toBeNull();
+    expect(moodAmbientBlend('#30323a', { depth: 0.5, warmth: 1 })).toBeNull();
+  });
+
+  it("durante il passaggio bastano due colori fermi: la loro sfumatura e' l'ambiente di ogni istante", () => {
+    for (const base of ['#30323a', '#1d2a24', '#3a2a22', '#2a3442']) {
+      for (const depth of [0, 0.4, 1]) {
+        const first = moodAmbientBlend(base, { depth, warmth: 0.1 })!;
+        for (let warmth = 0.05; warmth < 1; warmth += 0.05) {
+          const blend = moodAmbientBlend(base, { depth, warmth })!;
+          // Gli estremi non cambiano con il calore: in cache restano due sole versioni per tratto.
+          expect([blend.from, blend.to]).toEqual([first.from, first.to]);
+          const expected = channels(moodAmbient(base, { depth, warmth }));
+          const mixed = channels(blend.from).map((value, i) => value + (channels(blend.to)[i]! - value) * blend.t);
+          mixed.forEach((value, i) => expect(Math.abs(value - expected[i]!), `${base} d${depth} w${warmth.toFixed(2)}`).toBeLessThanOrEqual(1));
+        }
+      }
+    }
   });
 });

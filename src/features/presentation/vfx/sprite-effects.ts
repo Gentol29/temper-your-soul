@@ -3,6 +3,7 @@ import type { Projectile } from '../../combat/projectile';
 import type { Match } from '../../match/match';
 import { drawVfx, isVfxReady, type VfxId } from './assets';
 import { ISO_BODY_LIFT, TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
+import { isMeteorImpact, meteorImpactReady } from './meteor-impact';
 
 export interface Burst { readonly attachment?: { readonly owner?: string; readonly offsetY?: number; readonly range?: number; readonly arc?: number }; readonly id: VfxId; readonly x: number; readonly y: number; readonly width: number; readonly angle: number; readonly duration: number; age: number }
 const MAX_BURSTS = 96;
@@ -53,6 +54,8 @@ export class SpriteEffects {
       }
       case 'zone_detonated': {
         if (event.team !== 'player') break;
+        // La meteora ha il suo impatto isometrico (`meteor-impact.ts`): niente scoppio dritto della palla di fuoco.
+        if (isMeteorImpact(event) && meteorImpactReady()) break;
         const visual = event.visual ?? 'meteor';
         const id = visual === 'mage_blink_burst' ? 'mage-blink' : /veil|water|frost|mirror/.test(visual) ? 'mage-water-explosion'
           : /earth|shroud/.test(visual) ? 'mage-earth-aura' : 'mage-fire-explosion';
