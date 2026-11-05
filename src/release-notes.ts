@@ -159,6 +159,19 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.13.2', date: '2026-11-05',
+    changes: [
+      'L’Ossario (lo scheletro nero infuocato) compare ora in tutte e tre le vene della Cripta: oltre alla Navata anche nelle Catacombe e nella Cantoria, come folla. Prima c’era solo nella Navata e nelle altre vene non si vedeva mai.',
+      'È la stessa voce del bestiario in tutte le vene (vita 22, costo 1, ruolo folla): valori provvisori. Nelle Catacombe e nella Cantoria la folla ha pochi tipi, quindi l’Ossario pesa di più (in media circa 13–20 per stanza contro circa 12 nella Navata, misura su stanze simulate): da tarare giocando.',
+      'Solo la composizione delle ondate delle stanze della discesa: l’arena del Guardiano non cambia, e nemmeno vita, danni e comportamento dell’Ossario.',
+      'L’Ossario guarda ora dove va, in 8 direzioni sullo schermo (S, SE, E, NE, N, NW, W, SW), invece di un solo profilo specchiato a destra o a sinistra: otto serie di quattro fotogrammi di camminata, scelte dall’angolo del movimento come lo vede il giocatore, con un margine ai confini fra due direzioni per evitare il tremolio. Sprite di 26×38 px. Solo aspetto; gli altri mob restano come erano.',
+      'Anteprima di sviluppo: iso-preview.html?minions=4&walk=1 fa girare gli Ossari in cerchio per vederli voltarsi.',
+    ],
+    balanceChanges: [
+      { label: 'Ossario · vene della Cripta in cui compare', before: 1, after: 3, unit: 'su 3' },
+    ],
+  },
+  {
     version: '0.13.1', date: '2026-11-05',
     changes: [
       'Lo scheletro della Cripta (Ossario) ha un aspetto nuovo: nero carbonizzato con braci nel petto, nelle ginocchia, nella lama e nello scudo, teschio di cenere calda e contorno rosso brace dove brilla. È un modello 3D reso con Blender (camera isometrica 2:1, toni a gradini, nessuna sfumatura), non una grafica generata con l’IA.',

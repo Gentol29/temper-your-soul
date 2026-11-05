@@ -3,7 +3,8 @@
  * mappa scelta, disegnata con il vero `renderScene`. Parametri:
  *   map=crypt (arena del boss) o l'id di una stanza (crypt_nave, crypt_elbow, crypt_pews, crypt_collapse...)
  *   view=top per la vista dall'alto; fx, fy punto del mondo inquadrato; px, py posizione del giocatore
- *   minions=n servitori attorno al giocatore; zones=1 una zona di pericolo; collisioni=1 i contorni di gioco
+ *   minions=n Ossari vicino al giocatore (walk=1: girano in cerchio, per vedere le 8 direzioni); zones=1 una zona di
+ *   pericolo; collisioni=1 i contorni di gioco
  * I fotogrammi renderizzati non sono prove giocate.
  */
 import { Camera, ZOOM } from './core/camera';
@@ -90,7 +91,15 @@ const room: RoomView | null = arena === undefined ? null : {
   pickups: [{ id: 1, kind: 'heal', x: arena.width / 2 + 120, y: arena.height / 2, takenBy: [] }],
   offers: {}, pacts: [], preyId: null,
 } as unknown as RoomView;
+// `walk=1`: i servitori girano in cerchio (a velocita' diverse), per vedere gli sprite a 8 direzioni voltarsi.
+const walkCenter = new Vec2(match.player.position.x + 130, match.player.position.y);
 function frame(time: number): void {
+  if (params.get('walk') === '1') {
+    match.minions.forEach((minion, i) => {
+      const a = (clock + time / 1000) * (0.9 + 0.15 * (i % 3)) + i * 1.3;
+      minion.position = new Vec2(walkCenter.x + Math.cos(a) * 70, walkCenter.y + Math.sin(a) * 70);
+    });
+  }
   const look: RoomLook | null = room === null ? null : { view: room, arena: match.arena, nextOptions: [{ kind: 'combat', reward: 'none' }, { kind: 'trial', reward: 'none', hard: true }] as unknown as RoomLook['nextOptions'], localId: 'local', scene: sceneViewFor(camera.projection) };
   const drawRoom = look === null ? undefined : (c: CanvasRenderingContext2D, layer: RoomLayer): void => {
     if (layer === 'floor') drawRoomFloor(c, look, clock + time / 1000);
