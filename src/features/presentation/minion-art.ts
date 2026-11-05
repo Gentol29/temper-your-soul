@@ -4,7 +4,8 @@ import { FORGE_MINION_ART } from './minion-art/forge';
 import { FORGE_VEIN_ART } from './minion-art/forge-veins';
 import { GLACIER_MINION_ART } from './minion-art/glacier';
 import { GLACIER_VEIN_ART } from './minion-art/glacier-veins';
-import { GENERATED_SPRITES } from './minion-art/generated-sprites';
+import { BLENDER_SPRITES } from './minion-art/blender-sprites';
+import { GENERATED_SPRITES as LOCAL_GENERATOR_SPRITES } from './minion-art/generated-sprites';
 import type { MinionArt } from './minion-art/minion-art';
 import { SWAMP_MINION_ART } from './minion-art/swamp';
 import { SWAMP_VEIN_ART } from './minion-art/swamp-veins';
@@ -29,7 +30,10 @@ const HAND_ART: Readonly<Record<string, MinionArt>> = {
   ...GLACIER_VEIN_ART,
 };
 
-const classicRequested = typeof location !== 'undefined' && new URLSearchParams(location.search).get('mob') === 'classici';
+/** Gli sprite resi con Blender (`blender-sprites.ts`) hanno la precedenza su quelli del generatore locale. */
+const GENERATED_SPRITES = { ...LOCAL_GENERATOR_SPRITES, ...BLENDER_SPRITES };
+
+const classicRequested =typeof location !== 'undefined' && new URLSearchParams(location.search).get('mob') === 'classici';
 
 export const MINION_ART: Readonly<Record<string, MinionArt>> = classicRequested
   ? HAND_ART

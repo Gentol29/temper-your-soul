@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { MINIONS } from '../../minions/minion-catalog';
 import { MINION_ART } from '../minion-art';
+import { BLENDER_SPRITES } from './blender-sprites';
 import { GENERATED_SPRITES } from './generated-sprites';
 
 const OUTLINE = 'a';
 
-describe('sprite dei mob dal generatore locale', () => {
-  const entries = Object.entries(GENERATED_SPRITES);
+/** Il contorno di uno sprite: 'a' e, per quelli resi con Blender, i simboli dei contorni colorati (bagliore delle braci). */
+function outlineOf(id: string): ReadonlySet<string> {
+  return new Set([OUTLINE, ...(BLENDER_SPRITES[id]?.outline ?? [])]);
+}
+
+describe('sprite dei mob dal generatore locale e da Blender', () => {
+  // Gli sprite di Blender hanno la precedenza su quelli del generatore locale, come in `minion-art.ts`.
+  const entries = Object.entries({ ...GENERATED_SPRITES, ...BLENDER_SPRITES });
 
   it('ogni sprite appartiene a un mob del gioco, che lo usa a scala 1', () => {
     const visuals = new Set(Object.values(MINIONS).map((minion) => minion.visual));
@@ -34,10 +41,11 @@ describe('sprite dei mob dal generatore locale', () => {
 
   it('ogni fotogramma ha il contorno chiuso: nessun pixel della figura tocca il vuoto', () => {
     for (const [id, sprite] of entries) {
+      const outline = outlineOf(id);
       for (const frame of sprite.frames) {
         frame.forEach((row, y) => {
           [...row].forEach((symbol, x) => {
-            if (symbol === '.' || symbol === OUTLINE) return;
+            if (symbol === '.' || outline.has(symbol)) return;
             const around = [frame[y - 1]?.[x], frame[y + 1]?.[x], row[x - 1], row[x + 1]];
             expect(around.some((near) => near === undefined || near === '.'), `${id} ${x},${y}`).toBe(false);
           });
