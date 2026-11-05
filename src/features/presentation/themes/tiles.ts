@@ -1,30 +1,27 @@
 import type { ArenaThemeId } from '../../arena/arena';
 import { preloadSheets, sheetImage } from '../boss-art/sheet-images';
-import { TILE_ATLASES, type TileAtlasLayout, type TileGrid, type TileMaterial, type TileRect } from './tile-atlas';
+import type { TileAtlasLayout, TileGrid, TileMaterial, TileRect } from './tile-atlas';
 import { TILE_ATLASES_IA } from './tile-atlas-ia';
 
 /*
- * Un foglio di tile per tema, preparato da `tools/arte/prepara_scenari.py` con il generatore locale, a un pixel per unita'
- * di mondo come le figure; `?tile=classici` rimette quelli di terzi ricolorati (fase 6 dello studio grafico,
- * `tools/arte/prepara_tile.py`), a due unita' per pixel. Stesse rampe. Crediti in `art-credits.ts`. Solo aspetto. Finche'
- * il foglio non e' caricato (o senza DOM, nei test) i temi disegnano come prima, nel codice: nessuna regola dipende dai tile.
+ * Un foglio di tile per tema, preparato con il generatore locale, a un pixel per unita'
+ * di mondo come le figure. Crediti in `art-credits.ts`. Solo aspetto. Finche' il foglio non e' caricato (o senza DOM, nei
+ * test) i temi disegnano nel codice: nessuna regola dipende dai tile.
  */
 
-export const classicTilesRequested = typeof location !== 'undefined' && new URLSearchParams(location.search).get('tile') === 'classici';
-
 /** I fogli in uso. */
-export const ACTIVE_TILE_ATLASES: Readonly<Record<ArenaThemeId, TileAtlasLayout>> = classicTilesRequested ? TILE_ATLASES : TILE_ATLASES_IA;
+export const ACTIVE_TILE_ATLASES: Readonly<Record<ArenaThemeId, TileAtlasLayout>> = TILE_ATLASES_IA;
 
-/** Crediti (`art-credits.ts`) dei tile di ogni tema: quelli in uso e, finche' restano nel gioco, i classici. */
+/** Crediti (`art-credits.ts`) dei tile di ogni tema. */
 export const TILE_CREDITS: Readonly<Record<ArenaThemeId, readonly string[]>> = {
-  crypt: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-dungeon'],
-  swamp: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
-  forge: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles'],
-  glacier: ['local-sdxl-tile', 'itch-0x72-dungeontileset-ii', 'oga-eman-quest-tiles', 'itch-kmh-tundra'],
+  crypt: ['local-sdxl-tile'],
+  swamp: ['local-sdxl-tile'],
+  forge: ['local-sdxl-tile'],
+  glacier: ['local-sdxl-tile'],
 };
 
 /** Unita' del mondo per pixel d'arte dei fogli in uso. */
-export const TILE_SCALE = classicTilesRequested ? 2 : 1;
+export const TILE_SCALE = 1;
 /** Un tile copre 32 unita', come le lastre della cripta. */
 export const TILE_SIZE = 32;
 

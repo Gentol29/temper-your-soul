@@ -1,6 +1,6 @@
 # Scenografie dei dungeon
 
-Un foglio per tema, preparato da `tools/arte/prepara_scenari.py`. Si tolgono con `?tile=classici`, che rimette i tile di terzi e le forme disegnate nel codice.
+Un foglio per tema, preparato da `prepara_scenari.py` (strumenti esterni, vedi README). Finche' non sono caricati i temi disegnano le forme nel codice.
 
 Tutto a un pixel per unita' di mondo, come personaggio, boss e mob, e con la stessa riduzione dei mob: gli oggetti hanno lo stesso contorno scuro.
 
@@ -16,6 +16,6 @@ Tutto a un pixel per unita' di mondo, come personaggio, boss e mob, e con la ste
 
 Cripta: ardesia e cremisi, con statue, ossari, sarcofagi. Palude: gotico sommerso, muschio, radici, funghi. Fucina: basalto e ferro, forni e ingranaggi. Ghiacciaio: cattedrale ghiacciata, cristalli, cavalieri nel ghiaccio.
 
-Generate in locale con SDXL 1.0 e Pixel Art XL, prompt in `tools/arte/scenari-prompts.json`, scelte in `tools/arte/scenari-progetto.json`. Gli originali restano fuori dal progetto, in `PixelArt-AI/immagini/scenari/`.
+Generate in locale con SDXL 1.0 e Pixel Art XL, prompt e scelte in `scenari-prompts.json` e `scenari-progetto.json` degli strumenti esterni (README · Strumenti esterni). Gli originali restano fuori dal progetto, nella cartella di lavoro esterna di chi le ha generate.
 
 Licenze: SDXL 1.0 OpenRAIL++-M, Pixel Art XL OpenRAIL-M. Scelta del proprietario se tenerli: vedi `docs/produzione-grafica.md`.

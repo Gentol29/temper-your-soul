@@ -1,4 +1,4 @@
-// File generato da tools/arte/prepara_boss_ia.py: non modificarlo a mano, rilancia lo script.
+// File generato da prepara_boss_ia.py (script fuori dal repository, vedi README · Strumenti esterni): non modificarlo a mano.
 
 import type { SheetLayout } from './boss-sheet';
 

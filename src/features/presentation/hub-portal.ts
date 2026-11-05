@@ -128,11 +128,3 @@ function raster(art: PortalPixels): HTMLCanvasElement {
 export function drawPortalVortex(ctx: CanvasRenderingContext2D, x: number, y: number, time: number): void {
   ctx.drawImage(raster(portalVortexPixels(time * HUB_PORTAL.fps)), Math.round(x - HUB_PORTAL.anchorX), Math.round(y - HUB_PORTAL.anchorY));
 }
-
-export function drawHubPortal(ctx: CanvasRenderingContext2D, x: number, y: number, time: number): void {
-  const left = Math.round(x - HUB_PORTAL.anchorX), top = Math.round(y - HUB_PORTAL.anchorY);
-  ctx.save(); ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(raster(portalStonePixels()), left, top);
-  ctx.drawImage(raster(portalVortexPixels(time * HUB_PORTAL.fps)), left, top);
-  ctx.restore();
-}

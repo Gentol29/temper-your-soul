@@ -51,3 +51,8 @@ Verifica combinata ripetuta: **862 test in 78 file**, tipi e build superati; con
 Su richiesta esplicita dell’utente, tutti i file di questo incremento sono predisposti per commit e push diretti a `main`, base aggiornata `fb6c600`. Versione `0.10.3` → `0.11.0` secondo la convenzione delle integrazioni; package, lockfile e nuova prima voce delle note aggiornati insieme. Le note VFX prima locali sono raccolte nella release v0.11.00; le note pubblicate di v0.10.01 tornano a descrivere solo i cursori della PR #12, senza perdere quelle degli ostacoli v0.10.02/v0.10.03. Nessun cambiamento alle dipendenze o al lavoro parallelo della camera.
 
 Verifiche della release prima del push: `npm run verify` superato con **862 test in 78 file**, tipi client/server e build; controllo tecnico browser di v0.11.00, cronologia senza duplicati, scheda Cursore e diciassette effetti in anteprima senza eccezioni. Restano da confermare giocando leggibilità dei fendenti/dardi, intensità dell’onda, premi simultanei e fluidità in cooperativa; nessuna di queste prove è dichiarata manualmente confermata.
+
+## Aggiornamento · 5 novembre 2026
+
+`basic-attack-art.ts` e `hi-bit-atlas.ts` non esistono più: le animazioni descritte qui sopra sono diventate le pose di base
+(`tools/arte/vfx/pose/`) dei fogli a fotogrammi rifiniti con il generatore locale. Vedi `docs/vfx-pixellab.md`.

@@ -67,3 +67,16 @@ Con la scelta del corpo C e il rifacimento dell’equipaggiamento richiesti dall
 ### Primarie · revisione successiva 3 novembre 2026
 
 L’utente richiede di togliere soltanto le particelle durante le primarie: filtrati scoppio di lancio e scia, mantenendo impatti, sangue, uccisioni, buff, stati e altre abilità. Nuovo disegno locale Hi-bit a dodici pose per fendente, freccia, onda del tiro e fuoco/acqua/terra/vento del Mago; nessuna generazione. Gli altri atlanti conservati. AGENTS.md/CLAUDE.md ora esplicitano il requisito Hi-bit e la palette approvata. [Specifica e verifica](attacchi-base-hi-bit.md).
+
+### Skill a fotogrammi con il generatore locale · 5 novembre 2026
+
+Su richiesta dell'utente gli effetti delle skill delle tre classi non si disegnano più nel codice: sono 17 fogli PNG a
+fotogrammi in `src/assets/vfx/frames/` (12 fotogrammi, 96 px o 128 px per il fendente, 24 fps), letti da
+`vfx/frame-sheets.ts`. Tolti `hi-bit-atlas.ts` e `basic-attack-art.ts`. Gli sprite nascono con Z-Image Turbo in ComfyUI
+locale (img2img, seme 7331, intensità 0,60, 8 passi) sulle 12 pose che il codice disegnava, conservate in
+nelle pose di base (fuori dal repository), e sono ridotti a pixel Hi-bit con la palette della posa e il contorno scuro. Durate, cicli,
+dimensioni, rotazioni, ancoraggi e clipping del fendente non cambiano; il fendente resta nel raggio della lama di gioco.
+I PNG PixelLab restano solo come ripiego finché i fogli non sono caricati. Nessun download, nessun credito, nessuna regola
+toccata. Metodo e comandi nel LEGGIMI degli strumenti esterni (README · Strumenti esterni), credito `local-zimage-vfx`. L'eccezione del 1 novembre riguardava
+PixelLab: l'uso di questo modello per gli effetti è da confermare dal proprietario. Da provare giocando: leggibilità di ogni
+effetto in volo e sul posto, nelle tre classi e in cooperativa.

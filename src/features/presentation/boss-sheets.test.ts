@@ -4,7 +4,7 @@ import { Vec2 } from '../../core/vec2';
 import { createQuietMatch, STEP } from '../../testing';
 import { DUNGEONS } from '../dungeons/dungeons';
 import { ART_CREDITS, ART_LICENSES, VFX_CREDIT_IDS } from './art-credits';
-import { BOSS_SHEETS, CLASSIC_BOSS_SHEETS, DEATH_ANIMATION_SHARE, sheetFrame, type BossSheet, type SheetState } from './boss-art';
+import { BOSS_SHEETS, DEATH_ANIMATION_SHARE, sheetFrame, type BossSheet, type SheetState } from './boss-art';
 import { Effects, FEEDBACK } from './effects';
 import { ActorPoses } from './poses';
 import { LIEUTENANTS } from '../run/lieutenants';
@@ -34,8 +34,9 @@ const clipsOf = (sheet: BossSheet) => Object.values(sheet.layout.clips).filter((
 
 const STILL: SheetState = { enraged: false, slowed: false, time: 0, cast: null, transform: null, death: null };
 const GUARDIAN = BOSS_SHEETS.guardian!;
-// L'unico foglio senza trasformazione e' fra quelli di terzi.
-const WARDEN = CLASSIC_BOSS_SHEETS.frost_warden!;
+// Un foglio senza la riga della trasformazione (tutti quelli in uso ce l'hanno): il guardiano senza quella riga.
+const { transform: _transform, ...WARDEN_CLIPS } = GUARDIAN.layout.clips;
+const WARDEN: BossSheet = { ...GUARDIAN, layout: { ...GUARDIAN.layout, clips: WARDEN_CLIPS } };
 
 describe('fogli di sprite dei boss', () => {
   it('ogni boss dei dungeon ha un foglio', () => {
@@ -61,7 +62,7 @@ describe('fogli di sprite dei boss', () => {
   it('i PNG esistono, sono leggeri e misurano esattamente celle per righe e colonne', async () => {
     const fs = await fileSystem();
     let total = 0;
-    const tutti = [...Object.entries(CLASSIC_BOSS_SHEETS), ...Object.entries(BOSS_SHEETS)];
+    const tutti = Object.entries(BOSS_SHEETS);
     for (const [id, sheet] of tutti) {
       const url = new URL(sheet.layout.url);
       expect(url.protocol, id).toBe('file:');
@@ -98,7 +99,7 @@ describe('fogli di sprite dei boss', () => {
   });
 
   it('ogni foglio ha i crediti, con una licenza ammessa; nessun credito resta senza uso', () => {
-    const used = new Set([...VFX_CREDIT_IDS, ...Object.values(BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(CLASSIC_BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(TILE_CREDITS).flat()]);
+    const used = new Set([...VFX_CREDIT_IDS, ...Object.values(BOSS_SHEETS).flatMap((sheet) => sheet.credits), ...Object.values(TILE_CREDITS).flat()]);
     for (const [id, sheet] of Object.entries(BOSS_SHEETS)) {
       expect(sheet.credits.length, id).toBeGreaterThan(0);
       for (const credit of sheet.credits) expect(ART_CREDITS[credit], `${id}: ${credit}`).toBeDefined();

@@ -4,7 +4,7 @@ import { Vec2 } from '../../core/vec2';
 import type { ArenaThemeId } from '../arena/arena';
 import { ART_CREDITS } from './art-credits';
 import { ARENA_THEMES } from './themes';
-import { TILE_ATLASES, type TileMaterial } from './themes/tile-atlas';
+import type { TileMaterial } from './themes/tile-atlas';
 import { SCENERY_ATLASES } from './themes/scenery-atlas';
 import { TILE_ATLASES_IA } from './themes/tile-atlas-ia';
 import { pickVariant, TILE_CREDITS, TILE_SCALE, TILE_SIZE, tileAt, tileColors, tileGrid, tileVariants } from './themes/tiles';
@@ -29,7 +29,7 @@ function pngSize(bytes: Uint8Array): { width: number; height: number } {
   return { width: word(16), height: word(20) };
 }
 
-const THEMES = Object.keys(TILE_ATLASES) as ArenaThemeId[];
+const THEMES = Object.keys(TILE_ATLASES_IA) as ArenaThemeId[];
 /** I materiali su cui passano i colpi: pavimento, pozzi e ponti. */
 const GROUND: readonly TileMaterial[] = ['floor', 'floorWorn', 'floorDark', 'chasm', 'chasmBed', 'water', 'carpet', 'bridgeEW', 'bridgeNS'];
 
@@ -38,8 +38,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('tile dei dungeon (fase 6)', () => {
   it('i fogli esistono, sono leggeri e misurano quanto dice la geometria', async () => {
     const fs = await fileSystem();
-    // I fogli a un pixel per unita' hanno quattro volte i pixel di quelli classici.
-    for (const [atlases, limit] of [[TILE_ATLASES, 40 * 1024], [TILE_ATLASES_IA, 600 * 1024]] as const) {
+    for (const [atlases, limit] of [[TILE_ATLASES_IA, 600 * 1024]] as const) {
       let total = 0;
       for (const theme of THEMES) {
         const atlas = atlases[theme];
@@ -55,7 +54,7 @@ describe('tile dei dungeon (fase 6)', () => {
   });
 
   it('ogni tile sta dentro il suo foglio e nessuno si sovrappone a un altro', () => {
-    for (const atlases of [TILE_ATLASES, TILE_ATLASES_IA]) {
+    for (const atlases of [TILE_ATLASES_IA]) {
       for (const theme of THEMES) {
         const atlas = atlases[theme];
         const rects = Object.values(atlas.tiles).flat();
@@ -100,17 +99,18 @@ describe('tile dei dungeon (fase 6)', () => {
     }
   });
 
-  it('i fogli generati hanno gli stessi materiali dei classici e le rampe di terra comprese', () => {
+  it('ogni tema ha tutti i materiali che avevano i tile di prima, e i nove pezzi dell\'orlo dei pozzi', () => {
+    // Materiali dei vecchi tile di terzi (tolti il 5 novembre 2026): i fogli generati li coprono tutti.
+    const required: Readonly<Record<ArenaThemeId, readonly TileMaterial[]>> = {
+      crypt: ['floor', 'floorWorn', 'floorDark', 'wall', 'cap', 'chasm', 'bridgeEW', 'bridgeNS', 'cover'],
+      swamp: ['floor', 'cap', 'chasm', 'bridgeEW', 'bridgeNS', 'cover'],
+      forge: ['floor', 'floorDark', 'cap', 'chasm', 'bridgeEW', 'bridgeNS', 'cover'],
+      glacier: ['floor', 'floorDark', 'cap', 'chasm', 'bridgeEW', 'bridgeNS', 'cover'],
+    };
     for (const theme of THEMES) {
-      const classic = TILE_ATLASES[theme];
-      const generated = TILE_ATLASES_IA[theme];
-      for (const material of Object.keys(classic.tiles) as TileMaterial[]) {
-        expect(generated.tiles[material] ?? generated.grids?.[material], `${theme} ${material}`).toBeDefined();
-        // Si possono aggiungere accenti, ma i gradini della rampa restano quelli confrontati con i colpi nemici.
-        if (!GROUND.includes(material)) continue;
-        for (const color of classic.colors[material] ?? []) expect(generated.colors[material], `${theme} ${material}`).toContain(color);
-      }
-      expect(generated.tiles.chasm!.length, theme).toBe(9);
+      const atlas = TILE_ATLASES_IA[theme];
+      for (const material of required[theme]) expect(atlas.tiles[material] ?? atlas.grids?.[material], `${theme} ${material}`).toBeDefined();
+      expect(atlas.tiles.chasm!.length, theme).toBe(9);
     }
   });
 

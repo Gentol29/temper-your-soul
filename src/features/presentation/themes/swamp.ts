@@ -6,7 +6,7 @@ import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawIsoWallLights, paintWallFootShadows, worldCamera } from '../iso/iso-scenery';
 import type { IsoArtFrame } from '../iso/iso-theme';
-import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
+import { drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
 import type { TileGrid } from './tile-atlas';
@@ -506,7 +506,6 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const swampTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, SWAMP_DECOR.wall.base, SWAMP_DECOR.wall.moss, ambient, 'swamp'),
   ambient: '#22302a',
   block: { cap: '#26301c', edge: SWAMP_DECOR.wall.moss, face: SWAMP_WALL_FACE, tiles: 'swamp' },
   silhouette: '#e6f2cc66',

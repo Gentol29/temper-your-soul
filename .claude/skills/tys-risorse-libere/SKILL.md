@@ -30,7 +30,7 @@ Regole complete in `docs/prompt-di-progetto.md` (sezione 5); fonti già valutate
    - credito in `src/features/audio/audio-credits.ts` (titolo, autore, fonte, licenza, consultato il, modifiche);
    - riferimento nel catalogo `src/features/audio/audio-catalog.ts`: `asset(new URL('../../assets/audio/…', import.meta.url).href, '<credito>', …)` (più crediti se il file unisce più registrazioni);
    - `npm run verify`: i test del catalogo falliscono se un file manca, pesa troppo, non ha credito o ha una licenza non ammessa.
-   - Script di supporto in `tools/audio/` (scaricamento da Freesound, analisi, conversione): vedi `tools/audio/LEGGIMI.md`.
+   - Script di supporto (scaricamento da Freesound, analisi, conversione con ffmpeg): fuori dal repository, vedi README · Strumenti esterni.
 6. **Provare nel browser** (`npm run dev`): volume relativo, assenza di scatti negli anelli, nessun errore in console. Il giudizio finale sul suono spetta all'utente.
 
 ## Grafica e caratteri
@@ -38,5 +38,5 @@ Regole complete in `docs/prompt-di-progetto.md` (sezione 5); fonti già valutate
 Stessa procedura: file in `src/assets/<categoria>/`, niente CDN. I caratteri si servono in locale con `@font-face`.
 
 - **Crediti della grafica** in `src/features/presentation/art-credits.ts` (titolo, autore, fonte, licenza, data, uso, modifiche): si vedono nel gioco (pannello Audio, «Crediti») e i test rifiutano crediti mancanti o senza uso. Un `LEGGIMI.md` accanto ai file ripete i crediti.
-- **Sprite dei boss:** `tools/arte/prepara_boss.py` ritaglia, ricolora con la tavolozza del gioco e mette in fila le animazioni in `src/assets/art/boss/`, e genera la geometria in `boss-art/boss-sheet-layout.ts` (vedi `tools/arte/LEGGIMI.md`). Scala, verso e velocita' in `boss-art/boss-sheets.ts`; se l'immagine manca resta la grafica a matrici.
+- **Sprite dei boss:** i boss usano i fogli del generatore locale (`prepara_boss_ia.py`, fuori dal repository → `boss-art/boss-ia-layout.ts`). I fogli di terzi e `prepara_boss.py` sono stati tolti il 5 novembre 2026: per adattarne uno nuovo si recupera lo script dalla storia Git. Scala, verso e velocita' in `boss-art/boss-sheets.ts`; se l'immagine manca resta la grafica a matrici.
 - **Pixel art:** solo ingrandimenti interi, una tavolozza per tema, un contorno coerente; preferire autori affidabili (elenco in `docs/risorse-libere.md`).

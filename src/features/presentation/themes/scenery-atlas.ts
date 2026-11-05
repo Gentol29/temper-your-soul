@@ -1,4 +1,4 @@
-// File generato da tools/arte/prepara_scenari.py: non modificarlo a mano, rilancia lo script.
+// File generato da prepara_scenari.py (script fuori dal repository, vedi README · Strumenti esterni): non modificarlo a mano.
 
 import type { ArenaThemeId } from '../../arena/arena';
 

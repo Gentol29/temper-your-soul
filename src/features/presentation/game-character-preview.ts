@@ -11,9 +11,3 @@ export function drawGameCharacter(ctx:CanvasRenderingContext2D,appearance:Charac
  }
  ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.scale(facing,1);ctx.drawImage(raster,-CHARACTER_ART.feetX,14-CHARACTER_ART.feetY);ctx.restore();
 }
-/** Anteprima animata in pixel interi; il ciclo termina quando il pannello viene rimosso. */
-export function gameCharacterPreview(appearance:CharacterAppearance):HTMLCanvasElement {
- const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;canvas.className='game-character-preview';canvas.setAttribute('aria-label','Sprite di gioco con equipaggiamento attivo');
- const ctx=canvas.getContext('2d')!;
- const frame=(time:number)=>{if(!canvas.isConnected)return;ctx.clearRect(0,0,128,128);ctx.save();ctx.scale(2,2);drawGameCharacter(ctx,appearance,32,46,time/1000);ctx.restore();requestAnimationFrame(frame);};requestAnimationFrame(frame);return canvas;
-}

@@ -38,6 +38,7 @@ Questa sezione si applica anche a **Claude, Codex e qualsiasi altro agente** che
 5. Procedi per incrementi piccoli. Prima di cambiare una parte leggine il codice; dopo le modifiche esegui `npm run verify`. Se cambi regole, aggiungi test significativi; se cambi la UI, controllala anche nel browser.
 6. Aggiorna design, roadmap e bug quando cambiano decisioni o stato. Alla fine spiega cosa è cambiato, verifiche eseguite, limiti e prova manuale ancora necessaria.
 7. **Commit e push solo su richiesta esplicita dell’utente**, con messaggio descrittivo in italiano. Prima di pubblicare ricontrolla `git status` e l’allineamento col remoto; se nel frattempo ci sono nuovi commit, integra in sicurezza e ripeti le verifiche pertinenti. Riporta ramo e hash pubblicato. Mai force push.
+8. **Programmi esterni fuori dal repository.** Generatori, modelli locali, Blender, ffmpeg e simili si usano in una cartella di lavoro propria, fuori dal progetto; nel repository non si scrivono percorsi della propria macchina e si integra solo il risultato approvato dall'utente. Dettagli in CLAUDE.md/AGENTS.md, «Programmi esterni e file generati».
 
 Quando due persone lavorano contemporaneamente, preferire rami distinti e modifiche coordinate: gli agenti non devono sovrascrivere il lavoro dell’altro collaboratore. Questo README è il punto di ingresso; i dati nel codice e [game-design.md](docs/game-design.md) descrivono le regole correnti. Le sezioni storiche della roadmap non annullano le decisioni più recenti.
 
@@ -235,9 +236,9 @@ I tasti di gioco non intercettano la digitazione nei campi della creazione. Le s
 
 **La revisione dei ritratti resta sospesa su richiesta dell’utente**. La nuova richiesta esplicita del 3 novembre autorizza invece gli sprite di gioco C e i relativi oggetti indossati, ridisegnati nel codice senza crediti di generazione. Vestibilità, prese, offset, proporzioni e profondità hanno ancora difetti noti. Non rigenerare né rifare i ritratti per ogni incremento: riprendere la loro revisione solo su richiesta esplicita, con un piano e criteri concordati. La scelta della direzione artistica non equivale all’approvazione della resa attuale.
 
-**Boss (proposta del ramo `feature/grafica-boss`):** pixel art di terzi a licenza libera (CC BY e CC0, crediti nel pannello Audio e in `src/assets/art/boss/LEGGIMI.md`), ricolorata con la tavolozza del gioco e preparata da `tools/arte/prepara_boss.py`. Se un'immagine non si carica resta la grafica a matrici. Non tocca personaggi, ritratti e oggetti.
+**Mappe, boss, mob ed effetti:** tutti i dungeon si vedono in isometria 2:1; boss, luogotenenti, mob e tile vengono dal generatore locale; gli effetti delle skill delle tre classi sono fogli PNG a fotogrammi (`src/assets/vfx/frames/`). Il 5 novembre 2026 sono stati tolti la vista dall'alto dei dungeon, i fogli e i tile di terzi, gli atlanti PixelLab, il vecchio HUB disegnato nel codice e le pagine di anteprima, con i confronti `?vista=classica`, `?tile=classici`, `?mob=classici` e `?boss=classici` (restano nella storia Git). Se un'immagine non si carica resta la grafica a matrici nel codice.
 
-Anteprime di sviluppo: `/character-animation.html` confronta equipaggiamenti e animazioni senza toccare il salvataggio; non è un ingresso della build di produzione. `/ui-preview.html` conserva le precedenti proposte del tema. I preset dell’anteprima grafica sono liberi; i vincoli di classe sono applicati nel gioco reale.
+Nessuna pagina di anteprima di sviluppo: si prova direttamente il gioco (`npm run dev`).
 
 ## Architettura e punti di ingresso
 
@@ -281,6 +282,10 @@ Il prossimo incremento richiesto riguarda un’altra parte della progressione de
 Leggere sempre [docs/game-design.md](docs/game-design.md) per decisioni e valori, [docs/roadmap.md](docs/roadmap.md) per priorità e prove, [docs/bugs.md](docs/bugs.md) per difetti e limiti. Aggiornare questi file con i risultati del prossimo incremento.
 
 ## File esclusi e prototipo storico
+
+### Strumenti esterni (fuori dal repository)
+
+Il repository contiene solo il gioco e i suoi risultati (sprite, fogli, audio). Generatori di immagini e audio, modelli locali, Blender, ffmpeg e gli altri programmi esterni si usano in una cartella di lavoro propria di ogni collaboratore, fuori dal repository; nel gioco entra solo il risultato approvato dall'utente. Regola completa in CLAUDE.md e AGENTS.md, sezione «Programmi esterni e file generati». Gli script usati fino al 5 novembre 2026 (ComfyUI, Blender, audio), i prompt e le pose di base degli effetti restano nella storia Git (`git log -- tools/arte tools/audio`). I file di dati generati (`generated-sprites.ts`, `blender-sprites.ts`, `boss-ia-layout.ts`, `tile-atlas-ia.ts`, `scenery-atlas.ts`, `src/assets/vfx/frames/manifest.json`) non si modificano a mano. In `tools/` restano solo gli strumenti Node del progetto (`verify.ps1`, `network-benchmark.ts`, `tunnel.mjs`, `cerca-risorse.mjs`, `arte/genera-cursori.mjs`).
 
 `node_modules/`, `dist/`, `.tools/`, profili browser e screenshot temporanei locali non vanno pubblicati. Non committare credenziali, file `.env` o dati personali di test.
 

@@ -1,8 +1,6 @@
 import { Vec2 } from '../../core/vec2';
 import { circleInsidePolygon, circleTouchesPolygon } from '../../core/polygon';
 
-/** Rettangoli delle sole anteprime storiche. La mappa attiva usa sagome prospettiche. */
-export interface HubObstacle { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 export interface HubFootprint { readonly id: string; readonly outline: readonly Vec2[] }
 const polygon = (points: readonly (readonly [number, number])[]): readonly Vec2[] => points.map(([x, y]) => new Vec2(x, y));
 

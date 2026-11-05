@@ -1,5 +1,9 @@
 # Produzione grafica: inventario e piano
 
+> **Aggiornamento del 5 novembre 2026:** gli script e i prompt citati sotto (`tools/arte/...`) non sono più nel repository: vedi README · Strumenti esterni.
+>
+> **Sempre il 5 novembre:** su richiesta dell'utente sono stati tolti i confronti `?mob=classici`, `?boss=classici`, `?tile=classici` e `?vista=classica`, i fogli dei boss e i tile di terzi: la grafica del generatore locale e l'isometria sono l'unica versione nel gioco. Le righe sotto che citano quei confronti descrivono lo stato del 4 novembre.
+
 Stato al 4 novembre 2026. Ramo `feature/produzione-grafica`, sopra `feature/mob-ai-locale` (PR 15, aperta), versione v0.11.05, sopra main 0.11.3. Tutto quello che segue e' una proposta: regole, nomi e valori di gioco restano quelli di oggi.
 
 La grafica nuova nasce dal generatore locale (SDXL 1.0 e Pixel Art XL), quindi e' fatta con l'IA. Il proprietario non si e' ancora espresso: la PR 15 aspetta il suo si'. Se dice no, tutto questo va tolto. Per tornare indietro in ogni momento: `?mob=classici`, `?boss=classici`, `?tile=classici`.

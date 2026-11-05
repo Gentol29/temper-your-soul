@@ -5,7 +5,7 @@ export interface SheetClip {
 }
 
 /**
- * Geometria di un foglio di sprite, generata da `tools/arte/prepara_boss.py` in `boss-sheet-layout.ts`: celle uguali,
+ * Geometria di un foglio di sprite, generata dal generatore locale in `boss-ia-layout.ts`: celle uguali,
  * una riga per animazione. Le animazioni "rage" sono le stesse ricolorate per la furia; `transform` (facoltativa) si
  * vede al passaggio di fase, `death` durante la morte.
  */

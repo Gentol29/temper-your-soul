@@ -1,9 +1,8 @@
 import type { Camera } from '../../../core/camera';
 import { Vec2 } from '../../../core/vec2';
 import type { ArenaDefinition, ArenaThemeId, Solid } from '../../arena/arena';
-import { litColor } from '../lights';
-import { drawFacade, fillSurface } from './scenery';
-import { drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SIZE } from './tiles';
+import { drawFacade } from './scenery';
+import { drawTile, tileAt, tileSheet, tileVariants, TILE_SIZE } from './tiles';
 
 /*
  * Muri in vista a tre quarti. Il muro in alto mostra la sua faccia: una fascia sotto la cima, alta fin dove arrivano
@@ -201,29 +200,4 @@ export function drawSolidBlock(ctx: CanvasRenderingContext2D, solid: Solid, came
   ctx.fillRect(solid.x, solid.y, 2, capHeight);
   ctx.fillRect(solid.x + solid.width - 2, solid.y, 2, capHeight);
   drawFaceBand(ctx, solid.x, solid.y + capHeight, solid.width, face, look.face);
-}
-
-/**
- * La cima del muro in basso, ridisegnata davanti alle figure: chi passa vicino al muro ci finisce dietro. Si disegna
- * dopo la luce, quindi i colori si scuriscono con il buio della scena (`ambient`) come il muro sotto.
- */
-export function drawBottomWallLip(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, cap: string, edge: string, ambient: string, theme?: ArenaThemeId): void {
-  const top = arena.height - arena.wallThickness;
-  if (camera.position.y + camera.height < top) return;
-  const left = Math.max(0, camera.position.x - 4);
-  const right = Math.min(arena.width, camera.position.x + camera.width + 4);
-  if (right <= left) return;
-  if (theme !== undefined && tileSheet(theme) !== null && tileGrid(theme, 'cap') !== undefined) {
-    fillSurface(ctx, theme, 'cap', left, top, right - left, arena.wallThickness);
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = ambient;
-    ctx.fillRect(left, top, right - left, arena.wallThickness);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = litColor(cap, ambient);
-    ctx.fillRect(left, top, right - left, arena.wallThickness);
-  }
-  ctx.fillStyle = litColor(edge, ambient);
-  ctx.fillRect(left, top, right - left, 2);
 }

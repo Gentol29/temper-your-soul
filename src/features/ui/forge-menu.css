@@ -537,3 +537,58 @@
 @media (min-width: 761px) and (min-height: 561px) and (max-width: 1100px) {
   #screen-menu .menu-hero:has(.menu-hero-empty) { width: 280px; }
 }
+
+/* --- Pausa (overlay.ts, classe is-paused) ------------------------------------------------------------------------ */
+/* Stessa placca di ferro dei pannelli del rifugio: niente sfocatura, angoli a gradino, Riprendi in cremisi. */
+#overlay.is-paused { background: #08070acc; backdrop-filter: none; }
+#overlay.is-paused .card {
+  width: min(440px, calc(100vw - 32px));
+  max-width: none;
+  padding: 28px 28px 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--forge-corners), var(--forge-rivets), #121014f2;
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), inset 0 0 0 3px var(--forge-ink), inset 0 0 0 4px #b67a5059, 0 3px 0 var(--forge-ink);
+}
+#overlay.is-paused .eyebrow { display: block; color: var(--forge-copper-light); font: 400 16px/1.35 var(--relic-text); letter-spacing: .14em; overflow-wrap: anywhere; }
+#overlay.is-paused #overlay-title { margin: 16px 0 8px; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); text-shadow: 2px 2px 0 var(--forge-ink); }
+#overlay.is-paused #overlay-title::after {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 2px;
+  margin: 16px auto 0;
+  background: var(--forge-crimson-light);
+  box-shadow: 0 2px 0 var(--forge-ink);
+}
+#overlay.is-paused #overlay-text { margin: 0; color: var(--forge-muted); font-size: 16px; line-height: 1.5; }
+#overlay.is-paused .overlay-buttons { flex-direction: column; align-items: stretch; gap: 8px; margin: 24px 0 16px; }
+#overlay.is-paused .overlay-buttons button {
+  min-height: 48px;
+  padding: 8px 16px;
+  color: var(--forge-text);
+  font: 400 16px/1.2 var(--relic-title);
+  border: 0;
+  border-radius: 0;
+  transition: none;
+  background: var(--forge-corners), linear-gradient(#433d41 0 2px, #2c282b 2px calc(100% - 3px), #151317 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink);
+}
+#overlay.is-paused .overlay-buttons button:hover {
+  color: #fff6e6;
+  transform: none;
+  background: var(--forge-corners), linear-gradient(#5d5459 0 2px, #3f393d 2px calc(100% - 3px), #1d1a1e calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+}
+#overlay.is-paused #overlay-button {
+  background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink);
+}
+#overlay.is-paused #overlay-button:hover {
+  background: var(--forge-corners), linear-gradient(#a93a3c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+}
+#overlay.is-paused .overlay-buttons button:active { transform: translateY(1px); }
+#overlay.is-paused .overlay-buttons button:focus-visible { outline: 2px solid var(--forge-amber); outline-offset: 2px; }
+#overlay.is-paused .card > p:last-child { margin: 0; }
+#overlay.is-paused .card > p:last-child small { color: var(--forge-disabled); font: 8px var(--relic-pixel); letter-spacing: .1em; }

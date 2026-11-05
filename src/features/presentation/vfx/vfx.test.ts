@@ -7,54 +7,14 @@ import { Effects } from '../effects';
 import { createQuietMatch } from '../../../testing';
 import { describe, expect, it, vi } from 'vitest';
 import { Vec2 } from '../../../core/vec2';
-import { frameIndex, PIXELLAB_MANIFEST, VFX_IDS, NATIVE_ONLY_VFX } from './assets';
+import { FRAME_SHEETS } from './frame-sheets';
 import { SpriteEffects, PROJECTILE_VFX, burstPosition, buffVfx, replacesLegacy, drawPersistentVfx, CLEAVE_ART } from './sprite-effects';
 import { particleVertices, PARTICLE_STRIDE, drawWebGLParticles } from './particle-webgl';
 import type { Particle } from '../effects';
-import { ITEM_SPRITES } from '../item-sprites';
-import { ART_CREDITS } from '../art-credits';
 import { ITEM_FAMILIES } from '../../items/item-families';
-const NODE_FS = 'node:fs';
-interface FileSystem { readFileSync(path: URL): Uint8Array }
 const identity = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 const particle: Particle = { x: 10, y: 20, vx: 0, vy: 0, remaining: 0.5, total: 1, color: '#ff8040', size: 2, gravity: 0 };
 describe('atlanti delle skill', () => {
-  it('scorre tutti i frame, ripete solo i loop e ferma i one-shot sull’ultimo', () => {
-    expect(frameIndex(12, 0, 24, false)).toBe(0);
-    expect(frameIndex(12, 11 / 24, 24, false)).toBe(11);
-    expect(frameIndex(12, 2, 24, false)).toBe(11);
-    expect(frameIndex(12, 0.5, 24, true)).toBe(0);
-    expect(frameIndex(12, -1, 24, true)).toBe(0);
-  });
-  it('ogni asset ha frame dentro il PNG locale RGBA e un’origine documentata', async () => {
-    const fs = await import(/* @vite-ignore */ NODE_FS) as FileSystem;
-    expect(Object.keys(PIXELLAB_MANIFEST.effects).sort()).toEqual(VFX_IDS.filter(id=>!NATIVE_ONLY_VFX.includes(id)).sort());
-    for (const asset of Object.values(PIXELLAB_MANIFEST.effects)) {
-      const bytes = fs.readFileSync(new URL('../../../assets/vfx/pixellab/' + asset.file, import.meta.url));
-      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-      expect([...bytes.slice(1, 4)]).toEqual([80, 78, 71]);
-      expect(bytes[25]).toBe(6);
-      const w = view.getUint32(16), h = view.getUint32(20);
-      expect(asset.frames.length).toBeGreaterThan(1);
-      expect(asset.fps).toBeGreaterThan(0);
-      expect(asset.source).toMatch(/^https:\/\//);
-      for (const [x, y, fw, fh] of asset.frames) {
-        expect(x).toBeGreaterThanOrEqual(0); expect(y).toBeGreaterThanOrEqual(0);
-        expect(x + fw).toBeLessThanOrEqual(w); expect(y + fh).toBeLessThanOrEqual(h);
-        expect(asset.pivot[0]).toBeLessThanOrEqual(fw); expect(asset.pivot[1]).toBeLessThanOrEqual(fh);
-      }
-    }
-    for (const [id, icon] of Object.entries(PIXELLAB_MANIFEST.icons)) {
-      expect(ITEM_FAMILIES.some(family => family.id === id), id).toBe(true);
-      // Le vecchie icone restano archiviate; gli oggetti attivi usano il nuovo disegno Hi-bit.
-      expect(ITEM_SPRITES[id].size, id).toBe(32);
-      expect(ITEM_SPRITES[id].image, id).toBeUndefined();
-      expect(fs.readFileSync(new URL('../../../assets/vfx/pixellab/' + icon.file, import.meta.url)).length).toBeGreaterThan(100);
-    }
-    expect(Object.keys(PIXELLAB_MANIFEST.effects).length + Object.keys(PIXELLAB_MANIFEST.icons).length).toBeLessThanOrEqual(39);
-    expect([...Object.values(PIXELLAB_MANIFEST.effects), ...Object.values(PIXELLAB_MANIFEST.icons)].reduce((sum, asset) => sum + asset.generations, 0)).toBeLessThanOrEqual(39);
-    expect(ART_CREDITS['pixellab-vfx-items'].license).toBe('PixelLab-output');
-  });
   it('distingue le esplosioni e non aggiunge aree o falsi sanguinamenti alle frecce', () => {
     const fx = new SpriteEffects(), position = new Vec2(20, 40);
     for (const [visual, id] of [['meteor','mage-fire-explosion'], ['veil_blast','mage-water-explosion'], ['mage_blink_burst','mage-blink']]) {
@@ -69,7 +29,7 @@ describe('atlanti delle skill', () => {
     for (const family of ITEM_FAMILIES) {
       const skill = family.skill, effect = skill.effect;
       if (effect.kind === 'buff') {
-        expect(PIXELLAB_MANIFEST.effects[buffVfx(skill.visual)], family.id).toBeDefined();
+        expect(FRAME_SHEETS.effects[buffVfx(skill.visual)], family.id).toBeDefined();
         continue;
       }
       if (effect.kind === 'projectile') {
@@ -81,7 +41,7 @@ describe('atlanti delle skill', () => {
       else fx.handle({type:'skill_cast',skillId:skill.id,visual:skill.visual,kind:effect.kind,origin,destination:new Vec2(40,0),angle:0,
         ...(effect.kind === 'dash' ? {travelSeconds:effect.travelSeconds} : {})});
       expect(fx.bursts.length, family.id).toBeGreaterThan(0);
-      for (const burst of fx.bursts) expect(PIXELLAB_MANIFEST.effects[burst.id], family.id).toBeDefined();
+      for (const burst of fx.bursts) expect(FRAME_SHEETS.effects[burst.id], family.id).toBeDefined();
       if (effect.kind === 'dash' && !effect.travelSeconds) expect(fx.bursts).toHaveLength(2);
     }
   });

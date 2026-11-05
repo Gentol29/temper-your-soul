@@ -14,7 +14,7 @@ import { SWAMP_VEIN_ART } from './minion-art/swamp-veins';
  * Grafica dei servitori: pixel art come matrici di caratteri (vedi `sprites.ts`), due fotogrammi ciascuno, disegnati
  * nel codice (nessun asset esterno), un file per dungeon in `minion-art/` e uno per le sue vene B e C. Solo aspetto: il raggio di colpo sta in
  * `MinionDefinition`. Chi ha uno sprite del generatore locale (`generated-sprites.ts`) tiene colore, alone e ondeggio del
- * disegno a mano e ne prende figura e ritmo; con `?mob=classici` si rivedono quelli a mano, per confronto.
+ * disegno a mano e ne prende figura e ritmo.
  */
 
 export type { MinionArt } from './minion-art/minion-art';
@@ -33,11 +33,7 @@ const HAND_ART: Readonly<Record<string, MinionArt>> = {
 /** Gli sprite resi con Blender (`blender-sprites.ts`) hanno la precedenza su quelli del generatore locale. */
 const GENERATED_SPRITES = { ...LOCAL_GENERATOR_SPRITES, ...BLENDER_SPRITES };
 
-const classicRequested =typeof location !== 'undefined' && new URLSearchParams(location.search).get('mob') === 'classici';
-
-export const MINION_ART: Readonly<Record<string, MinionArt>> = classicRequested
-  ? HAND_ART
-  : Object.fromEntries(Object.entries(HAND_ART).map(([id, art]) => {
+export const MINION_ART: Readonly<Record<string, MinionArt>> = Object.fromEntries(Object.entries(HAND_ART).map(([id, art]) => {
       const sprite = GENERATED_SPRITES[id];
       const directions = (sprite as Partial<BlenderSprite> | undefined)?.directions;
       return [id, sprite === undefined ? art : { ...art, frames: sprite.frames, palette: sprite.palette, scale: 1, fps: sprite.fps, walks: sprite.walks, faces: sprite.faces, bob: sprite.bob, ...(directions === undefined ? {} : { directions }) }];

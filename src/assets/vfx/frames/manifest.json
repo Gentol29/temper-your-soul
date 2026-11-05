@@ -1,0 +1,126 @@
+{
+  "fps": 24,
+  "frames": 12,
+  "model": "Z-Image Turbo (img2img locale sulle pose disegnate nel codice fino al 5 novembre 2026)",
+  "effects": {
+    "archer-arrow": {
+      "file": "archer-arrow.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "archer-dash": {
+      "file": "archer-dash.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "archer-predator": {
+      "file": "archer-predator.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "archer-release": {
+      "file": "archer-release.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "archer-summon": {
+      "file": "archer-summon.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-blink": {
+      "file": "mage-blink.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-earth-aura": {
+      "file": "mage-earth-aura.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-earth-wisp": {
+      "file": "mage-earth-wisp.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-fire-explosion": {
+      "file": "mage-fire-explosion.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-fireball": {
+      "file": "mage-fireball.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-water-explosion": {
+      "file": "mage-water-explosion.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-water-orb": {
+      "file": "mage-water-orb.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "mage-wind-orb": {
+      "file": "mage-wind-orb.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "warrior-cleave": {
+      "file": "warrior-cleave.png",
+      "size": 128,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "warrior-fortify": {
+      "file": "warrior-fortify.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "warrior-guard": {
+      "file": "warrior-guard.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    },
+    "warrior-rush": {
+      "file": "warrior-rush.png",
+      "size": 96,
+      "seed": 7331,
+      "denoise": 0.6,
+      "steps": 8
+    }
+  }
+}

@@ -186,6 +186,8 @@ Circa 1,9 MB di archivi; i PNG effettivamente usati resterebbero sotto i 300 KB.
 
 ## Primo lotto grafico: scaricato e provato sui boss (1 novembre 2026)
 
+> **Tolto dal gioco il 5 novembre 2026**, insieme ai crediti e agli script di preparazione: sostituito dagli sprite del generatore locale. La sezione resta come registro delle fonti valutate.
+
 Scaricati con il consenso dell'utente gli archivi delle righe 1, 2 (statua, scheletro, ratto e pipistrello, piante), 3, 4 e 5 della tabella sopra, circa 2 MB in una cartella temporanea fuori dal progetto. Licenze ricontrollate: sulla pagina per OpenGameArt (nessun file di licenza negli archivi), nel `License.txt` del pacchetto per EVil Wizard 2 (CC0, «No generative AI was used» sulla pagina). Per Redshrike la pagina elenca anche OGA-BY: si usa CC BY 3.0.
 
 Usati per ora **solo i quattro boss** (ramo `feature/grafica-boss`), in `src/assets/art/boss/`, circa 110 KB in tutto:
@@ -211,6 +213,8 @@ Limiti noti:
 Restano nella cartella temporanea, non usati: scheletri, ratti, pipistrelli e piante di Calciumtrice, i nemici di Redshrike, gli altri nemici di Enemy Galore e di Monsters Creatures Fantasy. Sono il materiale per ridisegnare i servitori in un passo successivo, se la prova dei boss piace.
 
 ## Tileset della fase 6: scaricati il 1° novembre 2026
+
+> **Tolto dal gioco il 5 novembre 2026**, insieme ai crediti e agli script di preparazione: sostituito dagli sprite del generatore locale. La sezione resta come registro delle fonti valutate.
 
 Con il sì dell'utente («Scarica i file e fai i test per fase 5 e 6»), in una cartella temporanea fuori dal progetto. Licenze lette sulla pagina di ciascun pacchetto; nei pacchetti non ci sono file di licenza.
 
@@ -238,6 +242,8 @@ Con il sì dell'utente, dai file ufficiali di Google Fonts (CSS API per i WOFF2 
 Le tre licenze OFL scaricate pesano circa 4 KB ciascuna; nel progetto ci sono le due dei caratteri usati.
 
 ## Eccezione autorizzata: PixelLab (1 novembre 2026)
+
+> **Tolto dal gioco il 5 novembre 2026**, insieme ai crediti e agli script di preparazione: sostituito dagli sprite del generatore locale. La sezione resta come registro delle fonti valutate.
 
 Il proprietario ha richiesto esplicitamente VFX delle skill e poi icone oggetto generati con PixelLab, entro 39 generazioni. Gli output sono registrati come `PixelLab-output`, con i termini del servizio e senza dichiararli CC0. Nessuna generazione di personaggi, boss o mob in questo incremento. Vedere [dettagli e provenienza](vfx-pixellab.md).
 

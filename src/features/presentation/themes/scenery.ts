@@ -3,22 +3,22 @@ import type { ArenaDefinition, ArenaThemeId, Pillar } from '../../arena/arena';
 import { preloadSheets, sheetImage } from '../boss-art/sheet-images';
 import { drawLight } from '../lights';
 import { SCENERY_ATLASES, type SceneryPiece } from './scenery-atlas';
-import { classicTilesRequested, drawTile, tileAt, tileSheet, TILE_SIZE } from './tiles';
+import { drawTile, tileAt, tileSheet, TILE_SIZE } from './tiles';
 
 /*
  * Le scenografie dei dungeon, a un pixel per unita' di mondo come personaggio, boss e mob: facciate gotiche del muro in
- * alto, colonne e statue al posto dei pilastri, arredi a terra. Fogli preparati da `tools/arte/prepara_scenari.py`. Solo
- * aspetto: gli ingombri restano quelli di `ArenaDefinition`. Finche' i fogli non sono caricati (o con `?tile=classici`, o
- * senza DOM) ogni funzione risponde falso e i temi disegnano come prima, nel codice.
+ * alto, colonne e statue al posto dei pilastri, arredi a terra. Fogli preparati con il generatore locale. Solo
+ * aspetto: gli ingombri restano quelli di `ArenaDefinition`. Finche' i fogli non sono caricati (o senza DOM) ogni
+ * funzione risponde falso e i temi disegnano nel codice.
  */
 
 /** Comincia a caricare i fogli (all'avvio, con quelli dei tile). */
 export function preloadScenery(): void {
-  if (!classicTilesRequested) preloadSheets(Object.values(SCENERY_ATLASES).map((atlas) => atlas.url));
+  preloadSheets(Object.values(SCENERY_ATLASES).map((atlas) => atlas.url));
 }
 
 function sheetOf(theme: ArenaThemeId): HTMLImageElement | null {
-  return classicTilesRequested ? null : sheetImage(SCENERY_ATLASES[theme].url);
+  return sheetImage(SCENERY_ATLASES[theme].url);
 }
 
 /** Il foglio delle scenografie del tema, se e' pronto (per la vista isometrica). */
@@ -342,89 +342,6 @@ export function drawScenicPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, 
     }
   }
   return true;
-}
-
-/** Rimette i pilastri sopra macchie e tracce dello scontro: il sangue sta a terra, non sul fusto di una colonna. */
-export function drawPillarsOverDecals(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
-  const sheet = sheetOf(arena.theme);
-  if (sheet === null) return;
-  for (const pillar of arena.pillars) {
-    const pieces = pillarPieces(arena.theme, pillar);
-    if (pieces.length === 0) continue;
-    if (!camera.isVisible(pillar.position, pillar.radius + 160)) continue;
-    for (const { piece, left, top } of pieces) put(ctx, sheet, piece, left, top);
-  }
-}
-
-/** La parte alta di un pezzo che deve stare davanti a chi gli passa dietro. */
-export interface PillarTop {
-  readonly piece: SceneryPiece;
-  readonly x: number;
-  readonly left: number;
-  readonly top: number;
-  readonly height: number;
-  /** Si ordina con le figure su questa riga: chi sta piu' in basso resta davanti. */
-  readonly y: number;
-}
-
-/**
- * Le colonne sono alte e le figure si disegnano dopo l'ambiente: chi passa dietro una colonna ci finirebbe sopra. Qui si
- * cercano i pezzi che hanno davvero qualcuno dietro.
- */
-export function pillarTopsBehind(arena: ArenaDefinition, camera: Camera, figures: readonly { readonly x: number; readonly y: number }[]): readonly PillarTop[] {
-  if (sheetOf(arena.theme) === null) return [];
-  const tops: PillarTop[] = [];
-  for (const pillar of arena.pillars) {
-    if (!camera.isVisible(pillar.position, pillar.radius + 200)) continue;
-    for (const { piece, left, top, baseline } of pillarPieces(arena.theme, pillar)) {
-      if (baseline <= top) continue;
-      const cx = left + piece.w / 2;
-      if (figures.some((figure) => figure.y < baseline && figure.y > top - 24 && Math.abs(figure.x - cx) < piece.w / 2 + 26)) {
-        tops.push({ piece, x: cx, left, top, height: Math.min(piece.h, baseline - top), y: baseline });
-      }
-    }
-  }
-  return tops;
-}
-
-let scene: HTMLCanvasElement | null = null;
-let stencil: HTMLCanvasElement | null = null;
-
-/** Copia la scena illuminata prima di disegnare le figure: le colonne tornano davanti con la loro luce vera. */
-export function rememberScene(ctx: CanvasRenderingContext2D): void {
-  const source = ctx.canvas;
-  scene ??= document.createElement('canvas');
-  if (scene.width !== source.width || scene.height !== source.height) {
-    scene.width = source.width;
-    scene.height = source.height;
-  }
-  scene.getContext('2d')!.drawImage(source, 0, 0);
-}
-
-/**
- * Rimette sopra le figure i pixel di un pezzo, presi dalla copia della scena e ritagliati sulla sagoma. Un poco
- * trasparente: chi sta dietro si intravede, un nemico non deve sparire del tutto.
- */
-export function drawPillarTop(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, top: PillarTop): void {
-  const sheet = sheetOf(arena.theme);
-  if (sheet === null || scene === null) return;
-  const view = ctx.getTransform();
-  stencil ??= document.createElement('canvas');
-  const { piece, left, height } = top;
-  if (stencil.width < piece.w || stencil.height < height) {
-    stencil.width = Math.max(stencil.width, piece.w);
-    stencil.height = Math.max(stencil.height, height);
-  }
-  const paint = stencil.getContext('2d')!;
-  paint.globalCompositeOperation = 'source-over';
-  paint.clearRect(0, 0, stencil.width, stencil.height);
-  paint.drawImage(sheet, piece.x, piece.y, piece.w, height, 0, 0, piece.w, height);
-  paint.globalCompositeOperation = 'source-in';
-  paint.drawImage(scene, left + view.e, top.top + view.f, piece.w, height, 0, 0, piece.w, height);
-  ctx.save();
-  ctx.globalAlpha = 0.8;
-  ctx.drawImage(stencil, 0, 0, piece.w, height, left, top.top, piece.w, height);
-  ctx.restore();
 }
 
 /** Il portale gotico di una porta, se i fogli ci sono: il foglio e il pezzo. */

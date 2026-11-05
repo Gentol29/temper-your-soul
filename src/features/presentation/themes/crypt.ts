@@ -4,7 +4,7 @@ import type { ArenaDefinition, Pillar } from '../../arena/arena';
 import { drawLight } from '../lights';
 import { faceSpots, wallSpots } from './decor';
 import type { ArenaTheme } from './theme';
-import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
+import { drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawPixelRing, drawScenicPillar, drawSceneryPiece, floorVersion, sceneryReady } from './scenery';
 import { drawTile, tileAt, tileColors, tileSheet } from './tiles';
@@ -281,9 +281,6 @@ function drawFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera
     if (camera.isVisible(new Vec2(x, y), light.radius)) drawTorch(ctx, x, y, clock, false);
   }
 }
-
-/** Luce delle torce, riusata dalle torce del rifugio. */
-export const TORCH_LIGHT = CRYPT_DECOR.torchLight;
 
 /** Una torcia con la sua luce: su un piede sul pavimento, oppure appesa alla faccia del muro (`sconce`). */
 function drawTorch(ctx: CanvasRenderingContext2D, x: number, y: number, clock: number, sconce: boolean): void {
@@ -778,7 +775,6 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const cryptTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, CRYPT_WALL.cap, CRYPT_WALL.edge, ambient, 'crypt'),
   ambient: '#262c44',
   block: { cap: '#3a3e4a', edge: CRYPT_WALL.edge, face: CRYPT_WALL.face, tiles: 'crypt' },
   silhouette: '#d8d2ff73',

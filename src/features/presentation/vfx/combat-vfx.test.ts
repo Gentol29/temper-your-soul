@@ -6,7 +6,6 @@ import { createQuietMatch } from '../../../testing';
 import { Effects } from '../effects';
 import * as assets from './assets';
 import { COMBAT_VFX, CombatVfx } from './combat-vfx';
-import { HI_BIT, rasterVfx } from './hi-bit-atlas';
 
 const at = new Vec2(200, 200);
 function fixture() {
@@ -124,21 +123,5 @@ describe('VFX Hi-bit di combattimento', () => {
     expect(fx.stains.length).toBeGreaterThan(0);
     expect(fx.stains.length).toBeLessThanOrEqual(COMBAT_VFX.stains);
     fx.clear(); expect([fx.particles.length, fx.stains.length, fx.deaths.length]).toEqual([0, 0, 0]);
-  });
-});
-
-describe('atlanti raster Hi-bit', () => {
-  it('ogni skill ha sagoma trasparente, più toni e animazione distinta senza uscire dal foglio', () => {
-    for (const id of assets.VFX_IDS) {
-      const a = rasterVfx(id, 2), b = rasterVfx(id, 8), size = id === 'warrior-cleave' ? 128 : HI_BIT.size;
-      const tones = new Set<string>(); let filled = 0;
-      for (let i = 0; i < a.length; i += 4) if (a[i + 3] > 0) { filled++; tones.add(`${a[i]},${a[i + 1]},${a[i + 2]}`); }
-      expect(filled, id).toBeGreaterThan(80); expect(filled, id).toBeLessThan(size * size * 0.6);
-      expect(tones.size, id).toBeGreaterThanOrEqual(3);
-      for (let x = 0; x < size; x++) {
-        expect(a[x * 4 + 3], id).toBe(0); expect(a[((size - 1) * size + x) * 4 + 3], id).toBe(0);
-      }
-      if (!['archer-arrow', 'warrior-guard', 'archer-summon'].includes(id)) expect(a, id).not.toEqual(b);
-    }
   });
 });

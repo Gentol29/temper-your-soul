@@ -1,5 +1,5 @@
 /*
- * Generato da tools/arte/prepara_mob.py: non modificare a mano.
+ * Generato da prepara_mob.py (script fuori dal repository, vedi README · Strumenti esterni): non modificare a mano.
  * Sprite dei mob dal generatore locale (SDXL 1.0 e Pixel Art XL); quattro fotogrammi ricavati da un solo disegno.
  */
 

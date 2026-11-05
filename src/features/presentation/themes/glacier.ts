@@ -6,7 +6,7 @@ import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawIsoWallLights, paintWallFootShadows, worldCamera } from '../iso/iso-scenery';
 import type { IsoArtFrame } from '../iso/iso-theme';
-import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
+import { drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
 import { drawTile, tileAt, tileColors, tileSheet, TILE_SIZE } from './tiles';
@@ -339,7 +339,6 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const glacierTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, '#b4d6ea', '#e4f4fc', ambient, 'glacier'),
   ambient: '#3e4c64',
   // Pavimento chiaro: i proiettili nemici, quasi tutti chiari, hanno bisogno di un contorno piu' spesso.
   projectileRim: 4.5,

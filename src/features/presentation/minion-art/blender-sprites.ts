@@ -1,7 +1,7 @@
 /*
- * Generato da tools/arte/blender/esporta_mob.py: non modificare a mano.
+ * Generato da blender/esporta_mob.py (script fuori dal repository, vedi README · Strumenti esterni): non modificare a mano.
  * Sprite dei mob resi con Blender (modello 3D, camera isometrica 2:1, resa Hi-bit): 8 direzioni, ciascuna con
- * quattro fotogrammi di camminata. Sovrappone `generated-sprites.ts`; con `?mob=classici` si rivede la grafica a mano.
+ * quattro fotogrammi di camminata. Sovrappone `generated-sprites.ts`.
  */
 
 import type { GeneratedSprite } from './generated-sprites';

@@ -8,7 +8,6 @@ import {Projectile} from '../../combat/projectile';
 import {Effects} from '../effects';
 import * as assets from './assets';
 import {SpriteEffects,burstPosition} from './sprite-effects';
-import {BASIC_ATTACK_IDS,rasterBasicAttack} from './basic-attack-art';
 import {isBasicAttackVisual} from './basic-attack-visuals';
 import {Character} from '../../character/character';
 import {Match} from '../../match/match';
@@ -56,32 +55,5 @@ describe('attacchi base senza particelle di lancio o scia',()=>{
     fx.update(.3);expect(fx.bursts).toHaveLength(0);
     fx.handle({type:'skill_cast',kind:'projectile',skillId:'frost_orb',visual:'mage_water_orb',origin:at,destination:at,angle:0});
     expect(fx.bursts).toHaveLength(0);
-  });
-});
-
-describe('sprite Hi-bit degli attacchi',()=>{
-  it('tutti gli attacchi hanno dodici pose, colori netti e bordi trasparenti',()=>{
-    for(const id of BASIC_ATTACK_IDS){
-      const frames=new Set<string>(),size=id==='warrior-cleave'?128:96;
-      for(let f=0;f<12;f++){
-        const data=rasterBasicAttack(id,f);let filled=0;const colors=new Set<string>();
-        for(let i=0;i<data.length;i+=4)if(data[i+3]){filled++;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);expect(data[i+3]).toBe(255);}
-        expect(filled,`${id}/${f}`).toBeGreaterThan(8);expect(colors.size,`${id}/${f}`).toBeGreaterThanOrEqual(3);
-        for(let edge=0;edge<size;edge++)for(const [x,y]of [[edge,0],[edge,size-1],[0,edge],[size-1,edge]])expect(data[(y*size+x)*4+3],`${id}/${f}`).toBe(0);
-        frames.add(String(data));
-      }
-      expect(frames.size,id).toBeGreaterThanOrEqual(8);
-    }
-  });
-  it('i quattro elementi hanno sagome diverse, non solo palette differenti',()=>{
-    const masks=['mage-fireball','mage-water-orb','mage-earth-wisp','mage-wind-orb'].map(id=>{
-      const data=rasterBasicAttack(id as 'mage-fireball',3);return Array.from(data).filter((_,i)=>i%4===3).join(',');
-    });expect(new Set(masks).size).toBe(4);
-  });
-  it('il filo del fendente resta nel raggio reale dell’atlante in ogni posa',()=>{
-    for(let frame=0;frame<12;frame++){
-      const data=rasterBasicAttack('warrior-cleave',frame);
-      for(let y=0;y<128;y++)for(let x=0;x<128;x++)if(data[(y*128+x)*4+3])expect(Math.hypot(x-64,y-64)).toBeLessThanOrEqual(48);
-    }
   });
 });

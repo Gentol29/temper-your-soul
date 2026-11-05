@@ -159,6 +159,19 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.15.0', date: '2026-11-05',
+    changes: [
+      'Menù di pausa nello stile del rifugio: placca di ferro con angoli a gradino e rivetti di rame, niente sfocatura sullo sfondo, «Riprendi» in cremisi e «Abbandona» in ferro, testi in rame e avorio. Vittoria e sconfitta restano come prima.',
+      'Tutti gli effetti delle skill delle tre classi sono animazioni a fotogrammi: 17 fogli PNG da 12 fotogrammi (fendente, parata, secondo fiato e carica del Guerriero; dardi elementali, esplosioni, aura e teletrasporto del Mago; freccia, onda del tiro, scatto, istinto predatorio e lupo dell’Arciere). Rifiniti con un modello locale a partire dalle pose di prima, con la palette di ogni classe e il contorno scuro. Durate, dimensioni, rotazioni e il raggio del fendente non cambiano. Grafica fatta con l’IA: l’uso di questo modello per gli effetti è da confermare dal proprietario.',
+      'Tolto il disegno degli effetti calcolato nel codice e la riserva con gli atlanti PixelLab. Finché un foglio non è caricato restano le forme di ripiego di sempre.',
+      'Tutti i dungeon solo in isometria: tolti la vista dall’alto e i confronti ?vista=classica, ?tile=classici, ?mob=classici e ?boss=classici, con i tile e i fogli dei boss di terzi e i loro crediti. Le schede della scelta del dungeon continuano a usare il disegno dall’alto dei temi.',
+      'Pulizia del progetto: tolti il vecchio HUB disegnato nel codice, le pagine di anteprima di sviluppo (vfx-preview, iso-preview, sprite-prototypes, character-animation) e gli script per i programmi esterni (ComfyUI, Blender, audio), che restano nella storia Git. Il codice del gioco nella build scende da circa 1.573 a 1.449 KB.',
+      'Nuova regola per persone e agenti in CLAUDE.md, AGENTS.md e README: i programmi esterni si usano fuori dalla cartella del progetto, senza percorsi della propria macchina nei file, e nel repository entra solo il risultato approvato dall’utente.',
+      'Solo aspetto, interfaccia e organizzazione: regole, salvataggi e protocollo cooperativo invariati. Prova giocata ancora da fare: pausa, effetti delle tre classi, dungeon in isometria, schede dei dungeon, rifugio.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.14.0', date: '2026-11-05',
     changes: [
       'Nuovo aspetto per l’Ossario della Cripta: uno scheletro nero carbonizzato con braci nel petto, nelle ginocchia, nella lama e nello scudo, teschio di cenere calda e contorno rosso brace dove brilla. È un modello 3D reso con Blender (camera isometrica 2:1, toni a gradini, nessuna sfumatura), non una grafica generata con l’IA. Sprite di 26×38 px.',

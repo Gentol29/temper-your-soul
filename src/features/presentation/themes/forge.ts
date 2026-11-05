@@ -6,7 +6,7 @@ import { faceSpots, isClearSpot, wallSpots } from './decor';
 import type { ArenaTheme } from './theme';
 import { drawIsoWallLights, paintWallFootShadows } from '../iso/iso-scenery';
 import type { IsoArtFrame } from '../iso/iso-theme';
-import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
+import { drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, drawSceneryPiece, floorVersion, sceneryReady } from './scenery';
 import { drawTile, tileAt, tileColors, tileSheet, TILE_SIZE } from './tiles';
@@ -380,7 +380,6 @@ function drawPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camer
 export const forgeTheme: ArenaTheme = {
   drawFloor,
   drawPillar,
-  drawForeground: (ctx, arena, camera, _clock, ambient) => drawBottomWallLip(ctx, arena, camera, COLORS.wall, COLORS.wallEdge, ambient, 'forge'),
   ambient: '#33241f',
   block: { cap: COLORS.wall, edge: COLORS.wallEdge, face: FORGE_WALL_FACE, tiles: 'forge' },
   silhouette: '#ffe8d673',

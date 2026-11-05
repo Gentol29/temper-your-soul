@@ -36,6 +36,8 @@ export class Overlay {
       button: 'Riprendi →',
       secondary: 'Abbandona e torna al menu',
     });
+    // Solo la pausa usa la placca di ferro del rifugio (forge-menu.css); la fine partita conserva il suo stile.
+    this.root.classList.add('is-paused');
   }
 
   /**
@@ -68,6 +70,6 @@ export class Overlay {
     this.secondary.textContent = screen.secondary;
     this.extra.replaceChildren();
     if (screen.extra) this.extra.append(screen.extra);
-    this.root.classList.remove('hidden', 'is-victory', 'is-defeat');
+    this.root.classList.remove('hidden', 'is-victory', 'is-defeat', 'is-paused');
   }
 }

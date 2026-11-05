@@ -17,4 +17,4 @@ Cortile e strutture dello sfondo del menu principale. **Generati con l'IA, da ap
 
 Posizioni, fiamme e ordine dei pezzi stanno in `src/features/presentation/menu-layout.ts`: per spostare una struttura basta cambiare lì i numeri.
 
-Gli script di preparazione e i semi scelti stanno in `tools/arte/menu/`.
+Gli script di preparazione e i semi scelti stanno negli strumenti esterni (`arte/menu/`, vedi README · Strumenti esterni).
