@@ -106,6 +106,7 @@ export const MINION_LORE: Readonly<Record<string, LoreEntry>> = {
 export const LIEUTENANT_LORE: Readonly<Record<string, LoreEntry>> = {
   belfry_gargoyle: { role: 'Luogotenente', teaches: 'CARICA e RAFFICA', text: 'Il più antico dei doccioni veglia sul campanile e scende solo per chi arriva fin lì.' },
   toad_king: { role: 'Luogotenente', teaches: 'SLANCIO TOSSICO e PIOGGIA DI SPORE', text: 'La corona d\'oro gli è cresciuta addosso, come tutto in questa palude.' },
+  serpent_queen: { role: 'Luogotenente', teaches: 'SPUTO VELENOSO e ANELLO DI VELENO', text: 'Siede tra le radici con la coda arrotolata e le corna d\'osso: la palude le porta i morti, e lei li ascolta.' },
   anvil_master: { role: 'Luogotenente', teaches: 'MARTELLATA e CARICA DI FERRO', text: 'Forgiava per il Colosso. Ora forgia contro chiunque scenda.' },
   grand_gravedigger: { role: 'Luogotenente', teaches: 'FRATTURA e CARICA', text: 'Ha scavato ogni fossa delle catacombe. L\'ultima è ancora vuota.' },
   organ_master: { role: 'Luogotenente', teaches: 'SPIRALE DEL VUOTO e TRIPLICE VENTAGLIO', text: 'Suona l\'organo della chiesa sepolta senza mai fermarsi: le canne non hanno bisogno di fiato.' },

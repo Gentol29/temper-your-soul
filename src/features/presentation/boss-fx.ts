@@ -69,6 +69,10 @@ export const BOSS_FX: Readonly<Record<string, BossFx>> = {
     ambient: { colors: ['#c8e060', '#8ab04a', '#e8c040'], rate: 5, rise: -10, spread: 30 },
     rage: { colors: ['#c070b0', '#e2ff7a', '#9f6bff'], rate: 18, glow: '#a060d0' },
   },
+  serpent_queen: {
+    ambient: { colors: ['#9fd070', '#5a8a4a', '#c8e0a0'], rate: 5, rise: -10, spread: 40 },
+    rage: { colors: ['#d03a4a', '#9fd070', '#e8c0c0'], rate: 20, glow: '#c03048' },
+  },
   anvil_master: {
     ambient: { colors: ['#ff9a3d', '#ffd04a', '#6a5850'], rate: 6, rise: -40, spread: 32 },
     rage: { colors: ['#ff6a1a', '#ffd04a', '#ff3d12'], rate: 22, glow: '#ff5a00' },

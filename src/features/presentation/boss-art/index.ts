@@ -2,7 +2,7 @@ import type { BossArt } from './boss-art';
 import { FORGE_COLOSSUS_ART } from './forge-colossus';
 import { FROST_WARDEN_ART } from './frost-warden';
 import { GUARDIAN_ART } from './guardian';
-import { ANVIL_MASTER_ART, BELFRY_GARGOYLE_ART, FIRST_APPRENTICE_ART, TOAD_KING_ART } from './lieutenants';
+import { ANVIL_MASTER_ART, BELFRY_GARGOYLE_ART, FIRST_APPRENTICE_ART, SERPENT_QUEEN_ART, TOAD_KING_ART } from './lieutenants';
 import { SPORE_MOTHER_ART } from './spore-mother';
 import {
   ASTRONOMER_ART,
@@ -29,6 +29,7 @@ export const BOSS_ART: Readonly<Record<string, BossArt>> = {
   // I luogotenenti della discesa.
   belfry_gargoyle: BELFRY_GARGOYLE_ART,
   toad_king: TOAD_KING_ART,
+  serpent_queen: SERPENT_QUEEN_ART,
   anvil_master: ANVIL_MASTER_ART,
   first_apprentice: FIRST_APPRENTICE_ART,
   // I luogotenenti delle vene B e C.

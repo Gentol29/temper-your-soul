@@ -97,6 +97,16 @@ export const TOAD_KING_ART: BossArt = {
   palette: toadPalette,
 };
 
+/**
+ * Regina serpente (luogotenente della Palude al posto del Rospo re): il disegno vero e' il foglio direzionale in
+ * `directional-sheets.ts`. Le matrici sono quelle del Rospo re, mostrate solo finche' il PNG non e' caricato; ombra e
+ * quota dei piedi sono della Regina (`offsetY` = `feetY` del foglio).
+ */
+export const SERPENT_QUEEN_ART: BossArt = {
+  ...TOAD_KING_ART,
+  shadow: { radiusX: 52, radiusY: 16, offsetY: 30 },
+};
+
 // --- Mastro d'incudine -------------------------------------------------------------------------------------------
 
 const SMITH_IDLE: SpriteFrame = [

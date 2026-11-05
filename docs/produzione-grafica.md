@@ -91,7 +91,7 @@ Ricavato dal codice. Dove il brief chiede piu' del motore, vale il motore, come 
 | Cripta | Navata | Doccione del campanile | `belfry_gargoyle` | 22 | PR 15 |
 | Cripta | Catacombe | Gran becchino | `grand_gravedigger` | 24 | PR 15 |
 | Cripta | Cantoria | Maestro dell'organo | `organ_master` | 22 | PR 15 |
-| Palude spenta | Torbiera | Rospo re | `toad_king` | 28 | PR 15 |
+| Palude spenta | Torbiera | Regina serpente (al posto del Rospo re, 5 novembre 2026) | `serpent_queen` | 40 | Modello 3D reso con Blender: foglio direzionale 128 px, 8 direzioni × 6 fotogrammi (`src/assets/art/boss-3d/`) |
 | Palude spenta | Sommersi | Lavandaia maggiore | `elder_washer` | 24 | PR 15 |
 | Palude spenta | Colonia | Regina della colonia | `colony_queen` | 28 | Rifatto in questo ramo |
 | Fucina in rovina | Officina | Mastro d'incudine | `anvil_master` | 30 | PR 15 |

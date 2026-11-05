@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.16.2', date: '2026-11-05',
+    changes: [
+      'Nuovo luogotenente della Palude: la Regina serpente prende il posto del Rospo re a metà discesa. Modello 3D reso con Blender: foglio direzionale 128 × 128 px con 8 direzioni e 6 fotogrammi di ondeggiamento, respiro e torsione calcolati sulla mesh (senza scheletro), palette scura di 32 colori e contorno di 1 px. Guarda il giocatore come lo vede lo schermo, con isteresi ai confini fra due direzioni; in furia anima più in fretta, da rallentato a metà.',
+      'Schemi nuovi, valori provvisori: SPUTO VELENOSO (ventaglio di cinque sporelle), ANELLO DI VELENO (zona sotto il bersaglio e anello di 14 sporelle, due in furia) e COLPO DI CODA · SPOSTATI! (carica). Vita (1000), velocità (80) e danni di contatto e carica (16 e 22) restano quelli del Rospo re; in furia chiama ancora la folla di moscerini. Voce nuova nel bestiario; il Rospo re resta nel codice ma non compare più nel gioco, e le sue uccisioni già salvate non si perdono.',
+      'Sistema dei fogli dei boss esteso ai fogli direzionali (una riga per direzione, nessuno specchio); gli altri fogli non cambiano. Nuova voce nei crediti: il modello è generato con IA su Meshy e la licenza del piano è ancora da verificare con il proprietario. Salvataggi, protocollo cooperativo e id esistenti invariati. Prova giocata ancora da fare: scala della figura, direzioni e leggibilità degli schemi.',
+    ],
+    balanceChanges: [
+      { label: 'Palude · luogotenente (Rospo re → Regina serpente) · raggio di colpo', before: 28, after: 40, unit: 'u' },
+      { label: 'Palude · luogotenente · raggio dell’anello dei servitori evocati', before: 80, after: 90, unit: 'u' },
+    ],
+  },
+  {
     version: '0.16.1', date: '2026-11-05',
     changes: [
       'Oggetti in mappa della Cripta rifatti come modelli 3D resi con Blender in isometria 2:1 (nessuna IA): colonna gotica, angelo velato, gabbia, ruderi, ossari, altari, sarcofagi (il grande scoperchiato), e a terra macerie, ossa, candele, lapidi e grate. Quattro toni per materiale, linee fra le parti e contorno di 1 px. Lapidi e grate, prima saltate perché piatte, ora compaiono.',

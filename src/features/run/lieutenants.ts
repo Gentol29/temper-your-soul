@@ -137,6 +137,60 @@ export const TOAD_KING: BossDefinition = {
   summons: { minion: BOG_GNAT, onRage: 5, everyAttacks: 4, wave: 3, maxAlive: 8, ringRadius: 80 },
 };
 
+// --- Palude: la Regina serpente (al posto del Rospo re) -----------------------------------------------------------
+
+const VENOM_SPIT = { half: 2, spread: 0.14, speed: { normal: 185, rage: 215 } satisfies ByPhase<number>, damage: 13 };
+
+const VENOM_SPIT_PATTERN: BossPattern = {
+  id: 'venom_spit',
+  name: 'SPUTO VELENOSO',
+  labelColor: '#9fd070',
+  labelOffsetY: -98,
+  execute(boss, ctx) {
+    const spec = enemyShot(pick(VENOM_SPIT.speed, boss), VENOM_SPIT.damage, 6, 'swamp_spore');
+    spawnFan(ctx, boss.position, spec, boss.position.angleTo(ctx.target), VENOM_SPIT.half, VENOM_SPIT.spread);
+  },
+};
+
+const TAIL_LUNGE: BossPattern = {
+  id: 'tail_lunge',
+  name: 'COLPO DI CODA · SPOSTATI!',
+  labelColor: '#ffb177',
+  labelOffsetY: -98,
+  execute(boss, ctx) {
+    startCharge(boss, ctx, 0.9, 0.5);
+  },
+};
+
+const VENOM_RING = { zone: { team: 'enemy', radius: 40, delay: 1.2, damage: 16, visual: 'swamp_spit' } satisfies DangerZoneSpec, shots: 14 };
+
+const VENOM_RING_PATTERN: BossPattern = {
+  id: 'venom_ring',
+  name: 'ANELLO DI VELENO',
+  labelColor: '#d6e06a',
+  labelOffsetY: -98,
+  execute(boss, ctx) {
+    ctx.spawnZone(VENOM_RING.zone, clampToArena(boss.arena, ctx.target, boss.arena.bossMargin));
+    const rings = boss.isEnraged ? 2 : 1;
+    for (let ring = 0; ring < rings; ring++) {
+      schedule(boss, ring * 0.45, 'venom_ring_shots', (actor, c) => {
+        spawnRing(c, actor.position, enemyShot(120 + ring * 25, 11, 6, 'swamp_spore'), VENOM_RING.shots, c.time * 0.6 + ring * 0.22);
+      });
+    }
+  },
+};
+
+export const SERPENT_QUEEN: BossDefinition = {
+  id: 'serpent_queen',
+  name: 'REGINA SERPENTE',
+  art: 'serpent_queen',
+  rageText: 'LA REGINA SERPENTE SI SRODOLA',
+  // Stessa vita, velocita' e danni del Rospo re che sostituisce; solo il raggio di colpo segue la figura piu' grande.
+  stats: baseStats({ maxHealth: 1000, speed: 80, hitRadius: 40, contactDamage: 16, chargeDamage: 22 }),
+  patterns: [VENOM_SPIT_PATTERN, VENOM_RING_PATTERN, TAIL_LUNGE],
+  summons: { minion: BOG_GNAT, onRage: 5, everyAttacks: 4, wave: 3, maxAlive: 8, ringRadius: 90 },
+};
+
 // --- Fucina: il Mastro d'incudine ---------------------------------------------------------------------------------
 
 const ANVIL_SLAM = { zone: { team: 'enemy', radius: 64, delay: 1, damage: 22, visual: 'forge_anvil_slam' } satisfies DangerZoneSpec, shards: 12 };
@@ -247,7 +301,7 @@ export const FIRST_APPRENTICE: BossDefinition = {
 /** Il luogotenente di ogni dungeon. */
 export const LIEUTENANTS: Readonly<Record<string, BossDefinition>> = {
   crypt: BELFRY_GARGOYLE,
-  swamp: TOAD_KING,
+  swamp: SERPENT_QUEEN,
   forge: ANVIL_MASTER,
   glacier: FIRST_APPRENTICE,
 };

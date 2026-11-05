@@ -6,6 +6,7 @@ import { DUNGEONS } from '../dungeons/dungeons';
 import { ART_CREDITS, ART_LICENSES, VFX_CREDIT_IDS } from './art-credits';
 import { BOSS_SHEETS, DEATH_ANIMATION_SHARE, sheetFrame, type BossSheet, type SheetState } from './boss-art';
 import { Effects, FEEDBACK } from './effects';
+import { directionSeries } from './minion-art/minion-directions';
 import { ActorPoses } from './poses';
 import { LIEUTENANTS } from '../run/lieutenants';
 import { VEIN_LIEUTENANTS } from '../run/vein-lieutenants';
@@ -70,10 +71,12 @@ describe('fogli di sprite dei boss', () => {
       const bytes = fs.readFileSync(url);
       total += bytes.length;
       const clips = clipsOf(sheet);
-      const columns = Math.max(...clips.map((clip) => clip.frames));
+      // Un foglio direzionale ha una riga per ognuna delle 8 direzioni e `frames` colonne.
+      const columns = sheet.directional?.frames ?? Math.max(...clips.map((clip) => clip.frames));
+      const rows = sheet.directional === undefined ? clips.length : 8;
       expect(pngSize(bytes), id).toEqual({
         width: columns * sheet.layout.cell.width,
-        height: clips.length * sheet.layout.cell.height,
+        height: rows * sheet.layout.cell.height,
       });
     }
     expect(total).toBeLessThan(1500 * 1024);
@@ -82,9 +85,10 @@ describe('fogli di sprite dei boss', () => {
   it('righe distinte, fotogrammi validi, piedi dentro la cella e ingrandimento intero', () => {
     for (const [id, sheet] of Object.entries(BOSS_SHEETS)) {
       const clips = clipsOf(sheet);
-      expect(new Set(clips.map((clip) => clip.row)).size, id).toBe(clips.length);
+      // I fogli direzionali hanno tutte le animazioni sulla stessa riga 0: le righe sono le direzioni.
+      if (sheet.directional === undefined) expect(new Set(clips.map((clip) => clip.row)).size, id).toBe(clips.length);
       for (const clip of clips) {
-        expect(clip.row, id).toBeLessThan(clips.length);
+        if (sheet.directional === undefined) expect(clip.row, id).toBeLessThan(clips.length);
         expect(clip.frames, id).toBeGreaterThan(0);
       }
       const { cell, feet } = sheet.layout;
@@ -146,6 +150,50 @@ describe('scelta del fotogramma', () => {
     expect(WARDEN.layout.clips.transform).toBeUndefined();
     expect(sheetFrame(WARDEN, { ...STILL, enraged: true, transform: 0.5 }).row).toBe(WARDEN.layout.clips.rageWalk.row);
     expect(sheetFrame(WARDEN, { ...STILL, enraged: true, transform: 0.5, cast: 0 }).row).toBe(WARDEN.layout.clips.rageAttack.row);
+  });
+});
+
+describe('foglio direzionale della Regina serpente', () => {
+  const QUEEN = BOSS_SHEETS.serpent_queen!;
+  const frames = QUEEN.directional!.frames;
+  const step = 1 / QUEEN.walkFps;
+
+  it('e\' il luogotenente della Palude e ha 8 direzioni da 6 fotogrammi in celle 128 x 128', () => {
+    expect(LIEUTENANTS.swamp!.art).toBe('serpent_queen');
+    expect(QUEEN.directional).toEqual({ frames: 6 });
+    expect(QUEEN.layout.cell).toEqual({ width: 128, height: 128 });
+    expect(QUEEN.facesLeft).toBe(false);
+  });
+
+  it('la riga e\' la direzione, la colonna scorre in anello con il tempo', () => {
+    for (let direction = 0; direction < 8; direction++) expect(sheetFrame(QUEEN, { ...STILL, direction }).row).toBe(direction);
+    expect(sheetFrame(QUEEN, { ...STILL, direction: 3, time: step * 1.5 })).toEqual({ row: 3, column: 1 });
+    expect(sheetFrame(QUEEN, { ...STILL, time: step * frames }).column).toBe(0);
+    // Senza direzione si guarda a sud; una direzione fuori dai limiti non esce dal foglio.
+    expect(sheetFrame(QUEEN, STILL).row).toBe(0);
+    expect(sheetFrame(QUEEN, { ...STILL, direction: 12 }).row).toBe(7);
+  });
+
+  it('da rallentato anima a meta\' velocita\', in furia piu\' in fretta; attacco e morte non cambiano riga', () => {
+    const time = step * 3.2;
+    expect(sheetFrame(QUEEN, { ...STILL, time }).column).toBe(3);
+    expect(sheetFrame(QUEEN, { ...STILL, time, slowed: true }).column).toBe(1);
+    expect(sheetFrame(QUEEN, { ...STILL, time, enraged: true }).column).toBe(4);
+    expect(sheetFrame(QUEEN, { ...STILL, direction: 5, cast: 0.5 }).row).toBe(5);
+    expect(sheetFrame(QUEEN, { ...STILL, direction: 5, death: 0.5 }).row).toBe(5);
+  });
+
+  it('le direzioni seguono l\'angolo sullo schermo: giu\' = S, destra = E, su = N, sinistra = W', () => {
+    expect(directionSeries(Math.PI / 2)).toBe(0);
+    expect(directionSeries(Math.PI / 4)).toBe(1);
+    expect(directionSeries(0)).toBe(2);
+    expect(directionSeries(-Math.PI / 4)).toBe(3);
+    expect(directionSeries(-Math.PI / 2)).toBe(4);
+    expect(directionSeries(Math.PI)).toBe(6);
+  });
+
+  it('i fogli normali non cambiano: nessuno e\' direzionale tranne la Regina', () => {
+    for (const [id, sheet] of Object.entries(BOSS_SHEETS)) expect(sheet.directional !== undefined, id).toBe(id === 'serpent_queen');
   });
 });
 

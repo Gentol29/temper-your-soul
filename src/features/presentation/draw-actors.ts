@@ -106,7 +106,10 @@ function rimAlpha(rim: string): number {
   return rim.length >= 9 ? parseInt(rim.slice(7, 9), 16) / 255 : 1;
 }
 
-const NO_LOOK: BossLook = { flash: 0, offset: Vec2.ZERO, death: null, clock: 0 };
+/** L'ultima direzione mostrata da ogni boss con foglio direzionale. */
+const bossDirections = new WeakMap<Boss, number>();
+
+const NO_LOOK: BossLook ={ flash: 0, offset: Vec2.ZERO, death: null, clock: 0 };
 
 /** Lampo bianco all'inizio della morte (quota della sequenza) e dissolvenza finale, per i boss con foglio di sprite. */
 const SHEET_DEATH = { flash: 0.15, fadeFrom: 0.85 } as const;
@@ -126,6 +129,7 @@ function drawSheetBoss(
   cast: number | null,
   time: number,
   look: BossLook,
+  direction: number,
 ): void {
   const { layout, scale } = sheet;
   const frame = sheetFrame(sheet, {
@@ -135,6 +139,7 @@ function drawSheetBoss(
     cast,
     transform: look.transform ?? null,
     death: look.death,
+    direction,
   });
   const { width, height } = layout.cell;
   const sx = frame.column * width;
@@ -144,7 +149,8 @@ function drawSheetBoss(
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(x, y);
-  ctx.scale(facingLeft !== sheet.facesLeft ? -1 : 1, 1);
+  // I fogli direzionali hanno gia' una riga per ogni direzione: non si specchiano.
+  ctx.scale(sheet.directional === undefined && facingLeft !== sheet.facesLeft ? -1 : 1, 1);
   const death = look.death;
   if (death !== null && death > SHEET_DEATH.fadeFrom) ctx.globalAlpha = (1 - death) / (1 - SHEET_DEATH.fadeFrom);
   const source = boss.isSlowed && death === null ? sheetVariant(layout.url, image, 'frost') : image;
@@ -225,7 +231,13 @@ export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Play
   }
   const facingLeft = view.delta(player.position.x - boss.position.x, player.position.y - boss.position.y).x < 0;
   if (sheet !== null && image !== null) {
-    drawSheetBoss(ctx, boss, sheet, image, facingLeft, x, y, look.death === null ? poses.bossCastProgress : null, time, look);
+    let direction = 0;
+    if (sheet.directional !== undefined) {
+      // Guarda il giocatore come lo vede lo schermo; l'isteresi evita il tremolio ai confini fra due direzioni.
+      direction = directionSeries(view.angle(player.position.x - boss.position.x, player.position.y - boss.position.y), bossDirections.get(boss));
+      bossDirections.set(boss, direction);
+    }
+    drawSheetBoss(ctx, boss, sheet, image, facingLeft, x, y, look.death === null ? poses.bossCastProgress : null, time, look, direction);
     return;
   }
   const frame = Math.floor(time * (boss.isSlowed ? 2 : 5)) % 4;
