@@ -7,9 +7,9 @@ import { AUDIO_LICENSES } from '../audio/audio-credits';
  */
 
 /** Licenze ammesse per la grafica (stessi nomi di quelle dell'audio, per mostrarle allo stesso modo). */
-export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'Generato-locale';
+export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'Generato-locale' | 'Modello-IA-da-verificare';
 export const VFX_CREDIT_IDS = ['menu-rifugio-ia', 'local-zimage-vfx', 'local-sdxl-meteor'] as const;
-export const ART_LICENSES = { ...AUDIO_LICENSES, 'Generato-locale': { name: 'Generato con IA in locale · da approvare', url: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', requiresAttribution: false } };
+export const ART_LICENSES = { ...AUDIO_LICENSES, 'Generato-locale': { name: 'Generato con IA in locale · da approvare', url: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', requiresAttribution: false }, 'Modello-IA-da-verificare': { name: 'Modello 3D generato con IA su Meshy · licenza del piano da verificare', url: 'https://www.meshy.ai/', requiresAttribution: false } };
 
 export interface ArtCredit {
   /** Titolo come sulla pagina della fonte. */
@@ -60,6 +60,15 @@ export const ART_CREDITS: Readonly<Record<string, ArtCredit>> = {
     retrieved: '2026-11-03',
     use: 'boss, luogotenenti e i servitori del generatore locale',
     changes: 'un disegno per figura, ridotto a pixel veri; animazioni, furia, passaggio di fase e morte ricavati da quel disegno',
+  },
+  'meshy-serpent-queen': {
+    title: 'Regina serpente',
+    author: 'Modello 3D generato con IA su Meshy (esportato tramite Tripo) · reso da Temper your soul con Blender',
+    source: 'https://www.meshy.ai/',
+    license: 'Modello-IA-da-verificare',
+    retrieved: '2026-11-05',
+    use: 'luogotenente della Palude (src/assets/art/boss-3d/serpent_queen.png)',
+    changes: 'resa isometrica 2:1 in 8 direzioni e 6 fotogrammi di ondeggiamento calcolati sulla mesh, ridotta a 128 px, palette di 32 colori e contorno scuro; vedi src/assets/art/boss-3d/LEGGIMI.md',
   },
   'local-sdxl-tile': {
     title: 'Tile dei dungeon',

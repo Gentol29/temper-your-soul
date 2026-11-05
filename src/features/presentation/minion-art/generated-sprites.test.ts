@@ -83,6 +83,29 @@ describe('sprite dei mob dal generatore locale e da Blender', () => {
     }
   });
 
+  it('chi cammina tocca terra in ogni direzione: il disegno arriva al suo punto a terra, senza restare sospeso', () => {
+    for (const [id, sprite] of Object.entries(BLENDER_SPRITES)) {
+      expect(sprite.footRow, id).toBeGreaterThan(0);
+      expect(MINION_ART[id]!.footRow, id).toBe(sprite.footRow);
+      // Chi ondeggia sta sospeso apposta.
+      if (sprite.bob) continue;
+      sprite.directions.forEach((series, direction) => {
+        const lowest = Math.max(...series.map((frame) => frame.reduce((last, row, y) => (row.replace(/\./g, '') === '' ? last : y), 0)));
+        expect(lowest, `${id} direzione ${direction}`).toBeGreaterThanOrEqual(sprite.footRow - 2);
+      });
+    }
+  });
+
+  it('in isometria il cerchio di colpo e\' proporzionato allo sprite: non molto piu\' largo, ne\' molto piu\' stretto', () => {
+    const byVisual = new Map(Object.values(MINIONS).map((minion) => [minion.visual, minion]));
+    for (const [id, sprite] of Object.entries(BLENDER_SPRITES)) {
+      const onScreen = 2 * Math.SQRT2 * byVisual.get(id)!.hitRadius;
+      const width = sprite.frames[0]![0]!.length;
+      expect(onScreen, id).toBeLessThanOrEqual(width * 1.2);
+      expect(onScreen, id).toBeGreaterThanOrEqual(width * 0.33);
+    }
+  });
+
   it('la figura copre almeno il cerchio di colpo e il ritmo e\' ragionevole', () => {
     const byVisual = new Map(Object.values(MINIONS).map((minion) => [minion.visual, minion]));
     for (const [id, sprite] of entries) {

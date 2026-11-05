@@ -42,6 +42,12 @@ export interface BossSheet {
   readonly portraitScale: number;
   /** Id dei crediti in `art-credits.ts`. */
   readonly credits: readonly string[];
+  /**
+   * Foglio direzionale (modello 3D reso con Blender): una riga per direzione nell'ordine S, SE, E, NE, N, NW, W, SW
+   * (`minion-directions.ts`) e `frames` colonne di animazione in anello. Non si specchia e non ha righe per attacco,
+   * furia o morte: in `layout.clips` ogni animazione punta alla stessa riga 0 (serve solo a miniature e test).
+   */
+  readonly directional?: { readonly frames: number };
 }
 
 /** Che cosa sta facendo il boss in questo fotogramma (dalle pose e dagli effetti). */
@@ -56,7 +62,12 @@ export interface SheetState {
   readonly transform: number | null;
   /** Avanzamento 0–1 della sequenza di morte, null se vivo. */
   readonly death: number | null;
+  /** Serie di direzione (0 = S ... 7 = SW) verso cui guarda il boss: conta solo per i fogli direzionali. */
+  readonly direction?: number;
 }
+
+/** Velocita' dell'animazione di un foglio direzionale in furia (provvisoria). */
+export const DIRECTIONAL_RAGE_SPEED = 1.35;
 
 export interface SheetFrame {
   readonly row: number;
@@ -76,6 +87,12 @@ function once(clip: SheetClip, progress: number): SheetFrame {
 
 /** Sceglie il fotogramma: prima la morte, poi la trasformazione, poi l'attacco, altrimenti la camminata in anello. */
 export function sheetFrame(sheet: BossSheet, state: SheetState): SheetFrame {
+  if (sheet.directional !== undefined) {
+    // Un solo anello per direzione: da rallentato va a meta', in furia piu' in fretta; attacco e morte non cambiano riga.
+    const fps = sheet.walkFps * (state.slowed ? 0.5 : 1) * (state.enraged ? DIRECTIONAL_RAGE_SPEED : 1);
+    const row = Math.min(7, Math.max(0, state.direction ?? 0));
+    return { row, column: Math.floor(Math.max(0, state.time) * fps) % sheet.directional.frames };
+  }
   const { clips } = sheet.layout;
   if (state.death !== null) return once(clips.death, state.death / DEATH_ANIMATION_SHARE);
   if (state.transform !== null && clips.transform !== undefined) return once(clips.transform, state.transform);

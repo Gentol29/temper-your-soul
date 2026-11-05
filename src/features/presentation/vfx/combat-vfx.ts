@@ -5,6 +5,7 @@ import type { GameEvent } from '../../combat/events';
 import type { Match } from '../../match/match';
 import { minionRaster, minionsFacingLeft } from '../draw-actors';
 import { minionArt } from '../minion-art';
+import { minionFootOffset } from '../minion-art/minion-art';
 import type { Palette } from '../sprites';
 import { isBasicAttackCast } from './basic-attack-visuals';
 import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
@@ -282,7 +283,8 @@ export interface DeathPose {
 /** Riusa la sagoma esistente: lampo, sobbalzo e inclinazione. In isometria cade dove stava, piedi sul punto proiettato. */
 export function deathPose(death: MinionDeath, view: SceneView = TOP_DOWN_VIEW): DeathPose {
   const art = minionArt(death.visual), u = 1 - death.remaining / COMBAT_VFX.deathLife;
-  const shift = view.shift(death.x, death.y, Math.round((art.frames[0]!.length * art.scale) / 2 - 2));
+  // In isometria cade dove stava il servitore: piedi sul punto a terra proiettato, come la sua figura.
+  const shift = view.shift(death.x, death.y, minionFootOffset(art));
   return {
     raster: minionRaster(art.frames[0]!, u < 0.15 ? deathFlash(art.palette) : art.palette, art.scale),
     x: Math.round(death.x) + shift.x,

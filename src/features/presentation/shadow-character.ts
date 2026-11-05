@@ -2,6 +2,7 @@ import type { CharacterAppearance } from '../character/appearance';
 import { ITEM_CLASSES } from '../items/item-classes';
 import type { CharacterPixels } from './character-art';
 import type { CharacterMotion } from './adventurer-body';
+import { magePixels } from './mage-sprite';
 import { PixelPainter } from './pixel-painter';
 import { SHADOW_ANIMATION, shadowMotionForSlot, torsoPoint } from './shadow-motion';
 import { SHADOW_EQUIPMENT, SHADOW_GRIP, drawShadowHeld, drawShadowArmor, drawShadowBoot, drawShadowCape, shadowTrim } from './shadow-equipment';
@@ -11,6 +12,8 @@ const c={armor:'#302d30',light:'#51484b',shade:'#201c24',cloth:'#3d2932',clothLi
 /** Corpo C scelto dall'utente: strati articolati; nessun oggetto fittizio quando uno slot è vuoto. */
 export function shadowCharacterPixels(appearance:CharacterAppearance,animation:CharacterMotion):CharacterPixels {
   const kind=appearance.characterClass??ITEM_CLASSES[appearance.equipment.primary_hand?.familyId??'']??ITEM_CLASSES[appearance.equipment.armor?.familyId??'']??'warrior';
+  // Il Mago e' reso in 3D: stessi agganci, stessa modularita', un compositore proprio.
+  if(kind==='mage')return magePixels(appearance,animation);
   const f=animation.frame,female=appearance.body==='female',pose=animation.state==='cast'?'attack':animation.state;
   const motion=shadowMotionForSlot(kind,f,pose,animation.attackSlot);
   const lookup=(slot:keyof CharacterAppearance['equipment'])=>{const item=appearance.equipment[slot],art=item?SHADOW_EQUIPMENT[item.familyId]:undefined;return art?.slot===slot?art:undefined;};
@@ -41,11 +44,6 @@ export function shadowCharacterPixels(appearance:CharacterAppearance,animation:C
     if(boots)drawShadowBoot(p,{x,y},boots,shadowTrim(appearance.equipment.boots!));
   }
   p=layers.body;
-  if (kind === 'mage') {
-    p.poly([[19,27+bob],[30,27+bob],[32+stride*.3,38],[28,40],[24,38],[18-stride*.3,40],[16,37]],O);
-    p.poly([[20,28+bob],[29,28+bob],[30+stride*.3,37],[27,38],[24,36],[19-stride*.3,38],[18,36]],c.cloth);
-    p.line(23,30,22,37,c.clothLight);p.line(26,30,28,36,c.clothDark);
-  }
   const farHand = {x:motion.farHand.x+(female?2:0),y:motion.farHand.y}, hand = {x:motion.hand.x-(female?1:0),y:motion.hand.y};
   const arm = (shoulderX:number,shoulderY:number,target:typeof hand,color:string,bend:number):void=>{
     const shoulder=torsoPoint(shoulderX,shoulderY,motion.tilt);

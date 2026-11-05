@@ -35,8 +35,8 @@ const GENERATED_SPRITES = { ...LOCAL_GENERATOR_SPRITES, ...BLENDER_SPRITES };
 
 export const MINION_ART: Readonly<Record<string, MinionArt>> = Object.fromEntries(Object.entries(HAND_ART).map(([id, art]) => {
       const sprite = GENERATED_SPRITES[id];
-      const directions = (sprite as Partial<BlenderSprite> | undefined)?.directions;
-      return [id, sprite === undefined ? art : { ...art, frames: sprite.frames, palette: sprite.palette, scale: 1, fps: sprite.fps, walks: sprite.walks, faces: sprite.faces, bob: sprite.bob, ...(directions === undefined ? {} : { directions }) }];
+      const { directions, footRow } = (sprite ?? {}) as Partial<BlenderSprite>;
+      return [id, sprite === undefined ? art : { ...art, frames: sprite.frames, palette: sprite.palette, scale: 1, fps: sprite.fps, walks: sprite.walks, faces: sprite.faces, bob: sprite.bob, ...(directions === undefined ? {} : { directions }), ...(footRow === undefined ? {} : { footRow }) }];
     }));
 
 /** La grafica di un servitore per id d'aspetto; uno sconosciuto usa il fuoco fatuo (un test controlla i dati). */

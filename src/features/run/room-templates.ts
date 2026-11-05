@@ -130,22 +130,22 @@ const ring = (cx: number, cy: number, radius: number, count: number, size: numbe
 
 export const ROOM_TEMPLATES: Readonly<Record<string, readonly RoomTemplate[]>> = {
   crypt: [
-    template('crypt', 'nave', 'Navata', 'combat', 2000, 1300, [520, 840, 1160, 1480].flatMap((x) => [pillar(x, 440, 34), pillar(x, 860, 34)])),
-    template('crypt', 'chapel', 'Cappella laterale', 'combat', 1700, 1150, [pillar(560, 420, 44), pillar(1140, 420, 44), pillar(560, 760, 44), pillar(1140, 760, 44)]),
+    template('crypt', 'nave', 'Navata', 'combat', 2000, 1300, [520, 840, 1160, 1480].flatMap((x) => [pillar(x, 440, 24), pillar(x, 860, 24)])),
+    template('crypt', 'chapel', 'Cappella laterale', 'combat', 1700, 1150, [pillar(560, 420, 32), pillar(1140, 420, 32), pillar(560, 760, 32), pillar(1140, 760, 32)]),
     template('crypt', 'ossuary', 'Ossario', 'combat', 2200, 1400, [
-      pillar(400, 350, 30), pillar(900, 500, 30), pillar(1500, 380, 30), pillar(1850, 620, 30), pillar(700, 950, 30), pillar(1500, 900, 30),
+      pillar(400, 350, 22), pillar(900, 500, 22), pillar(1500, 380, 22), pillar(1850, 620, 22), pillar(700, 950, 22), pillar(1500, 900, 22),
     ]),
-    template('crypt', 'cloister', 'Chiostro', 'combat', 1900, 1300, ring(950, 620, 300, 8, 30)),
-    template('crypt', 'undercroft', 'Cripta bassa', 'combat', 2300, 1100, [pillar(650, 520, 60), pillar(1150, 520, 60), pillar(1650, 520, 60)]),
-    template('crypt', 'elbow', 'Sala a gomito', 'combat', 2000, 1300, [pillar(520, 420, 40), pillar(1480, 420, 40), pillar(560, 900, 40)], elbow(2000, 1300, 1240, 760)),
-    template('crypt', 'crossing', 'Crocevia', 'combat', 2100, 1400, [pillar(700, 700, 40), pillar(1400, 700, 40)], crossing(2100, 1400, 336, 356)),
+    template('crypt', 'cloister', 'Chiostro', 'combat', 1900, 1300, ring(950, 620, 300, 8, 22)),
+    template('crypt', 'undercroft', 'Cripta bassa', 'combat', 2300, 1100, [pillar(650, 520, 42), pillar(1150, 520, 42), pillar(1650, 520, 42)]),
+    template('crypt', 'elbow', 'Sala a gomito', 'combat', 2000, 1300, [pillar(520, 420, 28), pillar(1480, 420, 28), pillar(560, 900, 28)], elbow(2000, 1300, 1240, 760)),
+    template('crypt', 'crossing', 'Crocevia', 'combat', 2100, 1400, [pillar(700, 700, 28), pillar(1400, 700, 28)], crossing(2100, 1400, 336, 356)),
     // Fase 5: un crollo da muro a muro con due passerelle di assi; una navata di panche che si rompono.
-    template('crypt', 'collapse', 'Crollo', 'combat', 2048, 1344, [pillar(320, 960, 34), pillar(1728, 960, 34), pillar(1024, 330, 40), pillar(640, 300, 30), pillar(1408, 300, 30)], undefined,
+    template('crypt', 'collapse', 'Crollo', 'combat', 2048, 1344, [pillar(320, 960, 24), pillar(1728, 960, 24), pillar(1024, 330, 28), pillar(640, 300, 22), pillar(1408, 300, 22)], undefined,
       river(2048, 576, 128, 160, [536, 1512])),
-    template('crypt', 'pews', 'Navata dei banchi', 'combat', 2048, 1344, [pillar(400, 220, 30), pillar(1648, 220, 30)], undefined, {
+    template('crypt', 'pews', 'Navata dei banchi', 'combat', 2048, 1344, [pillar(400, 220, 22), pillar(1648, 220, 22)], undefined, {
       covers: covers(176, 40, [[280, 360], [1592, 360], [280, 520], [1592, 520], [280, 680], [1592, 680], [280, 840], [1592, 840], [640, 440], [1232, 440], [640, 760], [1232, 760]]),
     }),
-    template('crypt', 'altar', 'Altare', 'calm', 1700, 1300, [pillar(350, 350, 40), pillar(1350, 350, 40), pillar(350, 950, 40), pillar(1350, 950, 40)]),
+    template('crypt', 'altar', 'Altare', 'calm', 1700, 1300, [pillar(350, 350, 28), pillar(1350, 350, 28), pillar(350, 950, 28), pillar(1350, 950, 28)]),
   ],
   swamp: [
     template('swamp', 'mire', 'Acquitrino', 'combat', 2000, 1400, [pillar(500, 450, 60), pillar(1450, 420, 52), pillar(980, 700, 70), pillar(560, 1000, 48), pillar(1500, 1000, 58)]),

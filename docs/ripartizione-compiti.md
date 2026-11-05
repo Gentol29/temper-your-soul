@@ -55,3 +55,7 @@ Un'area che non compare in tabella non ha un referente: chi vuole lavorarci può
 ### Autorizzazione puntuale · sprite C, 3 novembre 2026
 
 Dopo la segnalazione dell’assegnazione a simonragaz87-sudo, l’utente aveva autorizzato soltanto tre coppie di prototipi separati. Successivamente ha scelto esplicitamente **C · Cacciatore d’ombre**, chiedendo di usarlo nel gioco, correggere il passo e rifare gli sprite di armi/equipaggiamento mantenendoli modulari. Questa decisione autorizza il relativo incremento locale sul ramo `codex/vfx-hi-bit`: compositore di gioco, oggetti indossati, icone e anteprima. Ritratti illustrati/PNG, inventario e regole di equipaggiamento restano nell’ambito precedente del referente. Non costituisce approvazione delle altre fasi del piano ritratti. [Incremento](sprite-c-equipaggiamento.md).
+
+### Autorizzazione puntuale · sprite 3D del Mago, 5 novembre 2026
+
+Dopo la segnalazione dell'assegnazione a simonragaz87-sudo e dello stile C, l'utente ha riferito di avere l'autorizzazione di tutti e ha chiesto di procedere in locale. L'autorizzazione è riportata come riferita dall'utente: va confermata dai diretti interessati nella pull request. Vale solo per lo sprite di gioco del Mago (`mage-sprite.ts`, i dati generati e il collegamento nel compositore e in `draw-actors.ts`). Guerriero, Arciere, ritratti illustrati e PNG approvati restano nell'ambito precedente. [Dettagli](sprite-c-equipaggiamento.md#mago-reso-in-3d--5-novembre-2026).

@@ -18,6 +18,8 @@ export interface SceneryPiece {
   readonly w: number;
   readonly h: number;
   readonly light?: SceneryLight;
+  /** Il punto dello sprite che poggia sul centro dell'ingombro, rispetto all'angolo alto a sinistra. */
+  readonly foot?: { readonly x: number; readonly y: number };
   /** Il vano di un portale, rispetto all'angolo alto a sinistra. */
   readonly hole?: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
 }
@@ -33,13 +35,13 @@ export const SCENERY_ATLASES: Readonly<Record<ArenaThemeId, SceneryAtlas>> = {
     url: new URL('../../../assets/art/scenari/crypt.png', import.meta.url).href,
     pieces: {
       gate: [{ x: 0, y: 0, w: 168, h: 145, hole: { x: 58, y: 61, w: 67, h: 84 } }],
-      pillarS: [{ x: 168, y: 0, w: 53, h: 139 }, { x: 344, y: 0, w: 68, h: 121 }, { x: 510, y: 0, w: 74, h: 111 }, { x: 803, y: 0, w: 47, h: 93 }],
-      pillarL: [{ x: 221, y: 0, w: 123, h: 126, light: { x: 62, y: 32, color: '#ffb066', radius: 150, intensity: 0.75 } }, { x: 678, y: 0, w: 125, h: 111 }, { x: 0, y: 145, w: 114, h: 90, light: { x: 57, y: 31, color: '#ff5a5a', radius: 130, intensity: 0.5 } }],
-      pillarM: [{ x: 412, y: 0, w: 98, h: 113 }, { x: 584, y: 0, w: 94, h: 111, light: { x: 47, y: 22, color: '#ffb066', radius: 120, intensity: 0.7 } }, { x: 850, y: 0, w: 98, h: 91 }, { x: 149, y: 145, w: 86, h: 82, light: { x: 43, y: 29, color: '#ff5a5a', radius: 110, intensity: 0.5 } }],
+      pillarS: [{ x: 0, y: 294, w: 64, h: 154, foot: { x: 32, y: 138 } }, { x: 64, y: 294, w: 62, h: 126, foot: { x: 31, y: 110 } }, { x: 543, y: 294, w: 56, h: 92, foot: { x: 28, y: 78 } }, { x: 903, y: 294, w: 55, h: 60, foot: { x: 30, y: 42 } }],
+      pillarL: [{ x: 126, y: 294, w: 124, h: 126, foot: { x: 62, y: 95 }, light: { x: 62, y: 56, color: '#ff5a5a', radius: 130, intensity: 0.5 } }, { x: 350, y: 294, w: 104, h: 101, foot: { x: 52, y: 64 }, light: { x: 52, y: 19, color: '#ffb066', radius: 150, intensity: 0.75 } }, { x: 599, y: 294, w: 125, h: 89, foot: { x: 61, y: 58 } }],
+      pillarM: [{ x: 250, y: 294, w: 100, h: 101, foot: { x: 50, y: 76 }, light: { x: 50, y: 12, color: '#ff5a5a', radius: 110, intensity: 0.5 } }, { x: 454, y: 294, w: 89, h: 96, foot: { x: 48, y: 67 } }, { x: 724, y: 294, w: 81, h: 78, foot: { x: 41, y: 49 }, light: { x: 41, y: 9, color: '#ffb066', radius: 120, intensity: 0.7 } }, { x: 805, y: 294, w: 98, h: 74, foot: { x: 49, y: 49 } }],
       pilaster: [{ x: 114, y: 145, w: 35, h: 84 }],
       facade: [{ x: 235, y: 145, w: 152, h: 80 }, { x: 387, y: 145, w: 152, h: 80 }, { x: 539, y: 145, w: 152, h: 80 }, { x: 691, y: 145, w: 152, h: 80 }, { x: 843, y: 145, w: 152, h: 80 }],
       hang: [{ x: 0, y: 235, w: 40, h: 59 }],
-      scatter: [{ x: 40, y: 235, w: 60, h: 39 }, { x: 100, y: 235, w: 46, h: 39 }, { x: 146, y: 235, w: 49, h: 36 }, { x: 195, y: 235, w: 58, h: 36 }, { x: 253, y: 235, w: 46, h: 33 }, { x: 299, y: 235, w: 40, h: 33 }, { x: 339, y: 235, w: 29, h: 27, light: { x: 14, y: 8, color: '#ffb066', radius: 70, intensity: 0.55 } }],
+      scatter: [{ x: 958, y: 294, w: 44, h: 27 }, { x: 0, y: 448, w: 52, h: 27 }, { x: 52, y: 448, w: 23, h: 25, light: { x: 12, y: 10, color: '#ffb066', radius: 70, intensity: 0.55 } }, { x: 75, y: 448, w: 44, h: 23 }, { x: 119, y: 448, w: 30, h: 21 }, { x: 149, y: 448, w: 29, h: 18 }, { x: 178, y: 448, w: 38, h: 18 }],
       sconce: [{ x: 368, y: 235, w: 22, h: 25 }],
     },
   },

@@ -33,6 +33,9 @@ export const ISO_SCENERY = {
   /** Quota della larghezza del basamento che un pezzo puo' coprire, al massimo e al minimo. */
   pieceMax: 0.95,
   pieceMin: 0.45,
+  /** Senza basamento il pezzo deve essere largo quanto il suo ingombro: quote della larghezza, al massimo e al minimo. */
+  footprintMax: 1.15,
+  footprintMin: 0.8,
 } as const;
 
 function canvas(width: number, height: number): HTMLCanvasElement {
@@ -304,7 +307,7 @@ function splitAround(a: number, b: number, gap: { readonly from: number; readonl
  * Gli arredi del foglio che sono lastre piatte viste dall'alto (posizione nel foglio "x,y"): in piedi sembrerebbero
  * cartelli, quindi in isometria si saltano.
  */
-export const FLAT_SCATTER: Readonly<Partial<Record<ArenaThemeId, readonly string[]>>> = { crypt: ['146,235', '195,235'] };
+export const FLAT_SCATTER: Readonly<Partial<Record<ArenaThemeId, readonly string[]>>> = {};
 
 /** Gli arredi bassi in piedi (macerie, ossa, candele): dritti, con la base nel loro punto della vista, sotto le figure. */
 export function drawIsoScatter(ctx: CanvasRenderingContext2D, frame: IsoArtFrame, theme: ArenaThemeId): void {
@@ -341,12 +344,20 @@ interface IsoPillarArt {
 
 const pillarArts = new WeakMap<Pillar, { readonly key: string; readonly art: IsoPillarArt }>();
 
+/** I temi i cui pezzi sono resi in isometria e poggiano da soli sul pavimento, senza il basamento di pietra. */
+const THEMES_WITHOUT_PLINTH: readonly ArenaThemeId[] = ['crypt'];
+
+/** Vero se le colonne del tema stanno su un basamento. */
+export function hasPlinth(theme: ArenaThemeId): boolean {
+  return !THEMES_WITHOUT_PLINTH.includes(theme);
+}
+
 /** Il pezzo del foglio per una colonna di raggio `r` sul basamento largo `width` pixel. */
-export function pillarPieceFor(pieces: readonly SceneryPiece[], width: number, h: number): SceneryPiece | undefined {
+export function pillarPieceFor(pieces: readonly SceneryPiece[], width: number, h: number, max: number = ISO_SCENERY.pieceMax, min: number = ISO_SCENERY.pieceMin): SceneryPiece | undefined {
   if (pieces.length === 0) return undefined;
-  const fits = pieces.filter((piece) => piece.w <= width * ISO_SCENERY.pieceMax && piece.w >= width * ISO_SCENERY.pieceMin);
+  const fits = pieces.filter((piece) => piece.w <= width * max && piece.w >= width * min);
   if (fits.length > 0) return sceneryPick(fits, h);
-  const under = pieces.filter((piece) => piece.w <= width * ISO_SCENERY.pieceMax).sort((a, b) => b.w - a.w);
+  const under = pieces.filter((piece) => piece.w <= width * max).sort((a, b) => b.w - a.w);
   return under[0] ?? [...pieces].sort((a, b) => a.w - b.w)[0];
 }
 
@@ -406,21 +417,25 @@ function pillarArt(theme: ArenaThemeId, pillar: Pillar): IsoPillarArt | null {
   const key = `${theme}|ready`;
   const known = pillarArts.get(pillar);
   if (known !== undefined && known.key === key) return known.art;
-  const base = plinth(theme, pillar);
+  const base = hasPlinth(theme) ? plinth(theme, pillar) : null;
   const pieces = ['pillarS', 'pillarM', 'pillarL'].flatMap((role) => sceneryPieces(theme, role));
   const width = 2 * Math.SQRT2 * pillar.radius;
-  const piece = pillarPieceFor(pieces, width, sceneryNoise(pillar.position.x, pillar.position.y, 5));
-  // Il pezzo sta in piedi al centro del basamento, appena davanti al centro della cima.
-  const center = { x: Math.round(pillar.position.x - pillar.position.y), y: Math.round((pillar.position.x + pillar.position.y) / 2) - ISO_SCENERY.plinth };
+  const noise = sceneryNoise(pillar.position.x, pillar.position.y, 5);
+  const piece = base === null ? pillarPieceFor(pieces, width, noise, ISO_SCENERY.footprintMax, ISO_SCENERY.footprintMin) : pillarPieceFor(pieces, width, noise);
+  const lift = base === null ? 0 : ISO_SCENERY.plinth;
+  const center = { x: Math.round(pillar.position.x - pillar.position.y), y: Math.round((pillar.position.x + pillar.position.y) / 2) - lift };
+  // Senza basamento il piede dello sprite sta sul centro dell'ingombro; sopra un basamento, appena davanti al centro della cima.
+  const anchor = base === null ? piece?.foot : undefined;
   const foot = center.y + Math.round((pillar.radius * Math.SQRT1_2) * 0.3);
-  const pieceLeft = piece === undefined ? center.x : Math.round(center.x - piece.w / 2);
-  const pieceTop = piece === undefined ? foot : foot - piece.h;
-  const left = Math.min(base.left, pieceLeft), top = Math.min(base.top, pieceTop);
-  const right = Math.max(base.left + base.canvas.width, pieceLeft + (piece?.w ?? 0));
-  const bottom = Math.max(base.top + base.canvas.height, foot);
+  const pieceLeft = piece === undefined ? center.x : anchor !== undefined ? center.x - anchor.x : Math.round(center.x - piece.w / 2);
+  const pieceTop = piece === undefined ? foot : anchor !== undefined ? center.y - anchor.y : foot - piece.h;
+  const pieceRight = pieceLeft + (piece?.w ?? 0), pieceBottom = pieceTop + (piece?.h ?? 0);
+  const left = base === null ? pieceLeft : Math.min(base.left, pieceLeft), top = base === null ? pieceTop : Math.min(base.top, pieceTop);
+  const right = base === null ? pieceRight : Math.max(base.left + base.canvas.width, pieceRight);
+  const bottom = base === null ? pieceBottom : Math.max(base.top + base.canvas.height, pieceBottom);
   const out = canvas(right - left, bottom - top);
   const ctx = out.getContext('2d')!;
-  ctx.drawImage(base.canvas, base.left - left, base.top - top);
+  if (base !== null) ctx.drawImage(base.canvas, base.left - left, base.top - top);
   if (piece !== undefined) ctx.drawImage(sheet, piece.x, piece.y, piece.w, piece.h, pieceLeft - left, pieceTop - top, piece.w, piece.h);
   const art: IsoPillarArt = {
     canvas: out,
