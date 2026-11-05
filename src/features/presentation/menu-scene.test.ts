@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HUB_MAP, HUB_STATIONS, hubApproachPoint, hubBlocked } from '../character/hub-state';
+import { HUB_MAP, HUB_STATIONS, hubApproachPoint, hubBlocked } from '../character/hub-map';
 import { Vec2 } from '../../core/vec2';
 import { MENU_ICONS } from './menu-icons';
 import { MENU_FLOOR_URL, MENU_MODULES, menuLayoutFor } from './menu-layout';

@@ -4,6 +4,8 @@ import type { ArenaDefinition, Pillar } from '../../arena/arena';
 import { drawLight } from '../lights';
 import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
+import { drawIsoWallLights, paintWallFootShadows, worldCamera } from '../iso/iso-scenery';
+import type { IsoArtFrame } from '../iso/iso-theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
@@ -201,7 +203,7 @@ function drawScenicGround(ctx: CanvasRenderingContext2D, camera: Camera, sheet: 
   ctx.drawImage(shoreLayer, left, top);
 }
 
-function drawStaticGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+function drawStaticGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, scenery = true): void {
   const { cell, mudThreshold, shoreBand, water, mud, shore } = SWAMP_DECOR;
   const sheet = tileSheet('swamp');
   const grain = tileVariants('swamp', 'floor');
@@ -214,7 +216,7 @@ function drawStaticGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition,
   const mudGrid = tileGrid('swamp', 'floor');
   if (sheet !== null && waterGrid !== undefined && mudGrid !== undefined) {
     drawScenicGround(ctx, camera, sheet, waterGrid, mudGrid);
-    drawFloorScenery(ctx, arena, camera, 'swamp');
+    if (scenery) drawFloorScenery(ctx, arena, camera, 'swamp');
     ctx.restore();
     return;
   }
@@ -520,3 +522,22 @@ export const swampTheme: ArenaTheme = {
     ...tileColors('swamp', 'floor'), ...tileColors('swamp', 'chasm'), ...tileColors('swamp', 'bridgeEW'), ...tileColors('swamp', 'water'),
   ],
 };
+
+// --- Vista isometrica --------------------------------------------------------------------------------------------------
+
+/** Il terreno piatto della palude per la cache isometrica: acqua, fango e rive, senza arredi ne' muro. */
+export function paintSwampIsoGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  drawStaticGround(ctx, arena, camera, false);
+  paintWallFootShadows(ctx, arena);
+}
+
+/** In isometria: increspature e nebbia a terra sotto la proiezione, i funghi luminosi del muro sui muri di fondo. */
+export function drawSwampIsoDetails(ctx: CanvasRenderingContext2D, frame: IsoArtFrame): void {
+  const { arena, camera, clock, view } = frame;
+  const world = worldCamera(camera);
+  view.ground(ctx, () => {
+    drawGroundMotion(ctx, arena, world, clock);
+    drawFog(ctx, world, clock);
+  });
+  drawIsoWallLights(ctx, frame, 170, (along) => ({ color: SWAMP_DECOR.mushroom.glow, radius: 110, intensity: 0.4 + 0.3 * (0.6 + 0.4 * Math.sin(clock * 2 + along * 0.03)) }));
+}

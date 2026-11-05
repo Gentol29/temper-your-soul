@@ -741,3 +741,21 @@ Su richiesta del proprietario, il giocatore cammina soltanto sui mattoni del cor
 Etichette dei servizi e nomi dei visitatori passano dal canvas ingrandito a testi DOM, senza trasformazioni frazionarie e allineati ai pixel fisici. A fine zoom il canvas mantiene la stessa scala intera su entrambi gli assi, anche con finestre di dimensioni dispari. Restano Silkscreen, passo fisso 60 Hz e frequenze di rete attuali. Da confermare giocando: leggibilità delle scritte mentre si cammina, margini lungo tutta la cinta e coerenza in cooperativa. Nessuna conferma manuale ancora registrata.
 
 Riscontro successivo del proprietario, 4 novembre: le collisioni sembrano a posto nella prova svolta. Restano tali sagome; la Forgia si usa a distanza dal suo fronte (652, 300) → (758, 345), con lo stesso raggio di 62 unità, per renderla accessibile anche arrivando da sinistra. Tooltip e priorità dei bersagli usano il punto del fronte più vicino al giocatore. Su richiesta esplicita i nomi dell’HUB e il tooltip diminuiscono di 2 px: a scala 3× i nomi passano da 24 a 22 px, il tooltip da 16 a 14 px. Eccezione locale alle misure DOM precedenti, senza cambiare Silkscreen né i font del canvas. Nuovo accesso, nuova leggibilità e cooperativa ancora da confermare giocando.
+
+## Cripta isometrica · proposta locale, 5 novembre 2026
+
+Richiesta dell'utente: mappa della Cripta in isometria a 45° con lastre che si ripetono alla Hades, mantenendo texture e tile esistenti, solo aspetto e collisioni coerenti con il disegno, Hi-bit. Se funziona si estenderà agli altri dungeon (basta registrare la grafica isometrica del tema in `iso/view-mode.ts`).
+
+- **Proiezione:** 2:1, vista = (x − y, (x + y) / 2), conserva l'area; il pavimento è una permutazione esatta dei pixel visti dall'alto (`isoPixel`), fatta solo con copie di rettangoli. Il mondo e la simulazione restano dall'alto.
+- **Collisioni:** invariate nella simulazione; il disegno le segue: piedi delle figure e ombre sul cerchio di gioco proiettato, basamenti delle colonne uguali al loro cerchio, massicci, ripari, pozzi e soglie delle porte sui rettangoli di gioco proiettati.
+- **Comandi:** WASD relativi allo schermo, stessa velocità nel mondo (sullo schermo in orizzontale si va più veloci che in verticale); mira sul punto del pavimento sotto il cursore. Protocollo invariato: il client converte prima di inviare.
+- **Valori provvisori:** lastre visibili 64 unità (`CRYPT_ISO_GROUND`); basamento 8 px, parapetto 10 px, dirupo 44 px, pietra sopra le facciate 96 px, applique 30 px (`ISO_SCENERY`); facce dei massicci 26 px e dei ripari 18 px (`ISO_BOXES`); colpi ed effetti 14 px sopra il punto di gioco (`ISO_BODY_LIFT`); ristampa degli ostacoli davanti alle figure all'80% (`ISO_STAMP_ALPHA`); pozze di luce ellittiche 2:1.
+
+Estensione dello stesso 5 novembre: Palude, Fucina e Ghiacciaio sono registrati in `iso/view-mode.ts` con `iso/theme-iso.ts`; ogni tema dà solo il suo pavimento piatto e i suoi dettagli (luci dei muri, increspature e nebbia, bracieri e incudini, neve). Le fughe delle lastre grandi ci sono solo nella Cripta.
+
+Punti aperti: se tenere le fughe a 64 o cambiarle; zoom della vista (in orizzontale si vede circa il 29% di mondo in meno, in verticale il 41% in più); diagonali dei tasti esatte sullo schermo o allineate ai muri; minimappa e panoramica audio ancora dall'alto; gli altri dungeon.
+
+### HUB isometrico · 5 novembre 2026
+
+Richiesta dell'utente: l'HUB come i dungeon, con gli edifici generati in locale; il menu resta l'illustrazione frontale per ora. Valori provvisori: piazza 640 × 560 unità con muro 24 e margine 40 (`HUB_ISO_MAP`), edifici e stazioni in `HUB_ISO_BUILDINGS` (accesso 34 unità davanti al fronte), edifici a scala ×2 (`HUB_ISO_BUILDING_SCALE`), tappeto largo 48, buio `#2c3048` (`HUB_ISO_LOOK`). WASD relativi allo schermo come nei dungeon. Punti aperti: scala e scelta dei disegni degli edifici, un portale animato al posto della sola luce, il menu in isometria.
+

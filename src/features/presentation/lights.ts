@@ -29,7 +29,16 @@ export interface LightSource {
   readonly radius: number;
   readonly color: string;
   readonly intensity: number;
+  /**
+   * Solo in isometria: il punto del canvas in cui la luce e' disegnata (la trasformazione del contesto al momento di
+   * `drawLight`, quindi con lo spostamento della figura o del pezzo che la porta).
+   */
+  readonly canvasX?: number;
+  readonly canvasY?: number;
 }
+
+/** In isometria una pozza di luce a terra e' un cerchio del mondo proiettato: ellisse larga sqrt2 r e alta r / sqrt2. */
+export const ISO_LIGHT_SHAPE = { rx: Math.SQRT2, ry: Math.SQRT1_2 } as const;
 
 const alphaHex = (alpha: number): string => Math.round(Math.max(0, Math.min(1, alpha)) * 255).toString(16).padStart(2, '0');
 
@@ -88,9 +97,20 @@ export class LightMap {
   private canvas: HTMLCanvasElement | null = null;
   private readonly lights: LightSource[] = [];
   private collecting = false;
+  private iso = false;
 
   get isCollecting(): boolean {
     return this.collecting;
+  }
+
+  /** Vero se le luci si raccolgono nel canvas (vista isometrica). */
+  get inCanvasSpace(): boolean {
+    return this.iso;
+  }
+
+  /** Le luci raccolte (per i test). */
+  get collected(): readonly LightSource[] {
+    return this.lights;
   }
 
   /** Le luci raccolte finora (per i test e per le misure). */
@@ -98,9 +118,14 @@ export class LightMap {
     return this.lights.length;
   }
 
-  begin(): void {
+  /**
+   * Apre la raccolta. Con `canvasSpace` (la vista isometrica) ogni luce si registra nel punto del canvas in cui la si
+   * disegna e si compone come pozza ellittica; senza, come sempre, in coordinate di mondo.
+   */
+  begin(canvasSpace = false): void {
     this.lights.length = 0;
     this.collecting = true;
+    this.iso = canvasSpace;
     active = this;
   }
 
@@ -142,6 +167,11 @@ export class LightMap {
     map.globalAlpha = 1;
     map.fillStyle = ambient;
     map.fillRect(0, 0, width, height);
+    if (this.iso) {
+      this.paintCanvasSpace(map, camera, scale);
+      this.blend(ctx, camera, left, top);
+      return;
+    }
     map.setTransform(scale, 0, 0, scale, -left * scale, -top * scale);
     map.globalCompositeOperation = 'lighter';
     const right = left + camera.width;
@@ -160,6 +190,31 @@ export class LightMap {
     ctx.drawImage(this.canvas, left, top, camera.width, camera.height);
     ctx.restore();
   }
+
+  /** Le luci registrate nel canvas, come pozze ellittiche 2:1 (vista isometrica). */
+  private paintCanvasSpace(map: CanvasRenderingContext2D, camera: Camera, scale: number): void {
+    map.setTransform(scale, 0, 0, scale, 0, 0);
+    map.globalCompositeOperation = 'lighter';
+    const visible = this.lights.filter((l) => {
+      const x = l.canvasX ?? l.x, y = l.canvasY ?? l.y;
+      const rx = l.radius * ISO_LIGHT_SHAPE.rx, ry = l.radius * ISO_LIGHT_SHAPE.ry;
+      return x + rx > 0 && x - rx < camera.width && y + ry > 0 && y - ry < camera.height;
+    });
+    if (visible.length > LIGHT.maxLights) visible.sort((a, b) => b.intensity * b.radius - a.intensity * a.radius).length = LIGHT.maxLights;
+    for (const light of visible) {
+      const rx = light.radius * ISO_LIGHT_SHAPE.rx, ry = light.radius * ISO_LIGHT_SHAPE.ry;
+      map.globalAlpha = Math.min(1, light.intensity);
+      map.drawImage(lightSprite(light.color), (light.canvasX ?? light.x) - rx, (light.canvasY ?? light.y) - ry, rx * 2, ry * 2);
+    }
+  }
+
+  private blend(ctx: CanvasRenderingContext2D, camera: Camera, left: number, top: number): void {
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.canvas!, left, top, camera.width, camera.height);
+    ctx.restore();
+  }
 }
 
 /** La mappa che sta raccogliendo, se c'e'. */
@@ -171,7 +226,10 @@ let active: LightMap | null = null;
  */
 export function drawLight(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, radius: number, intensity = 1): void {
   if (active !== null && active.isCollecting) {
-    active.add({ x, y, color, radius, intensity: Math.max(0, Math.min(1, intensity)) });
+    if (active.inCanvasSpace) {
+      const m = ctx.getTransform();
+      active.add({ x, y, color, radius, intensity: Math.max(0, Math.min(1, intensity)), canvasX: m.a * x + m.c * y + m.e, canvasY: m.b * x + m.d * y + m.f });
+    } else active.add({ x, y, color, radius, intensity: Math.max(0, Math.min(1, intensity)) });
     return;
   }
   if (!canPaint()) return;

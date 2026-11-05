@@ -2,6 +2,7 @@ import type { GameEvent } from '../../combat/events';
 import type { Projectile } from '../../combat/projectile';
 import type { Match } from '../../match/match';
 import { drawVfx, isVfxReady, type VfxId } from './assets';
+import { ISO_BODY_LIFT, TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
 
 export interface Burst { readonly attachment?: { readonly owner?: string; readonly offsetY?: number; readonly range?: number; readonly arc?: number }; readonly id: VfxId; readonly x: number; readonly y: number; readonly width: number; readonly angle: number; readonly duration: number; age: number }
 const MAX_BURSTS = 96;
@@ -68,10 +69,29 @@ export class SpriteEffects {
       if (this.bursts[i].age >= this.bursts[i].duration) this.bursts.splice(i, 1);
     }
   }
-  draw(ctx: CanvasRenderingContext2D, match?: Match): void {
+  draw(ctx: CanvasRenderingContext2D, match?: Match, view: SceneView = TOP_DOWN_VIEW): void {
     for (const burst of this.bursts) {
       const position = match ? burstPosition(burst, match) : burst;
       if (!position) continue;
+      const shape = burst.attachment;
+      if (view.iso) {
+        // In isometria: il fendente sta a terra nel settore colpibile (sotto la proiezione); gli altri effetti dritti,
+        // all'altezza del corpo sopra il loro punto, ruotati come appare la direzione sullo schermo.
+        if (shape?.range !== undefined && shape.arc !== undefined) {
+          view.ground(ctx, () => this.drawBurst(ctx, burst, position));
+          continue;
+        }
+        const anchorY = position.y - (shape?.offsetY ?? 0);
+        const shift = view.shift(position.x, anchorY, ISO_BODY_LIFT);
+        drawVfx(ctx, burst.id, position.x + shift.x, position.y + shift.y, burst.width, burst.age, view.angle(Math.cos(burst.angle), Math.sin(burst.angle)), 0.95 * Math.min(1, (burst.duration - burst.age) / 0.12), burst.duration);
+        continue;
+      }
+      this.drawBurst(ctx, burst, position);
+    }
+  }
+
+  private drawBurst(ctx: CanvasRenderingContext2D, burst: Burst, position: { readonly x: number; readonly y: number }): void {
+    {
       ctx.save();
       const shape = burst.attachment;
       if (shape?.range !== undefined && shape.arc !== undefined) {
@@ -87,22 +107,25 @@ export class SpriteEffects {
 }
 
 /** I nemici mantengono sagoma e contrasto precedenti: gli asset nuovi sono dedicati ai giocatori. */
-export function drawProjectileVfx(ctx: CanvasRenderingContext2D, projectile: Projectile, time: number): boolean {
+export function drawProjectileVfx(ctx: CanvasRenderingContext2D, projectile: Projectile, time: number, view: SceneView = TOP_DOWN_VIEW): boolean {
   if (projectile.team !== 'player') return false;
   const id = PROJECTILE_VFX[projectile.spec.visual]; if (!id) return false;
   const width = id === 'archer-arrow' ? 68 : id === 'mage-wind-orb' ? 44 + projectile.radius * 2 : 76 + projectile.radius * 3;
-  return drawVfx(ctx, id, projectile.position.x, projectile.position.y, width, time, projectile.velocity.angle(), 0.85);
+  const shift = view.shift(projectile.position.x, projectile.position.y, ISO_BODY_LIFT);
+  return drawVfx(ctx, id, projectile.position.x + shift.x, projectile.position.y + shift.y, width, time, view.angle(projectile.velocity.x, projectile.velocity.y), 0.85);
 }
 
 /** Aure e stati leggono lo snapshot autorevole; il tempo qui anima soltanto il disegno. */
-export function drawPersistentVfx(ctx: CanvasRenderingContext2D, match: Match, time: number): void {
+export function drawPersistentVfx(ctx: CanvasRenderingContext2D, match: Match, time: number, view: SceneView = TOP_DOWN_VIEW): void {
   const state = match.classCombat.snapshot();
   for (const active of state.players) {
     const player = match.players.get(active.id); if (!player || player.health.isDead) continue;
-    const x = player.position.x, y = player.position.y;
+    // In isometria tutto si sposta con la figura (piedi sul punto proiettato).
+    const shift = view.shift(player.position.x, player.position.y, ISO_BODY_LIFT);
+    const x = player.position.x + shift.x, y = player.position.y + shift.y;
     if (active.guard) drawVfx(ctx, 'warrior-guard', x, y - 12, 82, time, 0, 0.65);
     else if (active.buff) drawVfx(ctx, player.characterClass === 'warrior' ? 'warrior-fortify' : player.characterClass === 'archer' ? 'archer-predator' : 'mage-earth-aura', x, y, 78, time, 0, 0.6);
-    if (active.rushing) drawVfx(ctx, player.characterClass === 'archer' ? 'archer-dash' : 'warrior-rush', x, y, 85, time % 0.25, player.position.angleTo(player.aim), 0.7, 0.25);
+    if (active.rushing) drawVfx(ctx, player.characterClass === 'archer' ? 'archer-dash' : 'warrior-rush', x, y, 85, time % 0.25, view.angle(player.aim.x - player.position.x, player.aim.y - player.position.y), 0.7, 0.25);
     if (active.channel > 0) drawVfx(ctx, 'mage-earth-aura', x, y, 82, time, 0, 0.55);
   }
   for (const status of state.statuses) {
@@ -110,7 +133,8 @@ export function drawPersistentVfx(ctx: CanvasRenderingContext2D, match: Match, t
     if (!target || target.health.isDead || !['burning', 'soaked', 'rooted', 'exposed', 'bleeding'].includes(status.status)) continue;
     const id: VfxId = status.status === 'burning' ? 'mage-fireball' : status.status === 'soaked' ? 'mage-water-orb'
       : status.status === 'rooted' ? 'mage-earth-aura' : status.status === 'exposed' ? 'mage-wind-orb' : 'archer-predator';
-    drawVfx(ctx, id, target.position.x, target.position.y - (status.status === 'burning' ? 10 : 0), status.status === 'burning' ? 40 : 66, time, 0, 0.45);
+    const shift = view.shift(target.position.x, target.position.y, ISO_BODY_LIFT);
+    drawVfx(ctx, id, target.position.x + shift.x, target.position.y + shift.y - (status.status === 'burning' ? 10 : 0), status.status === 'burning' ? 40 : 66, time, 0, 0.45);
   }
 }
 

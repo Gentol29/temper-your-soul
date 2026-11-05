@@ -78,7 +78,7 @@ function visiblePart(rect: Solid, camera: Camera, margin: number): Solid | null 
  * Il fondo del pozzo: i tile 3 x 3 del tema (angoli, lati, centro) adattati al rettangolo, o un riempimento scuro. Si
  * disegnano solo le colonne e le righe di `view`: un fiume lungo quanto la stanza non costa piu' della parte inquadrata.
  */
-function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaThemeId, view: Solid): void {
+export function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaThemeId, view: Solid): void {
   const look = HAZARD_LOOKS[theme];
   const sheet = tileSheet(theme);
   const pieces = tileVariants(theme, 'chasm');
@@ -209,7 +209,7 @@ function drawChasm(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaTheme
 }
 
 /** Un ponte: il vuoto sotto, le assi (tile del tema) che sporgono un poco sulle rive, le ringhiere con i pali. */
-function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaThemeId, camera: Camera): void {
+export function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaThemeId, camera: Camera): void {
   if (!visible(camera, bridge)) return;
   const look = HAZARD_LOOKS[theme];
   const ns = bridge.along === 'ns';

@@ -4,6 +4,8 @@ import type { ArenaDefinition, Pillar } from '../../arena/arena';
 import { drawLight } from '../lights';
 import { faceSpots, isClearSpot, wallSpots } from './decor';
 import type { ArenaTheme } from './theme';
+import { drawIsoWallLights, paintWallFootShadows } from '../iso/iso-scenery';
+import type { IsoArtFrame } from '../iso/iso-theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, drawSceneryPiece, floorVersion, sceneryReady } from './scenery';
@@ -194,12 +196,21 @@ const DARK_ZONE = 192;
  */
 function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
   const { x: camX, y: camY } = camera.position;
-  const { tileSize } = FORGE_DECOR;
 
   // Il margine copre l'arrotondamento della traslazione e la scossa dello schermo.
   ctx.fillStyle = COLORS.void;
   ctx.fillRect(camX - 4, camY - 4, camera.width + 8, camera.height + 8);
 
+  drawForgeTiles(ctx, arena, camera);
+
+  drawFloorScenery(ctx, arena, camera, 'forge');
+  drawForgeWalls(ctx, arena, camera);
+}
+
+/** Le lastre di basalto (dal foglio o nel codice) dentro il rettangolo della camera dall'alto. */
+function drawForgeTiles(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const { x: camX, y: camY } = camera.position;
+  const { tileSize } = FORGE_DECOR;
   const sheet = tileSheet('forge');
   if (sheet !== null) {
     const x0 = Math.max(0, Math.floor(camX / TILE_SIZE) * TILE_SIZE);
@@ -230,9 +241,11 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
       }
     }
   }
+}
 
-  drawFloorScenery(ctx, arena, camera, 'forge');
-
+/** Il muro perimetrale e la faccia in alto (vista dall'alto). */
+function drawForgeWalls(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const { x: camX, y: camY } = camera.position;
   // Il muro perimetrale appartiene al mondo, non allo schermo: si disegna solo il tratto che la vista raggiunge.
   const wall = arena.wallThickness;
   const left = Math.max(0, camX - 4);
@@ -377,3 +390,24 @@ export const forgeTheme: ArenaTheme = {
     ...tileColors('forge', 'floor'), ...tileColors('forge', 'floorDark'), ...tileColors('forge', 'chasm'), ...tileColors('forge', 'bridgeEW'),
   ],
 };
+
+// --- Vista isometrica --------------------------------------------------------------------------------------------------
+
+/** Il basalto piatto della fucina per la cache isometrica, senza arredi ne' muro. */
+export function paintForgeIsoGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  drawForgeTiles(ctx, arena, camera);
+  paintWallFootShadows(ctx, arena);
+}
+
+/** In isometria: le bocche di forno come luci sui muri di fondo; bracieri e incudini dritti nel loro punto (sotto le figure). */
+export function drawForgeIsoDetails(ctx: CanvasRenderingContext2D, frame: IsoArtFrame): void {
+  const { arena, camera, clock, view } = frame;
+  drawIsoWallLights(ctx, frame, 210, (along) => ({ color: FORGE_DECOR.crackLight.color, radius: 130, intensity: 0.45 + 0.2 * Math.sin(clock * 1.7 + along) }));
+  const { braziers } = FORGE_DECOR;
+  for (const brazier of wallSpots(arena, braziers.inset, braziers.spacing, 40, false)) {
+    if (camera.isVisible(brazier, FORGE_DECOR.brazierLight.radius)) view.at(ctx, brazier.x, brazier.y, 10, () => drawBrazier(ctx, brazier.x, brazier.y, clock));
+  }
+  for (const anvil of anvilsOf(arena)) {
+    if (camera.isVisible(anvil, 80)) view.at(ctx, anvil.x, anvil.y, 8, () => drawAnvil(ctx, anvil.x, anvil.y, clock));
+  }
+}

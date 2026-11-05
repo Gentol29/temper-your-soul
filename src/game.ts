@@ -14,6 +14,9 @@ import { NetworkView } from './features/presentation/network-view';
 import { PerformancePanel } from './features/ui/performance-panel';
 import { SeededRng } from './core/rng';
 import { Vec2 } from './core/vec2';
+import { ISOMETRIC, screenDirectionToWorld } from './core/view-projection';
+import { projectionFor } from './features/presentation/iso/view-mode';
+import { sceneViewFor } from './features/presentation/iso/scene-view';
 import { AudioPlayer } from './features/audio/audio-player';
 import { Character } from './features/character/character';
 import type { CharacterRoster } from './features/character/character-roster';
@@ -454,7 +457,7 @@ export class Game {
     this.match = this.createMatch(dungeon);
     this.effects.clear();
     this.poses.reset();
-    this.camera.follow(this.match.player.position);
+    this.recenter();
     this.updateParty();
   }
 
@@ -521,7 +524,7 @@ export class Game {
     this.overlay.hide();
     this.hud.buildSkills(this.match.player.skillBar.skills);
     this.hud.setBossName(this.match.boss?.definition.name ?? '');
-    this.camera.follow(this.match.player.position);
+    this.recenter();
     this.hud.update(this.match, levelProgress(this.character.totalXp));
     this.canvas.focus();
     this.updateParty();
@@ -845,7 +848,7 @@ export class Game {
       if (!event.playerId || event.playerId === me) this.poses.handle(event);
       if (event.playerId) this.allyPoses.get(event.playerId)?.handle(event);
     }
-    if (enteringBattle) this.camera.follow(this.match.player.position);
+    if (enteringBattle) this.recenter();
     if (snapshot.run !== null) this.saveNetworkRunProgress(snapshot.run);
     if (snapshot.status !== 'playing') {
       this.completedBattles.add(snapshot.id);
@@ -1014,6 +1017,15 @@ export class Game {
     requireElement('audio-state').textContent = enabled ? 'Audio attivo · M' : 'Audio disattivato · M';
   }
 
+  /**
+   * Centra la camera sul giocatore con la proiezione della mappa mostrata: isometrica per i temi che hanno la loro grafica
+   * isometrica (la Cripta), dall'alto per gli altri. Solo aspetto: mira e movimento si convertono nel mondo.
+   */
+  private recenter(): void {
+    this.camera.setProjection(projectionFor(this.match.arena.theme));
+    this.camera.follow(this.match.player.position);
+  }
+
   /** La vista e' la finestra divisa per lo zoom: il canvas ha risoluzione ridotta e il CSS lo ingrandisce a scatti. */
   private resize(): void {
     const stage = this.canvas.parentElement ?? this.canvas;
@@ -1021,7 +1033,7 @@ export class Game {
     this.canvas.width = this.camera.width;
     this.canvas.height = this.camera.height;
     this.ctx.imageSmoothingEnabled = false;
-    this.camera.follow(this.match.player.position);
+    this.recenter();
   }
 
   // --- Ciclo -----------------------------------------------------------------------------------------------------
@@ -1030,9 +1042,13 @@ export class Game {
     const playerPosition = this.networkBattleId && this.networkView
       ? this.networkView.match.player.position
       : this.match.player.position;
+    // I tasti indicano una direzione dello schermo: in isometria diventa la direzione del mondo che punta da quella parte
+    // (W va in alto sullo schermo), con la stessa velocita' nel mondo. Dall'alto resta la stessa.
+    const keys = this.input.getVector('move_left', 'move_right', 'move_up', 'move_down');
     return {
-      move: this.input.getVector('move_left', 'move_right', 'move_up', 'move_down'),
-      // La vista può essere decentrata: l'offset parte dal giocatore visibile, non dal centro dello schermo.
+      move: screenDirectionToWorld(this.camera.projection, keys.x, keys.y),
+      // La vista può essere decentrata: l'offset parte dal giocatore visibile, non dal centro dello schermo. In isometria
+      // il cursore indica il punto del pavimento sotto di lui.
       aimOffset: this.camera.pointerOffset(this.input.pointer, playerPosition),
       skills: SKILL_ACTIONS.map((action) => this.input.isActionActive(action)),
     };
@@ -1041,7 +1057,7 @@ export class Game {
   private step(): void {
     const { match } = this;
     if(this.screen==='hub'){
-      const move=this.input.getVector('move_left','move_right','move_up','move_down');this.hub.step(STEP,move);
+      const keys=this.input.getVector('move_left','move_right','move_up','move_down'),move=screenDirectionToWorld(ISOMETRIC,keys.x,keys.y);this.hub.step(STEP,move);
       if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.inputLocked?Vec2.ZERO:move});}
     }
     if (this.screen === 'playing' || this.screen === 'ended') {
@@ -1089,6 +1105,8 @@ export class Game {
     this.accumulator += delta;
     const view = this.networkBattleId && this.networkView ? this.networkView : null;
     view?.sample(performance.now());
+    // La proiezione segue la mappa mostrata prima dei passi: i comandi letti in questo fotogramma usano la vista giusta.
+    this.camera.setProjection(projectionFor((view?.match ?? this.match).arena.theme));
     while (this.accumulator >= STEP) {
       this.step();
       this.accumulator -= STEP;
@@ -1160,6 +1178,7 @@ export class Game {
     const nextVein = views !== null && showsVeins(views.run.veins) ? views.run.stageVeins?.[views.run.stage + 1] : undefined;
     const look: RoomLook | null = views === null ? null : {
       view: views.room,
+      scene: sceneViewFor(this.camera.projection),
       arena: this.match.arena,
       nextOptions: views.next,
       localId: views.localId,

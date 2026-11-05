@@ -8,6 +8,7 @@ import type { Projectile } from '../combat/projectile';
 import type { Vec2 } from '../../core/vec2';
 import type { ZoneFlash } from './effects';
 import { projectileLook, zoneLook } from './visuals';
+import { ISO_BODY_LIFT, TOP_DOWN_VIEW, type SceneView } from './iso/scene-view';
 
 /** Segnale a terra della carica del boss: la fascia di percorso e il punto d'arrivo. Solo durante la preparazione. */
 export function drawChargeTelegraph(ctx: CanvasRenderingContext2D, charge: Charge): void {
@@ -210,11 +211,19 @@ export function drawProjectile(
   camera: Camera,
   time: number,
   rimWidth: number = PROJECTILE_STYLE.enemyRimWidth,
+  view: SceneView = TOP_DOWN_VIEW,
 ): void {
   if (!camera.isVisible(projectile.position, 80)) return;
-  if (drawProjectileVfx(ctx, projectile, time)) return;
-  const look = projectileLook(projectile.spec.visual);
   const r = projectile.radius;
+  // In isometria il colpo vola all'altezza del corpo sopra il suo punto di gioco, che resta segnato da un'ombra a terra.
+  const shift = view.shift(projectile.position.x, projectile.position.y, ISO_BODY_LIFT);
+  if (view.iso) {
+    const ground = view.shift(projectile.position.x, projectile.position.y, 0);
+    ctx.fillStyle = '#05030a66';
+    ctx.fillRect(Math.round(projectile.position.x + ground.x - r), Math.round(projectile.position.y + ground.y) - 1, Math.max(2, Math.round(r * 2)), 2);
+  }
+  if (drawProjectileVfx(ctx, projectile, time, view)) return;
+  const look = projectileLook(projectile.spec.visual);
   const enemy = projectile.team === 'enemy';
   const style = PROJECTILE_STYLE;
   ctx.save();
@@ -226,12 +235,14 @@ export function drawProjectile(
     ctx.globalAlpha = (i / trail.length) * trailAlpha;
     ctx.lineWidth = Math.max(1, (r * i) / trail.length);
     ctx.beginPath();
-    ctx.moveTo(trail[i - 1]!.x, trail[i - 1]!.y);
-    ctx.lineTo(trail[i]!.x, trail[i]!.y);
+    const from = trail[i - 1]!, to = trail[i]!;
+    const a = view.shift(from.x, from.y, ISO_BODY_LIFT), b = view.shift(to.x, to.y, ISO_BODY_LIFT);
+    ctx.moveTo(from.x + a.x, from.y + a.y);
+    ctx.lineTo(to.x + b.x, to.y + b.y);
     ctx.stroke();
   }
-  ctx.translate(projectile.position.x, projectile.position.y);
-  ctx.rotate(projectile.velocity.angle());
+  ctx.translate(projectile.position.x + shift.x, projectile.position.y + shift.y);
+  ctx.rotate(view.angle(projectile.velocity.x, projectile.velocity.y));
   if (look.shape === 'diamond') ctx.rotate(time * 3);
   else if (look.shape === 'mirror') ctx.rotate(Math.sin(time * 7) * 0.4);
   if (enemy) {

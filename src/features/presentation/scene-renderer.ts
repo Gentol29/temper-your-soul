@@ -20,6 +20,8 @@ import type { ActorPoses } from './poses';
 import type { Player } from '../player/player';
 import { projectileLook } from './visuals';
 import { canvasFont } from './fonts';
+import { renderIsometricScene } from './iso/iso-scene';
+import { isoArtFor } from './iso/view-mode';
 
 /** Tutto cio' che serve per disegnare un fotogramma. Il renderer legge e non modifica nulla. */
 export interface Scene {
@@ -81,6 +83,14 @@ function collectActorLights(ctx: CanvasRenderingContext2D, scene: Scene): void {
 
 /** Disegna un fotogramma della partita sul canvas. */
 export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
+  // Le mappe in isometria hanno il loro fotogramma (iso/iso-scene.ts); da qui in giu' la vista dall'alto, invariata.
+  if (scene.camera.projection.kind === 'isometric') {
+    const art = isoArtFor(scene.match.arena.theme);
+    if (art !== undefined) {
+      renderIsometricScene(ctx, scene, art);
+      return;
+    }
+  }
   const { match, effects, poses, camera, clock } = scene;
   const { player, boss } = match;
   const theme = ARENA_THEMES[match.arena.theme];

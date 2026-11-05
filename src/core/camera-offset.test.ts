@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Camera } from './camera';
 import { updateCamera, type Camera as CameraState } from './camera-offset';
 import { Vec2 } from './vec2';
+import { ISOMETRIC } from './view-projection';
 
 function trackingCamera(): CameraState {
   return { x: 20, y: 30, targetX: 20, targetY: 30, smoothSpeed: 8, maxOffset: 100 };
@@ -109,6 +110,68 @@ describe('Camera con offset del mouse', () => {
     expect(camera.y).toBeCloseTo(player.y, 4);
     camera.follow(new Vec2(2000, 1500));
     expect([camera.x, camera.y, camera.targetX, camera.targetY]).toEqual([2000, 1500, 2000, 1500]);
+  });
+
+  it('in isometria centra il giocatore proiettato e mira al punto del pavimento sotto il cursore', () => {
+    const camera = new Camera();
+    camera.projection = ISOMETRIC;
+    camera.setViewSize(800, 400);
+    const player = new Vec2(500, 300);
+    camera.follow(player);
+    expect([camera.x, camera.y]).toEqual([200, 400]);
+    // Il centro del canvas e' il giocatore; un punto a destra sullo schermo e' a nord-est nel mondo.
+    const center = camera.pointerToWorld(new Vec2(0.5, 0.5));
+    expect(center.x).toBeCloseTo(500, 9);
+    expect(center.y).toBeCloseTo(300, 9);
+    const right = camera.pointerToWorld(new Vec2(0.75, 0.5)).sub(player);
+    expect(right.x).toBeCloseTo(100, 9);
+    expect(right.y).toBeCloseTo(-100, 9);
+    // Inseguimento con il cursore fermo al centro: la vista resta sul giocatore proiettato, senza deriva.
+    const moved = new Vec2(540, 320);
+    for (let i = 0; i < 240; i++) camera.update(moved, new Vec2(0.5, 0.5), 1 / 60);
+    const view = ISOMETRIC.toView(moved.x, moved.y);
+    expect(camera.x).toBeCloseTo(view.x, 4);
+    expect(camera.y).toBeCloseTo(view.y, 4);
+    expect(camera.isVisible(moved)).toBe(true);
+    expect(camera.isVisible(new Vec2(moved.x + 600, moved.y - 600))).toBe(false);
+    // Il rettangolo del mondo della vista contiene i punti agli angoli del canvas.
+    const bounds = camera.worldBounds();
+    for (const corner of [new Vec2(0, 0), new Vec2(1, 0), new Vec2(0, 1), new Vec2(1, 1)]) {
+      const world = camera.pointerToWorld(corner);
+      expect(world.x).toBeGreaterThanOrEqual(bounds.x0 - 1e-9);
+      expect(world.x).toBeLessThanOrEqual(bounds.x1 + 1e-9);
+      expect(world.y).toBeGreaterThanOrEqual(bounds.y0 - 1e-9);
+      expect(world.y).toBeLessThanOrEqual(bounds.y1 + 1e-9);
+    }
+  });
+
+  it('cambiando proiezione resta fermo il punto del mondo al centro e quello inseguito', () => {
+    const camera = new Camera();
+    camera.setViewSize(640, 360);
+    const player = new Vec2(900, 700);
+    camera.follow(player);
+    camera.update(player, new Vec2(0.8, 0.3), 1 / 60);
+    const before = camera.projection.toWorld(camera.x, camera.y);
+    const target = camera.projection.toWorld(camera.targetX, camera.targetY);
+    camera.setProjection(ISOMETRIC);
+    const after = ISOMETRIC.toWorld(camera.x, camera.y);
+    expect(after.x).toBeCloseTo(before.x, 9);
+    expect(after.y).toBeCloseTo(before.y, 9);
+    const followed = ISOMETRIC.toWorld(camera.targetX, camera.targetY);
+    expect(followed.x).toBeCloseTo(target.x, 9);
+    expect(followed.y).toBeCloseTo(target.y, 9);
+    // Stessa proiezione: nessun cambiamento.
+    const x = camera.x;
+    camera.setProjection(ISOMETRIC);
+    expect(camera.x).toBe(x);
+  });
+
+  it('dall alto il rettangolo del mondo coincide con la vista', () => {
+    const camera = new Camera();
+    camera.setViewSize(320, 180);
+    camera.follow(new Vec2(1000, 500));
+    expect(camera.worldBounds()).toEqual({ x0: 840, y0: 410, x1: 1160, y1: 590 });
+    expect(camera.worldBounds(16)).toEqual({ x0: 824, y0: 394, x1: 1176, y1: 606 });
   });
 
   it('ricava la mira dalla vista decentrata, anche dopo un resize, senza includere la scossa', () => {

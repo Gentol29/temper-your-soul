@@ -170,11 +170,11 @@ lavoro qui ──► ramo feature/… sul fork ──► pull request verso Jabb
 
 ## 7. Strumenti per agenti
 
-### Skill di progetto (`.claude/skills/`)
+### Skill di progetto (`.claude/skills/` e `.agents/skills/`)
 
 | Skill | Quando |
 | --- | --- |
-| `tys-collabora` | All'inizio e alla fine di ogni lavoro: allineamento con Jabbaz, verify, commit, push sul fork, pull request |
+| `tys-collabora` | Operazioni Git richieste: sincronizzazione, commit/push autorizzati e PR; remoti ricavati dalla copia corrente |
 | `tys-risorse-libere` | Cercare, valutare, scaricare (con permesso), convertire e registrare audio, grafica o caratteri |
 | `tys-nuovo-dungeon` | Aggiungere un dungeon con mappa, boss, tema, bottino e test |
 | `tys-nuova-famiglia` | Aggiungere una famiglia di oggetti (skill, classe, icona, suono, bottino, test) |

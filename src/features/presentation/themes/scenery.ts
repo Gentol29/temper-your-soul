@@ -21,6 +21,26 @@ function sheetOf(theme: ArenaThemeId): HTMLImageElement | null {
   return classicTilesRequested ? null : sheetImage(SCENERY_ATLASES[theme].url);
 }
 
+/** Il foglio delle scenografie del tema, se e' pronto (per la vista isometrica). */
+export function scenerySheet(theme: ArenaThemeId): HTMLImageElement | null {
+  return sheetOf(theme);
+}
+
+/** I pezzi di un ruolo del foglio del tema (facciate, lesene, pilastri...). */
+export function sceneryPieces(theme: ArenaThemeId, role: string): readonly SceneryPiece[] {
+  return piecesOf(theme, role);
+}
+
+/** Valore pseudocasuale stabile in [0, 1), lo stesso delle scenografie dall'alto. */
+export function sceneryNoise(x: number, y: number, salt = 0): number {
+  return noise(x, y, salt);
+}
+
+/** Un elemento di una lista scelto da un valore in [0, 1). */
+export function sceneryPick<T>(list: readonly T[], h: number): T | undefined {
+  return pick(list, h);
+}
+
 /** Vero quando foglio delle scenografie e foglio dei tile del tema sono pronti. */
 export function sceneryReady(theme: ArenaThemeId): boolean {
   return sheetOf(theme) !== null && tileSheet(theme) !== null;
@@ -200,15 +220,19 @@ export function drawFacade(ctx: CanvasRenderingContext2D, arena: ArenaDefinition
 const SCATTER_DENSITY: Readonly<Record<ArenaThemeId, number>> = { crypt: 0.42, swamp: 0.5, forge: 0.46, glacier: 0.44 };
 const SCATTER_CELL = 168;
 
-function forScatter(arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, margin: number, visit: (piece: SceneryPiece, x: number, y: number, h: number) => void): void {
+/**
+ * Gli arredi a terra nel rettangolo del mondo visibile (dall'alto e' la vista stessa; in isometria il rettangolo che la
+ * contiene): pezzo, centro della base e valore stabile.
+ */
+export function forScatter(arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, margin: number, visit: (piece: SceneryPiece, x: number, y: number, h: number) => void): void {
   const list = piecesOf(theme, 'scatter');
   if (list.length === 0) return;
-  const { x: camX, y: camY } = camera.position;
+  const bounds = camera.worldBounds();
   const density = SCATTER_DENSITY[theme];
-  const x0 = Math.floor((camX - margin) / SCATTER_CELL);
-  const x1 = Math.ceil((camX + camera.width + margin) / SCATTER_CELL);
-  const y0 = Math.floor((camY - margin) / SCATTER_CELL);
-  const y1 = Math.ceil((camY + camera.height + margin) / SCATTER_CELL);
+  const x0 = Math.floor((bounds.x0 - margin) / SCATTER_CELL);
+  const x1 = Math.ceil((bounds.x1 + margin) / SCATTER_CELL);
+  const y0 = Math.floor((bounds.y0 - margin) / SCATTER_CELL);
+  const y1 = Math.ceil((bounds.y1 + margin) / SCATTER_CELL);
   const inset = arena.wallThickness + 24;
   for (let gy = y0; gy < y1; gy++) {
     for (let gx = x0; gx < x1; gx++) {

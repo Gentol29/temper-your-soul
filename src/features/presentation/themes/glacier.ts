@@ -4,6 +4,8 @@ import type { ArenaDefinition, Pillar } from '../../arena/arena';
 import { drawLight } from '../lights';
 import { faceSpots } from './decor';
 import type { ArenaTheme } from './theme';
+import { drawIsoWallLights, paintWallFootShadows, worldCamera } from '../iso/iso-scenery';
+import type { IsoArtFrame } from '../iso/iso-theme';
 import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle } from './wall';
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawScenicPillar, floorVersion, sceneryReady } from './scenery';
@@ -349,3 +351,29 @@ export const glacierTheme: ArenaTheme = {
     ...tileColors('glacier', 'floor'), ...tileColors('glacier', 'floorDark'), ...tileColors('glacier', 'chasm'), ...tileColors('glacier', 'bridgeEW'),
   ],
 };
+
+// --- Vista isometrica --------------------------------------------------------------------------------------------------
+
+/** Le lastre di ghiaccio piatte per la cache isometrica, senza arredi ne' muro. */
+export function paintGlacierIsoGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const sheet = tileSheet('glacier');
+  forVisibleCells(arena, camera, GLACIER_DECOR.slabSize, 0, (x, y) => drawSlab(ctx, x, y, GLACIER_DECOR.slabSize, sheet));
+  paintWallFootShadows(ctx, arena);
+}
+
+/** In isometria: il pulviscolo di neve nel suo punto della vista e i cristalli della parete come luci sui muri di fondo. */
+export function drawGlacierIsoDetails(ctx: CanvasRenderingContext2D, frame: IsoArtFrame): void {
+  const { arena, camera, clock, view } = frame;
+  const decor = GLACIER_DECOR;
+  forVisibleCells(arena, worldCamera(camera), decor.moteCell, 20, (cx, cy) => {
+    for (let i = 0; i < 3; i++) {
+      const h = cellValue(cx, cy, 31 + i);
+      const x = cx + ((h * decor.moteCell + clock * (10 + h * 14)) % decor.moteCell);
+      const y = cy + ((cellValue(cx, cy, 41 + i) * decor.moteCell + clock * (16 + h * 10)) % decor.moteCell) + Math.sin(clock * 1.3 + h * TAU) * 6;
+      const at = view.point(x, y);
+      ctx.fillStyle = i === 0 ? '#ffffffb0' : '#cfeeffa0';
+      ctx.fillRect(Math.round(at.x), Math.round(at.y) - 14, 2, 2);
+    }
+  });
+  drawIsoWallLights(ctx, frame, 200, (along) => ({ color: '#7fd8ff', radius: 120, intensity: 0.3 + 0.3 * (Math.sin(clock * 2.2 + along * 0.02) * 0.5 + 0.5) }));
+}

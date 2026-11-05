@@ -13,11 +13,12 @@ import type { ActorPoses } from './poses';
 import { playerCastFrame } from './poses';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
 import { canvasFont } from './fonts';
+import { TOP_DOWN_VIEW, type SceneView } from './iso/scene-view';
 
 /** Un raster per fotogramma/equipaggiamento, liberato insieme all'art dalla cache.
  * Evita migliaia di cambi di colore/fillRect per ogni giocatore e fotogramma. */
 const rasterFrames = new WeakMap<CharacterPixels, HTMLCanvasElement>();
-const previousPositions=new WeakMap<Player,{x:number;direction:1|-1}>();
+const previousPositions=new WeakMap<Player,{x:number;y:number;direction:1|-1}>();
 function rasterOf(art: CharacterPixels): HTMLCanvasElement {
   let raster = rasterFrames.get(art); if (raster) return raster;
   raster = document.createElement('canvas'); raster.width = art.width; raster.height = art.height;
@@ -47,18 +48,21 @@ export function drawPlayer(
   time: number,
   visible: boolean,
   appearance: CharacterAppearance = DEFAULT_APPEARANCE,
+  view: SceneView = TOP_DOWN_VIEW,
 ): void {
-  drawShadow(ctx, player.position.x, player.position.y + 14, 14, 5, '#080b1480');
+  // In isometria l'ombra e' il corpo di gioco proiettato (cerchio di raggio 10: ellisse 2:1).
+  drawShadow(ctx, player.position.x, player.position.y + 14, 14, view.iso ? 7 : 5, '#080b1480');
   if (!visible) return;
   const slots = ['primary_hand','secondary_hand','armor','boots'] as const;
   const slotIndex=player.skillBar.skills.findIndex(skill=>skill?.id===poses.playerSkillId);
   const attackSlot=slots[slotIndex] ?? 'primary_hand',skill=player.skillBar.skillAt(slotIndex);
   const cadence=skill?skill.cooldown/(slotIndex===0?1+player.buffValue('attackSpeed'):1):undefined;
   const castFrame=playerCastFrame(poses.playerCast,cadence);
-  const facing = player.aim.x < player.position.x ? -1 : 1;
-  const previous=previousPositions.get(player),dx=previous?player.position.x-previous.x:0;
+  // Verso e passo seguono le direzioni come appaiono sullo schermo (in isometria il mondo e' ruotato).
+  const facing = view.delta(player.aim.x - player.position.x, player.aim.y - player.position.y).x < 0 ? -1 : 1;
+  const previous=previousPositions.get(player),dx=previous?view.delta(player.position.x-previous.x,player.position.y-previous.y).x:0;
   const walkDirection:1|-1=Math.abs(dx)>.01?(dx*facing<0?-1:1):previous?.direction??1;
-  previousPositions.set(player,{x:player.position.x,direction:walkDirection});
+  previousPositions.set(player,{x:player.position.x,y:player.position.y,direction:walkDirection});
   const count=SHADOW_ANIMATION.frames;
   const motion = castFrame!==null
     ? {state: 'cast' as const, attackSlot, frame: castFrame}
@@ -189,13 +193,15 @@ function whitePalette(palette: Palette): Palette {
  * caricato, altrimenti la grafica a matrici. In furia ha un alone pulsante del suo colore; quando e' colpito lampeggia
  * di bianco e sobbalza; morendo trema e si frantuma.
  */
-export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Player, poses: ActorPoses, time: number, look: BossLook = NO_LOOK): void {
+export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Player, poses: ActorPoses, time: number, look: BossLook = NO_LOOK, view: SceneView = TOP_DOWN_VIEW): void {
   const art = bossArt(boss.definition.art);
   const sheet = bossSheet(boss.definition.art);
   const image = sheet === null ? null : sheetImage(sheet.layout.url);
   const x = Math.round(boss.position.x + look.offset.x);
   const y = Math.round(boss.position.y + look.offset.y);
-  drawShadow(ctx, boss.position.x, boss.position.y + art.shadow.offsetY, art.shadow.radiusX, art.shadow.radiusY, '#070c1680');
+  // In isometria l'ombra e' il cerchio di gioco proiettato, sotto i piedi.
+  if (view.iso) drawShadow(ctx, boss.position.x, boss.position.y + art.shadow.offsetY, boss.stats.hitRadius * Math.SQRT2, boss.stats.hitRadius * Math.SQRT1_2, '#070c1680');
+  else drawShadow(ctx, boss.position.x, boss.position.y + art.shadow.offsetY, art.shadow.radiusX, art.shadow.radiusY, '#070c1680');
   if (boss.isEnraged || look.death !== null) {
     // Alone della furia (e della morte): un bagliore del colore del boss che pulsa sotto lo sprite.
     const glow = bossFx(boss.definition.art).rage.glow;
@@ -212,7 +218,7 @@ export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Play
     ctx.fill();
     ctx.restore();
   }
-  const facingLeft = player.position.x < boss.position.x;
+  const facingLeft = view.delta(player.position.x - boss.position.x, player.position.y - boss.position.y).x < 0;
   if (sheet !== null && image !== null) {
     drawSheetBoss(ctx, boss, sheet, image, facingLeft, x, y, look.death === null ? poses.bossCastProgress : null, time, look);
     return;
@@ -325,7 +331,7 @@ export const minionsFacingLeft = new Set<number>();
 const STILL_AFTER = 0.14;
 
 /** Vero se il servitore si e' mosso da poco: chi sta fermo non deve camminare sul posto. */
-function minionIsMoving(minion: Minion, time: number): boolean {
+function minionIsMoving(minion: Minion, time: number, view: SceneView): boolean {
   const { x, y } = minion.position;
   const step = minionSteps.get(minion);
   if (step === undefined) {
@@ -334,7 +340,8 @@ function minionIsMoving(minion: Minion, time: number): boolean {
   }
   if (Math.abs(x - step.x) + Math.abs(y - step.y) > 0.05) {
     // Chi sale o scende quasi dritto non si volta a ogni minimo scarto.
-    if (Math.abs(x - step.x) > 0.25 * Math.abs(y - step.y)) step.left = x < step.x;
+    const d = view.delta(x - step.x, y - step.y);
+    if (Math.abs(d.x) > 0.25 * Math.abs(d.y)) step.left = d.x < 0;
     step.x = x;
     step.y = y;
     step.movedAt = time;
@@ -380,7 +387,7 @@ export const ELITE_COLORS: Readonly<Record<string, string>> = {
  * si rialza; le elite hanno un anello del colore del modificatore e la barra sempre visibile; gli scudi un velo.
  * `rim` e' il bordo chiaro della sagoma (dal tema della mappa); chi dorme non ce l'ha, perche' deve sembrare pietra.
  */
-export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: number, flash: number, prey = false, rim = ''): void {
+export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: number, flash: number, prey = false, rim = '', view: SceneView = TOP_DOWN_VIEW): void {
   const art = minionArt(minion.definition.visual);
   const { x, y } = minion.position;
   const half = (art.frames[0]!.length * art.scale) / 2;
@@ -397,7 +404,8 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     return;
   }
   const lift = minion.state === 'airborne' ? Math.sin(Math.max(0, Math.min(1, 1 - minion.stateTimer / Math.max(0.01, minion.definition.leap?.flight ?? 0.5))) * Math.PI) * 60 : 0;
-  drawShadow(ctx, x, y + half - 2, minion.hitRadius * (lift > 0 ? 0.7 : 1), 3, '#070c1670');
+  if (view.iso) drawShadow(ctx, x, y + half - 2, minion.hitRadius * Math.SQRT2 * (lift > 0 ? 0.7 : 1), minion.hitRadius * Math.SQRT1_2 * (lift > 0 ? 0.7 : 1), '#070c1670');
+  else drawShadow(ctx, x, y + half - 2, minion.hitRadius * (lift > 0 ? 0.7 : 1), 3, '#070c1670');
   if (minion.elite !== null || prey) {
     const color = prey ? '#ffd889' : ELITE_COLORS[minion.elite!.id] ?? '#ffd889';
     ctx.save();
@@ -417,7 +425,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     ctx.drawImage(glowRaster(art.glow, radius), Math.round(x - radius), Math.round(y - radius - lift));
     ctx.restore();
   }
-  const moving = minionIsMoving(minion, time);
+  const moving = minionIsMoving(minion, time, view);
   const stands = art.walks === true && !moving;
   const count = art.frames.length;
   const frameIndex = dormant || stands ? 0 : ((Math.floor(time * (art.fps ?? 6) + minion.id) % count) + count) % count;

@@ -8,6 +8,7 @@ import { drawBottomWallLip, drawTopWallFace, wallFaceHeight, type WallFaceStyle 
 import { FloorCache } from '../floor-cache';
 import { drawFloorScenery, drawFloorSceneryLights, drawPixelRing, drawScenicPillar, drawSceneryPiece, floorVersion, sceneryReady } from './scenery';
 import { drawTile, tileAt, tileColors, tileSheet } from './tiles';
+import { paintWallFootShadows } from '../iso/iso-scenery';
 
 /**
  * Decorazione della cripta (solo aspetto). Le posizioni sono frazioni della mappa, ricavate dall'arena del prototipo
@@ -47,20 +48,43 @@ function hash(x: number, y: number): number {
   return s - Math.floor(s);
 }
 
-function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
-  const { x: camX, y: camY } = camera.position;
-  const { tileSize } = CRYPT_DECOR;
-  const carpet = {
+/** Le fasce del tappeto in unita' di mondo. */
+function carpetBands(arena: ArenaDefinition): { readonly xMin: number; readonly xMax: number; readonly yMin: number; readonly yMax: number } {
+  return {
     xMin: CRYPT_DECOR.carpet.xMin * arena.width,
     xMax: CRYPT_DECOR.carpet.xMax * arena.width,
     yMin: CRYPT_DECOR.carpet.yMin * arena.height,
     yMax: CRYPT_DECOR.carpet.yMax * arena.height,
   };
+}
+
+function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const { x: camX, y: camY } = camera.position;
 
   // Il margine copre l'arrotondamento della traslazione e la scossa dello schermo.
   ctx.fillStyle = '#10151d';
   ctx.fillRect(camX - 4, camY - 4, camera.width + 8, camera.height + 8);
 
+  drawFloorTiles(ctx, arena, camera);
+
+  drawFloorScenery(ctx, arena, camera, 'crypt');
+
+  // Il muro perimetrale appartiene al mondo, non allo schermo.
+  const wall = arena.wallThickness;
+  ctx.fillStyle = CRYPT_WALL.cap;
+  ctx.fillRect(0, 0, arena.width, wall);
+  ctx.fillRect(0, arena.height - wall, arena.width, wall);
+  ctx.fillRect(0, 0, wall, arena.height);
+  ctx.fillRect(arena.width - wall, 0, wall, arena.height);
+  drawTopWallFace(ctx, arena, camera, CRYPT_WALL.face);
+
+}
+
+/** Le lastre del pavimento e il tappeto, visti dall'alto, dentro il rettangolo della camera (dall'alto). */
+function drawFloorTiles(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  const { x: camX, y: camY } = camera.position;
+  const { tileSize } = CRYPT_DECOR;
+  const carpet = carpetBands(arena);
   const x0 = Math.max(0, Math.floor(camX / tileSize) * tileSize);
   const y0 = Math.max(0, Math.floor(camY / tileSize) * tileSize);
   const sheet = tileSheet('crypt');
@@ -122,18 +146,81 @@ function drawStaticFloor(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, 
       }
     }
   }
+}
 
-  drawFloorScenery(ctx, arena, camera, 'crypt');
+/**
+ * Il pavimento della Cripta per la vista isometrica (provvisorio, solo aspetto): `slab` e' il lato delle lastre visibili
+ * (64 unita' = rombi di 128 x 64 pixel), con una fuga scura e uno smusso chiaro presi dalle rampe del pavimento (i colori a
+ * terra restano quelli confrontati con i colpi nemici); 0 le toglie. Le ombre ai piedi dei muri di fondo hanno le stesse
+ * bande della facciata dall'alto.
+ */
+export const CRYPT_ISO_GROUND = { slab: 64, joint: '#1d232c', bevel: '#30353f' } as const;
 
-  // Il muro perimetrale appartiene al mondo, non allo schermo.
-  const wall = arena.wallThickness;
-  ctx.fillStyle = CRYPT_WALL.cap;
-  ctx.fillRect(0, 0, arena.width, wall);
-  ctx.fillRect(0, arena.height - wall, arena.width, wall);
-  ctx.fillRect(0, 0, wall, arena.height);
-  ctx.fillRect(arena.width - wall, 0, wall, arena.height);
-  drawTopWallFace(ctx, arena, camera, CRYPT_WALL.face);
+/**
+ * Il pavimento piatto della Cripta visto dall'alto, per la cache isometrica: lastre, tappeto, fughe delle lastre grandi,
+ * rune e ombre ai piedi dei muri di fondo. Niente muri ne' arredi in piedi; fuori dal pavimento della stanza resta vuoto.
+ */
+export function paintCryptIsoGround(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera): void {
+  drawFloorTiles(ctx, arena, camera);
+  const sheet = tileSheet('crypt');
+  const { slab, joint, bevel } = CRYPT_ISO_GROUND;
+  const bounds = camera.worldBounds();
+  if (sheet !== null && slab > 0) {
+    const carpet = carpetBands(arena);
+    const tile = CRYPT_DECOR.tileSize;
+    const onCarpet = (x: number, y: number): boolean => (x > carpet.xMin && x < carpet.xMax) || (y > carpet.yMin && y < carpet.yMax);
+    const x0 = Math.max(0, Math.floor(bounds.x0 / slab) * slab), y0 = Math.max(0, Math.floor(bounds.y0 / slab) * slab);
+    for (let y = y0; y < Math.min(arena.height, bounds.y1 + slab); y += slab) {
+      for (let x = x0; x < Math.min(arena.width, bounds.x1 + slab); x += slab) {
+        // Fughe solo fra lastre di pietra: ogni cella di 32 sul bordo della lastra, se non e' tappeto.
+        for (let k = 0; k < slab; k += tile) {
+          if (!onCarpet(x + k, y)) {
+            ctx.fillStyle = joint; ctx.fillRect(x + k, y, tile, 1);
+            ctx.fillStyle = bevel; ctx.fillRect(x + k + (k === 0 ? 1 : 0), y + 1, k === 0 ? tile - 1 : tile, 1);
+          }
+          if (!onCarpet(x, y + k)) {
+            ctx.fillStyle = joint; ctx.fillRect(x, y + k, 1, tile);
+            ctx.fillStyle = bevel; ctx.fillRect(x + 1, y + k + (k === 0 ? 1 : 0), 1, k === 0 ? tile - 1 : tile);
+          }
+        }
+      }
+    }
+  }
+  if (sceneryReady('crypt')) {
+    for (const fraction of CRYPT_DECOR.runeCircles) {
+      const circle = new Vec2(fraction.x * arena.width, fraction.y * arena.height);
+      if (circle.x + 120 < bounds.x0 || circle.x - 120 > bounds.x1 || circle.y + 120 < bounds.y0 || circle.y - 120 > bounds.y1) continue;
+      for (const r of [90, 108]) drawPixelRing(ctx, circle.x, circle.y, r, 2, '#575064');
+      ctx.fillStyle = '#8b6b94';
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        ctx.fillRect(Math.round(circle.x + Math.cos(a) * 99) - 4, Math.round(circle.y + Math.sin(a) * 99) - 4, 8, 8);
+      }
+    }
+  }
+  paintWallFootShadows(ctx, arena);
+}
 
+/** La versione del pavimento isometrico: cambia quando arrivano i fogli. */
+export function cryptIsoGroundVersion(): string {
+  return `${floorVersion('crypt')}|iso${CRYPT_ISO_GROUND.slab}`;
+}
+
+/** I centri dei cerchi runici e la loro luce (pulsante). */
+export function drawCryptRuneLights(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, clock: number, at: (x: number, y: number, draw: () => void) => void): void {
+  for (const fraction of CRYPT_DECOR.runeCircles) {
+    const x = fraction.x * arena.width;
+    const y = fraction.y * arena.height;
+    at(x, y, () => drawLight(ctx, x, y, '#8b6bd4', 150, 0.22 + 0.06 * Math.sin(clock * 1.2 + x)));
+  }
+}
+
+/** Le torce della Cripta: applique ogni `sconceSpacing` sui muri, torce in piedi ogni `spacing` a `inset` dai muri. */
+export const CRYPT_TORCHES = CRYPT_DECOR.torches;
+
+/** Una torcia della Cripta disegnata attorno a (`x`, `y`) come dall'alto (appesa al muro con `sconce`). */
+export function drawCryptTorch(ctx: CanvasRenderingContext2D, x: number, y: number, clock: number, sconce: boolean): void {
+  drawTorch(ctx, x, y, clock, sconce);
 }
 
 /** Rune nel contesto finale: evita giunzioni antialias visibili fra i tasselli della cache. */

@@ -159,6 +159,20 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.12.0', date: '2026-11-05',
+    changes: [
+      'Tutti e quattro i dungeon (arene dei boss e stanze della discesa) si vedono in isometria 2:1, alla Hades. Le texture sono gli stessi pixel di prima disposti a rombo, senza sfumature; nella Cripta lastre visibili da 64 unità.',
+      'Muri di fondo con le facciate gotiche appoggiate alla diagonale, bordi davanti bassi con il dirupo nel buio, uscite sul muro in alto a destra e ingresso sul bordo in basso a sinistra.',
+      'Colonne e statue su basamenti grandi quanto il loro cerchio di collisione; massicci e panche come blocchi; pozzi e ponti piatti. Chi passa dietro un ostacolo ci finisce dietro.',
+      'Figure con i piedi sul punto di gioco e ombre ellittiche; colpi, scritte, effetti e luci al loro posto nella vista. WASD muove come appare sullo schermo e il cursore mira al punto del pavimento sotto di lui.',
+      'HUB giocabile rifatto come piazza isometrica, con gli edifici generati in locale (SDXL 1.0 e Pixel Art XL) a scala intera ×2. Proposta da rivedere; il menu iniziale resta l’illustrazione frontale.',
+      'Per confrontare: ?vista=classica riporta i dungeon alla vista dall’alto. Anteprima di sviluppo: /iso-preview.html.',
+      'Protocollo cooperativo 18 (nuova geometria dell’HUB): riavviare il server e ricaricare tutte le schede. Simulazione, collisioni dei dungeon, danni e salvataggi invariati.',
+      'Skill di collaborazione Git resa generica per tutti i collaboratori.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.11.5', date: '2026-11-04',
     changes: [
       'Tutti gli 88 mob ridisegnati con il generatore locale (SDXL 1.0 e Pixel Art XL), con quattro fotogrammi di animazione. Grafica generata con l\'IA: proposta da confermare con il proprietario.',

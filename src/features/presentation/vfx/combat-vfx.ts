@@ -7,6 +7,10 @@ import { minionRaster, minionsFacingLeft } from '../draw-actors';
 import { minionArt } from '../minion-art';
 import type { Palette } from '../sprites';
 import { isBasicAttackCast } from './basic-attack-visuals';
+import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
+
+/** Nessuno spostamento (vista dall'alto). */
+const ZERO_SHIFT = Vec2.ZERO;
 
 /** Taratura estetica provvisoria; budget indipendente dal numero di nemici o giocatori. */
 export const COMBAT_VFX = {
@@ -204,19 +208,21 @@ export class CombatVfx {
 }
 
 /** Sangue in alpha normale: resta cremisi anche su fuoco e neve; mai luce additiva rosa. */
-export function drawBloodStains(ctx: CanvasRenderingContext2D, vfx: CombatVfx, camera: Camera): void {
+export function drawBloodStains(ctx: CanvasRenderingContext2D, vfx: CombatVfx, camera: Camera, view: SceneView = TOP_DOWN_VIEW): void {
   ctx.save(); ctx.globalCompositeOperation = 'source-over';
   for (const stain of vfx.stains) {
     if (!camera.isVisible(new Vec2(stain.x, stain.y), 12)) continue;
     ctx.globalAlpha = Math.min(0.85, stain.remaining / 3); ctx.fillStyle = stain.color;
-    const x = Math.round(stain.x), y = Math.round(stain.y), s = Math.max(2, Math.round(stain.size));
+    // In isometria la macchia (gia' schiacciata) sta nel punto proiettato, dritta e a pixel interi.
+    const shift = view.shift(stain.x, stain.y, 0);
+    const x = Math.round(stain.x) + shift.x, y = Math.round(stain.y) + shift.y, s = Math.max(2, Math.round(stain.size));
     ctx.fillRect(x - s / 2, y, s, Math.max(1, Math.round(s * 0.45)));
     ctx.fillRect(x - s / 2 + 1, y - 1, Math.max(1, s - 2), 1);
   }
   ctx.restore();
 }
 
-export function drawCombatMotes(ctx: CanvasRenderingContext2D, vfx: CombatVfx): void {
+export function drawCombatMotes(ctx: CanvasRenderingContext2D, vfx: CombatVfx, view: SceneView = TOP_DOWN_VIEW): void {
   ctx.save();
   // Due passate evitano cambi di compositing per ogni particella.
   for (const glow of [false, true]) {
@@ -224,7 +230,9 @@ export function drawCombatMotes(ctx: CanvasRenderingContext2D, vfx: CombatVfx): 
     for (const p of vfx.particles) {
       if ((p.kind === 'glow') !== glow) continue;
       const fade = Math.min(1, p.remaining / Math.min(0.2, p.total));
-      const x = Math.round(p.x), y = Math.round(p.y - p.z), s = Math.max(1, Math.round(p.size));
+      // In isometria: il punto a terra proiettato, poi l'altezza sullo schermo.
+      const shift = view.iso ? view.shift(p.x, p.y, 0) : ZERO_SHIFT;
+      const x = Math.round(p.x) + shift.x, y = Math.round(p.y - p.z) + shift.y, s = Math.max(1, Math.round(p.size));
       ctx.fillStyle = p.color;
       if (glow) {
         ctx.globalAlpha = fade * 0.12; ctx.fillRect(x - 2, y - 2, s + 4, s + 4);
@@ -255,10 +263,12 @@ function deathFlash(palette: Palette): Palette {
 }
 
 /** Riusa la sagoma esistente: lampo, sobbalzo, cedimento e dissolvenza. Da un raster: gli sprite grandi costerebbero troppo pixel per pixel. */
-export function drawMinionDeaths(ctx: CanvasRenderingContext2D, vfx: CombatVfx): void {
+export function drawMinionDeaths(ctx: CanvasRenderingContext2D, vfx: CombatVfx, view: SceneView = TOP_DOWN_VIEW): void {
   for (const death of vfx.deaths) {
     const art = minionArt(death.visual), u = 1 - death.remaining / COMBAT_VFX.deathLife;
-    ctx.save(); ctx.translate(Math.round(death.x), Math.round(death.y + u * 8));
+    // In isometria cade dove stava il servitore: piedi sul punto proiettato, come la sua figura.
+    const shift = view.shift(death.x, death.y, Math.round((art.frames[0]!.length * art.scale) / 2 - 2));
+    ctx.save(); ctx.translate(Math.round(death.x) + shift.x, Math.round(death.y + u * 8) + shift.y);
     ctx.rotate(death.direction * u * 0.35); ctx.scale((death.left ? -1 : 1) * (1 + u * 0.1), Math.max(0.1, 1 - u * 0.8));
     ctx.globalAlpha = Math.min(1, (1 - u) * 2);
     const raster = minionRaster(art.frames[0]!, u < 0.15 ? deathFlash(art.palette) : art.palette, art.scale);

@@ -78,6 +78,9 @@ export interface Particle {
   color: string;
   size: number;
   gravity: number;
+  /** Il punto del mondo da cui la particella e' partita: in isometria il moto resta sullo schermo attorno al suo punto. */
+  ax?: number;
+  ay?: number;
 }
 
 /** Anello che si espande da un punto. */
@@ -106,6 +109,12 @@ export interface FloatingText {
   readonly pixel?: boolean;
   /** Gli XP restano sopra il destinatario anche mentre cammina. */
   readonly attachment?: { readonly owner: string; readonly offsetY: number };
+  /**
+   * Il punto a terra del mondo a cui il testo appartiene (chi e' colpito, chi riceve gli XP): `x`, `y` meno questo punto e'
+   * lo scostamento sullo schermo. In isometria il testo sta sopra il punto proiettato. Senza, il testo e' tutto nel mondo.
+   */
+  anchorX?: number;
+  anchorY?: number;
 }
 
 export const XP_FEEDBACK = { life: 1.2, size: 16, color: '#efc0a1', offsetY: 46, stackGap: 24, maxTexts: 48 } as const;
@@ -332,7 +341,7 @@ export class Effects {
         }
         break;
       case 'boss_phase_changed':
-        this.text(event.position.x, event.position.y - 48, event.text, '#ff785d', 16);
+        this.text(event.position.x, event.position.y - 48, event.text, '#ff785d', 16, 0, TEXT_LIFE, event.position);
         this.burst(event.position, '#ff735b', 60);
         for (const [radius, life] of [[120, 0.5], [180, 0.7], [240, 0.9]] as const) this.wave(event.position, radius, '#ff6a4a', life);
         this.shake = 10;
@@ -340,7 +349,7 @@ export class Effects {
         this.bossTransform = FEEDBACK.bossTransform;
         break;
       case 'boss_attack':
-        this.text(event.position.x, event.position.y + event.labelOffsetY, event.name, event.color);
+        this.text(event.position.x, event.position.y + event.labelOffsetY, event.name, event.color, 13, 0, TEXT_LIFE, event.position);
         break;
       case 'boss_charge_finished':
         this.burst(event.position, '#ffb06b', 24);
@@ -485,6 +494,8 @@ export class Effects {
         if (!player) { t.remaining = 0; continue; }
         t.x = player.position.x;
         t.y = player.position.y - t.attachment.offsetY - (t.total - t.remaining) * 25;
+        t.anchorX = player.position.x;
+        t.anchorY = player.position.y;
       } else { t.y -= 25 * dt; t.x += t.vx * dt; }
     }
     this.texts = this.texts.filter((t) => t.remaining > 0);
@@ -529,17 +540,17 @@ export class Effects {
   private onDamage(event: Extract<GameEvent, { type: 'damage_dealt' }>, localPlayerId: string | undefined): void {
     const { position, amount } = event;
     if (event.target === 'boss') {
-      this.damageText(position.x + (this.rng.next() - 0.5) * 34, position.y - 34, amount, 1);
+      this.damageText(position.x + (this.rng.next() - 0.5) * 34, position.y - 34, amount, 1, position);
       this.bossFlash = FEEDBACK.hitFlash;
       this.bossJolt = FEEDBACK.jolt;
       this.burst(position, '#d8a5fa', 6);
     } else if (event.target === 'minion') {
-      this.damageText(position.x + (this.rng.next() - 0.5) * 16, position.y - 20, amount, 0.8);
+      this.damageText(position.x + (this.rng.next() - 0.5) * 16, position.y - 20, amount, 0.8, position);
       if (event.minionId !== undefined) this.minionFlashes.set(event.minionId, FEEDBACK.hitFlash);
       this.burst(position, '#f0d8c0', 3);
     } else {
       const mine = localPlayerId === undefined || event.playerId === undefined || event.playerId === localPlayerId;
-      this.text(position.x, position.y - 22, `−${amount}`, '#ff6f61', mine ? 17 : 12, 0, DAMAGE_TEXT_LIFE);
+      this.text(position.x, position.y - 22, `−${amount}`, '#ff6f61', mine ? 17 : 12, 0, DAMAGE_TEXT_LIFE, position);
       if (mine) {
         this.shake = Math.max(this.shake, 6);
         this.hurtFlash = FEEDBACK.hurtFlash;
@@ -750,7 +761,7 @@ export class Effects {
 
   private particle(x: number, y: number, vx: number, vy: number, color: string, life = 0.45, size = 3, gravity = 0): void {
     if (this.particles.length >= MAX_PARTICLES) return;
-    this.particles.push({ x, y, vx, vy, remaining: life, total: life, color, size, gravity });
+    this.particles.push({ x, y, vx, vy, remaining: life, total: life, color, size, gravity, ax: x, ay: y });
   }
 
   private burst(position: Vec2, color: string, count = 16): void {
@@ -767,12 +778,12 @@ export class Effects {
   }
 
   /** Numero del danno: dimensione e colore dal livello, piccola deriva laterale casuale. `scale` rimpicciolisce (servitori). */
-  private damageText(x: number, y: number, amount: number, scale: number): void {
+  private damageText(x: number, y: number, amount: number, scale: number, anchor?: Vec2): void {
     const tier = damageTier(amount);
-    this.text(x, y, String(amount), tier.color, Math.round(tier.size * scale), (this.rng.next() - 0.5) * 30, DAMAGE_TEXT_LIFE);
+    this.text(x, y, String(amount), tier.color, Math.round(tier.size * scale), (this.rng.next() - 0.5) * 30, DAMAGE_TEXT_LIFE, anchor);
   }
 
-  private text(x: number, y: number, text: string, color: string, size = 13, vx = 0, life = TEXT_LIFE): void {
-    this.texts.push({ x, y, text, color, remaining: life, total: life, size, vx, outline: true });
+  private text(x: number, y: number, text: string, color: string, size = 13, vx = 0, life = TEXT_LIFE, anchor?: Vec2): void {
+    this.texts.push({ x, y, text, color, remaining: life, total: life, size, vx, outline: true, ...(anchor === undefined ? {} : { anchorX: anchor.x, anchorY: anchor.y }) });
   }
 }

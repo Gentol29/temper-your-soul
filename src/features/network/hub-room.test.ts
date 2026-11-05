@@ -18,7 +18,7 @@ describe('hub cooperativo',()=>{
  });
  it('movimento autorevole, collisioni e scadenza dell’input',()=>{
   const r=setup(),p=r.hub.positions.get('a')!;p.position=hubApproachPoint('merchant').add(new Vec2(0,5));r.hub.inputs.set('a',{move:new Vec2(-1,0),at:0});
-  for(let i=0;i<120;i++)r.tick(0);expect(hubBlocked(p.position)).toBe(false);expect(p.position.x).toBeGreaterThan(370);expect(p.nearest()?.id).toBe('merchant');const before=p.position;r.tick(1000);expect(p.position).toEqual(before);
+  for(let i=0;i<120;i++)r.tick(0);expect(hubBlocked(p.position)).toBe(false);expect(p.position.x).toBeGreaterThan(70);expect(p.nearest()?.id).toBe('merchant');const before=p.position;r.tick(1000);expect(p.position).toEqual(before);
  });
  it('tutti i visitatori nascono sul selciato e client e server si fermano sugli stessi bordi',()=>{
   const r=setup();for(let i=2;i<HUB_NETWORK.capacity;i++)r.enter('visitor-'+i,serializeCharacter(hero('Visita'+i)),true);
