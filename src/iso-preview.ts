@@ -30,13 +30,10 @@ import { drawRoomFloor, drawRoomFront, drawRoomLabels, drawRoomPickups, type Roo
 import type { RoomLayer } from './features/presentation/scene-renderer';
 import type { RoomView } from './features/run/encounter';
 import { sceneViewFor } from './features/presentation/iso/scene-view';
-import { HubState } from './features/character/hub-state';
-import { HubIsoRenderer } from './features/presentation/hub-iso-renderer';
 
 const params = new URLSearchParams(location.search);
 const number = (name: string): number | null => (params.has(name) ? Number(params.get(name)) : null);
-const mapId = params.get('map') ?? 'crypt';
-const roomId = mapId === 'hub' ? 'crypt' : mapId;
+const roomId = params.get('map') ?? 'crypt';
 const dungeons = { crypt: CRYPT, swamp: SWAMP, forge: FORGE, glacier: GLACIER } as const;
 const bossMap = roomId in dungeons ? roomId as keyof typeof dungeons : null;
 const template = bossMap !== null ? undefined : roomTemplateById(roomId);
@@ -79,15 +76,6 @@ preloadFonts();
 
 document.querySelector('#info')!.textContent = `${match.arena.name} · ${camera.projection.kind} · ${match.arena.width}x${match.arena.height}`;
 const clock = number('t') ?? 0;
-// L'HUB isometrico (map=hub): la vera piazza con il suo renderer, il personaggio in px, py.
-if (mapId === 'hub') {
-  const hub = new HubState();
-  if (px !== null && py !== null) hub.position = new Vec2(px, py);
-  const renderer = new HubIsoRenderer(canvas);
-  const loop = (time: number): void => { renderer.draw(hub, character.appearance(), clock + time / 1000); requestAnimationFrame(loop); };
-  requestAnimationFrame(loop);
-  throw new Error('anteprima HUB');
-}
 // Una stanza finta con due uscite aperte e un premio, per vedere porte, soglie, cartelli e ingresso.
 const room: RoomView | null = arena === undefined ? null : {
   kind: 'combat', reward: 'none', cleared: true, wave: 1, waves: 1, countdown: null, trialFailed: false,

@@ -14,7 +14,7 @@ import { hubOffer } from './hub-offer';
 import { forgeWindow } from './forge-window';
 import { storageWindow } from './storage-window';
 import { STARTER_SETS } from '../character/creation';
-import { HubIsoRenderer } from '../presentation/hub-iso-renderer';
+import { HubRenderer } from '../presentation/hub-renderer';
 import { hideItemTooltip } from './item-slot';
 import { playerProfile } from './player-profile';
 import { HubLabels } from './hub-labels';
@@ -22,7 +22,7 @@ import { snapHubLabel } from '../presentation/hub-projection';
 export class HubScreen {
   readonly root=el('section','hub-screen hidden');
   private readonly canvas=el('canvas','hub-world');
-  private readonly renderer:HubIsoRenderer;
+  private readonly renderer:HubRenderer;
   private readonly labels=new HubLabels();
   private time=0;
   private arrivalElapsed=Infinity;
@@ -40,7 +40,7 @@ export class HubScreen {
   get dialogOpen():boolean{return this.panel!==null;}
   constructor(private readonly handlers:{portal:()=>void;save:()=>void;inventory:()=>void;menu:()=>void}) {
     this.canvas.setAttribute('aria-label','Piazza del rifugio: WASD per muoverti, E vicino a NPC e strutture');
-    this.canvas.tabIndex=0;this.renderer=new HubIsoRenderer(this.canvas);
+    this.canvas.tabIndex=0;this.renderer=new HubRenderer(this.canvas);
     this.prompt.className='hub-interaction-tooltip hidden';this.prompt.setAttribute('role','status');
     const button=(label:string,action:()=>void)=>{const b=el('button','relic-button secondary',label);b.type='button';b.onclick=action;return b;};
     const menu=button('Menu principale',handlers.menu);menu.classList.add('hub-menu-button');
@@ -66,7 +66,7 @@ export class HubScreen {
     const target=this.interactionTarget();this.prompt.classList.toggle('hidden',!target||this.inputLocked);
     if(target){
       const anchor='width' in target?hubInteractionPoint(target,this.state.position):new Vec2(target.x,target.y);
-      const point=this.renderer.screenPoint(anchor.x,anchor.y,28);
+      const point=this.renderer.screenPoint(anchor.x+('width' in target?target.width/2:18),anchor.y-28);
       this.prompt.textContent=`E · ${target.name}`;
       this.prompt.style.left=snapHubLabel(Math.max(8,Math.min(window.innerWidth-210,point.x+12)),window.devicePixelRatio)+'px';
       this.prompt.style.top=snapHubLabel(Math.max(12,Math.min(window.innerHeight-80,point.y)),window.devicePixelRatio)+'px';

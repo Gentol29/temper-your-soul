@@ -755,7 +755,7 @@ Estensione dello stesso 5 novembre: Palude, Fucina e Ghiacciaio sono registrati 
 
 Punti aperti: se tenere le fughe a 64 o cambiarle; zoom della vista (in orizzontale si vede circa il 29% di mondo in meno, in verticale il 41% in più); diagonali dei tasti esatte sullo schermo o allineate ai muri; minimappa e panoramica audio ancora dall'alto; gli altri dungeon.
 
-### HUB isometrico · 5 novembre 2026
+### HUB isometrico · 5 novembre 2026 (annullato)
 
-Richiesta dell'utente: l'HUB come i dungeon, con gli edifici generati in locale; il menu resta l'illustrazione frontale per ora. Valori provvisori: piazza 640 × 560 unità con muro 24 e margine 40 (`HUB_ISO_MAP`), edifici e stazioni in `HUB_ISO_BUILDINGS` (accesso 34 unità davanti al fronte), edifici a scala ×2 (`HUB_ISO_BUILDING_SCALE`), tappeto largo 48, buio `#2c3048` (`HUB_ISO_LOOK`). WASD relativi allo schermo come nei dungeon. Punti aperti: scala e scelta dei disegni degli edifici, un portale animato al posto della sola luce, il menu in isometria.
+Era stato proposto l'HUB come piazza isometrica con edifici generati in locale; dopo tre revisioni l'utente ha deciso di annullarlo. Decisione: l'HUB resta la schermata principale con l'artwork modulare del cortile (vista frontale, WASD come prima, mappa e collisioni di `hub-map.ts`). L'isometria vale solo per i dungeon. Protocollo 19 per la geometria dell'HUB tornata quella precedente.
 

@@ -14,7 +14,7 @@ import { NetworkView } from './features/presentation/network-view';
 import { PerformancePanel } from './features/ui/performance-panel';
 import { SeededRng } from './core/rng';
 import { Vec2 } from './core/vec2';
-import { ISOMETRIC, screenDirectionToWorld } from './core/view-projection';
+import { screenDirectionToWorld } from './core/view-projection';
 import { projectionFor } from './features/presentation/iso/view-mode';
 import { sceneViewFor } from './features/presentation/iso/scene-view';
 import { AudioPlayer } from './features/audio/audio-player';
@@ -1057,7 +1057,7 @@ export class Game {
   private step(): void {
     const { match } = this;
     if(this.screen==='hub'){
-      const keys=this.input.getVector('move_left','move_right','move_up','move_down'),move=screenDirectionToWorld(ISOMETRIC,keys.x,keys.y);this.hub.step(STEP,move);
+      const move=this.input.getVector('move_left','move_right','move_up','move_down');this.hub.step(STEP,move);
       if(this.party.client.state&&performance.now()-this.lastHubInput>NETWORK_HUB_INPUT){this.lastHubInput=performance.now();this.party.client.send({type:'hub_input',move:this.hub.inputLocked?Vec2.ZERO:move});}
     }
     if (this.screen === 'playing' || this.screen === 'ended') {

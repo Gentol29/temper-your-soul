@@ -159,6 +159,15 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.13.0', date: '2026-11-05',
+    changes: [
+      'HUB isometrico annullato: il rifugio torna la schermata principale con l’artwork del cortile come mappa giocabile, come prima della v0.12.00. Rimossi piazza, edifici generati e script dell’HUB isometrico.',
+      'I dungeon restano in isometria; l’anteprima /iso-preview.html non mostra più l’HUB.',
+      'Protocollo cooperativo 18 → 19 (geometria dell’HUB tornata quella precedente): riavviare il server e ricaricare tutte le schede. Simulazione, dungeon e salvataggi invariati.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.12.0', date: '2026-11-05',
     changes: [
       'Tutti e quattro i dungeon (arene dei boss e stanze della discesa) si vedono in isometria 2:1, alla Hades. Le texture sono gli stessi pixel di prima disposti a rombo, senza sfumature; nella Cripta lastre visibili da 64 unità.',

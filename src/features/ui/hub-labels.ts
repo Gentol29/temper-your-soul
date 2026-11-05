@@ -1,7 +1,7 @@
 import './hub-labels.css';
-import { HUB_STATIONS } from '../character/hub-state';
+import { HUB_STATIONS } from '../character/hub-map';
 import type { HubPlayer } from '../network/hub-protocol';
-import type { HubIsoRenderer } from '../presentation/hub-iso-renderer';
+import type { HubRenderer } from '../presentation/hub-renderer';
 import { snapHubLabel } from '../presentation/hub-projection';
 import { el } from './dom';
 
@@ -17,12 +17,12 @@ export class HubLabels {
     void document.fonts.ready.then(() => { for (const node of this.labels.values()) node.key = ''; });
   }
 
-  draw(renderer: HubIsoRenderer, peers: readonly HubPlayer[], visible: boolean): void {
+  draw(renderer: HubRenderer, peers: readonly HubPlayer[], visible: boolean): void {
     this.root.classList.toggle('hidden', !visible);
     if (!visible) return;
     const entries = [
-      ...HUB_STATIONS.map(s => ({ id: s.id, text: s.name, x: s.x, y: s.y, lift: 42 })),
-      ...peers.map(p => ({ id: `peer:${p.id}`, text: p.name, x: p.x, y: p.y, lift: 54 })),
+      ...HUB_STATIONS.map(s => ({ id: s.id, text: s.name, x: s.x, y: s.y - 42 })),
+      ...peers.map(p => ({ id: `peer:${p.id}`, text: p.name, x: p.x, y: p.y - 46 })),
     ];
     const live = new Set(entries.map(entry => entry.id));
     for (const [id, node] of this.labels) if (!live.has(id)) { node.element.remove(); this.labels.delete(id); }
@@ -38,7 +38,7 @@ export class HubLabels {
         node.element.textContent = entry.text; node.element.style.fontSize = `${fontSize}px`; node.key = key;
         node.width = node.element.offsetWidth; node.height = node.element.offsetHeight;
       }
-      const point = renderer.screenPoint(entry.x, entry.y, entry.lift);
+      const point = renderer.screenPoint(entry.x, entry.y);
       node.element.style.left = `${snapHubLabel(point.x - node.width / 2, ratio)}px`;
       node.element.style.top = `${snapHubLabel(point.y - node.height, ratio)}px`;
     }
