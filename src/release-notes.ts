@@ -159,6 +159,20 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.14.0', date: '2026-11-05',
+    changes: [
+      'Nuovo aspetto per l’Ossario della Cripta: uno scheletro nero carbonizzato con braci nel petto, nelle ginocchia, nella lama e nello scudo, teschio di cenere calda e contorno rosso brace dove brilla. È un modello 3D reso con Blender (camera isometrica 2:1, toni a gradini, nessuna sfumatura), non una grafica generata con l’IA. Sprite di 26×38 px.',
+      'L’Ossario guarda dove va, in 8 direzioni sullo schermo (S, SE, E, NE, N, NW, W, SW), con quattro fotogrammi di camminata per direzione. La direzione si sceglie dall’angolo del movimento come lo vede il giocatore, con un margine ai confini per evitare il tremolio. Gli altri mob restano come erano; con ?mob=classici si rivede la grafica di prima.',
+      'L’Ossario compare in tutte e tre le vene della Cripta (Navata, Catacombe, Cantoria), come folla con una voce condivisa del bestiario (vita 22, costo 1): prima c’era solo nella Navata. Nelle Catacombe e nella Cantoria la folla ha pochi tipi, quindi pesa di più (circa 13–20 per stanza contro circa 12 nella Navata, misura su stanze simulate). Valori provvisori, da tarare giocando. L’arena del Guardiano non cambia.',
+      'Nuovi strumenti in tools/arte/blender: rendono un personaggio 3D in 8 direzioni isometriche a 64×64 (posa ferma, camminata, attacco, colpo subito, morte) con palette e contorno Hi-bit, e ne esportano la camminata come sprite di mob. Il gioco usa solo la camminata dell’Ossario: le altre animazioni non sono ancora collegate. Ambiente ComfyUI locale facoltativo (installa-comfyui.ps1, genera_isometrico.py): scarica i modelli solo su richiesta e li tiene fuori dal repository.',
+      'Anteprima di sviluppo: iso-preview.html?minions=n fa comparire n Ossari e walk=1 li fa girare in cerchio per vederli voltarsi (minions era documentato ma non implementato). Il test degli sprite dei mob riconosce i contorni colorati e le 8 serie.',
+      'Solo aspetto e composizione delle ondate della discesa: vita, danni e comportamento dell’Ossario, collisioni, rete e salvataggi non cambiano. Prova giocata ancora da fare: camminata in movimento, voltarsi senza tremare, quantità nelle Catacombe e nella Cantoria, leggibilità del corpo nero sui fondi della Cripta.',
+    ],
+    balanceChanges: [
+      { label: 'Ossario · vene della Cripta in cui compare', before: 1, after: 3, unit: 'su 3' },
+    ],
+  },
+  {
     version: '0.13.2', date: '2026-11-05',
     changes: [
       'L’Ossario (lo scheletro nero infuocato) compare ora in tutte e tre le vene della Cripta: oltre alla Navata anche nelle Catacombe e nella Cantoria, come folla. Prima c’era solo nella Navata e nelle altre vene non si vedeva mai.',
