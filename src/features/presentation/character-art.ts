@@ -48,7 +48,9 @@ export function characterPixels(appearance: CharacterAppearance, resolution: Res
   const direction=resolution==='game'&&animation.state==='walk'?(animation.walkDirection??1):1;
   const frame = ((Math.floor(animation.frame)*direction % frames) + frames) % frames;
   const slots = ['armor','boots','secondary_hand','primary_hand'] as const;
-  const key = JSON.stringify([appearance.body,appearance.characterClass,resolution,animation.state,animation.attackSlot,frame,slots.map(slot=> {
+  // Solo il Mago ha piu' viste: per le altre classi non moltiplicano la cache.
+  const view=appearance.characterClass==='mage'?animation.view:undefined;
+  const key = JSON.stringify([appearance.body,appearance.characterClass,resolution,animation.state,animation.attackSlot,frame,view,slots.map(slot=> {
     const item=appearance.equipment[slot];return item ? [item.familyId,item.rarity] : null;
   })]);
   const cached = cache.get(key); if(cached) return cached;

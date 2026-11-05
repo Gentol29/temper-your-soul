@@ -18,12 +18,12 @@ export const CRYPT_ARENA: ArenaDefinition = {
   projectileMargin: 24,
   // Ostacoli scenografici (teschi, fontane, rovine, ossa): variante e aspetto scelti dal tema in base alla posizione.
   pillars: [
-    { position: new Vec2(1100, 999), radius: 64 },
-    { position: new Vec2(2100, 1003), radius: 64 },
-    { position: new Vec2(1100, 1600), radius: 64 },
-    { position: new Vec2(2100, 1601), radius: 64 },
-    { position: new Vec2(1600, 1800), radius: 64 },
-    { position: new Vec2(699, 1299), radius: 64 },
+    { position: new Vec2(1100, 999), radius: 44 },
+    { position: new Vec2(2100, 1003), radius: 44 },
+    { position: new Vec2(1100, 1600), radius: 44 },
+    { position: new Vec2(2100, 1601), radius: 44 },
+    { position: new Vec2(1600, 1800), radius: 44 },
+    { position: new Vec2(699, 1299), radius: 44 },
   ],
 };
 

@@ -121,10 +121,12 @@ export function renderIsometricScene(ctx: CanvasRenderingContext2D, scene: Scene
     const feet = minionFeet(minion);
     const size = minionSize(minion);
     const at = view.point(minion.position.x, minion.position.y);
+    // Il disegno puo' scendere sotto il punto a terra (una coda verso la camera): l'ingombro lo comprende.
+    const below = Math.max(0, Math.ceil(size.height / 2 - feet));
     figures.push({
       x: minion.position.x,
       y: minion.position.y,
-      box: figureBox(at.x, at.y, size.width + 8, size.height + 64),
+      box: figureBox(at.x, at.y + below, size.width + 8, size.height + 64 + below),
       draw: () => view.at(ctx, minion.position.x, minion.position.y, feet, () => drawMinion(ctx, minion, clock, effects.minionFlashes.get(minion.id) ?? 0, minion.prey || minion.id === scene.preyId, theme.silhouette, view)),
     });
   }

@@ -7,7 +7,10 @@ import { drawBossIndicator } from '../draw-effects';
 import { Effects } from '../effects';
 import { drawLight, LightMap } from '../lights';
 import { ISO_BODY_LIFT, ISO_VIEW, TOP_DOWN_VIEW } from './scene-view';
-import { pillarPieceFor, sconceAnchor } from './iso-scenery';
+import { SCENERY_ATLASES } from '../themes/scenery-atlas';
+import { CRYPT_ARENA } from '../../dungeons/crypt';
+import { ROOM_TEMPLATES } from '../../run/room-templates';
+import { hasPlinth, ISO_SCENERY, pillarPieceFor, sconceAnchor } from './iso-scenery';
 import { wallFloorRow } from './iso-shear';
 
 /** Un contesto finto che registra i nomi delle chiamate e tiene una traslazione (per getTransform). */
@@ -95,6 +98,30 @@ describe('scenografia isometrica', () => {
     }
     // Basamento piu' stretto di ogni pezzo: il piu' piccolo.
     expect(pillarPieceFor(pieces, 40, 0.5)!.w).toBe(53);
+  });
+
+  it('nella Cripta gli oggetti poggiano senza basamento, con il piede dentro lo sprite', () => {
+    expect(hasPlinth('crypt')).toBe(false);
+    for (const theme of ['swamp', 'forge', 'glacier'] as const) expect(hasPlinth(theme), theme).toBe(true);
+    const pieces = ['pillarS', 'pillarM', 'pillarL'].flatMap((role) => SCENERY_ATLASES.crypt.pieces[role] ?? []);
+    expect(pieces.length).toBeGreaterThan(0);
+    for (const piece of pieces) {
+      expect(piece.foot, JSON.stringify(piece)).toBeDefined();
+      expect(piece.foot!.x >= 0 && piece.foot!.x < piece.w && piece.foot!.y >= 0 && piece.foot!.y < piece.h, JSON.stringify(piece)).toBe(true);
+    }
+  });
+
+  it('nella Cripta ogni ostacolo ha oggetti larghi quanto il suo ingombro di gioco', () => {
+    const pieces = ['pillarS', 'pillarM', 'pillarL'].flatMap((role) => SCENERY_ATLASES.crypt.pieces[role] ?? []);
+    const arenas = [CRYPT_ARENA, ...(ROOM_TEMPLATES.crypt ?? [])];
+    const radii = new Set(arenas.flatMap((arena) => arena.pillars.map((pillar) => pillar.radius)));
+    expect(radii.size).toBeGreaterThan(0);
+    for (const radius of radii) {
+      const width = 2 * Math.SQRT2 * radius;
+      const fitting = pieces.filter((piece) => piece.w <= width * ISO_SCENERY.footprintMax && piece.w >= width * ISO_SCENERY.footprintMin);
+      expect(fitting.length, `raggio ${radius}`).toBeGreaterThan(0);
+      for (const h of [0, 0.5, 0.99]) expect(fitting).toContain(pillarPieceFor(pieces, width, h, ISO_SCENERY.footprintMax, ISO_SCENERY.footprintMin));
+    }
   });
 
   it('le applique stanno sul muro di fondo, sopra la base', () => {

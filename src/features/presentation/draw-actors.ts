@@ -6,6 +6,8 @@ import type { Boss } from '../boss/boss';
 import type { Minion } from '../minions/minion';
 import { bossFx } from './boss-fx';
 import { minionArt } from './minion-art';
+import { minionFootOffset } from './minion-art/minion-art';
+import { mageViewFromAim } from './mage-sprite';
 import { directionSeries } from './minion-art/minion-directions';
 import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
@@ -60,15 +62,17 @@ export function drawPlayer(
   const cadence=skill?skill.cooldown/(slotIndex===0?1+player.buffValue('attackSpeed'):1):undefined;
   const castFrame=playerCastFrame(poses.playerCast,cadence);
   // Verso e passo seguono le direzioni come appaiono sullo schermo (in isometria il mondo e' ruotato).
-  const facing = view.delta(player.aim.x - player.position.x, player.aim.y - player.position.y).x < 0 ? -1 : 1;
+  const aimOnScreen = view.delta(player.aim.x - player.position.x, player.aim.y - player.position.y);
+  const facing = aimOnScreen.x < 0 ? -1 : 1;
+  const aimView = mageViewFromAim(aimOnScreen.x, aimOnScreen.y);
   const previous=previousPositions.get(player),dx=previous?view.delta(player.position.x-previous.x,player.position.y-previous.y).x:0;
   const walkDirection:1|-1=Math.abs(dx)>.01?(dx*facing<0?-1:1):previous?.direction??1;
   previousPositions.set(player,{x:player.position.x,y:player.position.y,direction:walkDirection});
   const count=SHADOW_ANIMATION.frames;
   const motion = castFrame!==null
-    ? {state: 'cast' as const, attackSlot, frame: castFrame}
-    : player.moving ? {state:'walk' as const,frame:Math.floor(poses.walkPhase)%count,walkDirection}
-    : {state:'idle' as const,frame:Math.floor(time*SHADOW_ANIMATION.fps.idle)%count};
+    ? {state: 'cast' as const, attackSlot, frame: castFrame, view: aimView}
+    : player.moving ? {state:'walk' as const,frame:Math.floor(poses.walkPhase)%count,walkDirection, view: aimView}
+    : {state:'idle' as const,frame:Math.floor(time*SHADOW_ANIMATION.fps.idle)%count, view: aimView};
   ctx.save();
   ctx.translate(Math.round(player.position.x), Math.round(player.position.y));
   ctx.scale(facing, 1);
@@ -394,6 +398,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
   const art = minionArt(minion.definition.visual);
   const { x, y } = minion.position;
   const half = (art.frames[0]!.length * art.scale) / 2;
+  const foot = minionFootOffset(art);
   if (minion.state === 'burrowed' || minion.state === 'emerging') {
     // Un cumulo di terra che si muove; quando sta per uscire trema.
     const shake = minion.state === 'emerging' ? Math.sin(time * 60) * 2 : 0;
@@ -407,8 +412,8 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     return;
   }
   const lift = minion.state === 'airborne' ? Math.sin(Math.max(0, Math.min(1, 1 - minion.stateTimer / Math.max(0.01, minion.definition.leap?.flight ?? 0.5))) * Math.PI) * 60 : 0;
-  if (view.iso) drawShadow(ctx, x, y + half - 2, minion.hitRadius * Math.SQRT2 * (lift > 0 ? 0.7 : 1), minion.hitRadius * Math.SQRT1_2 * (lift > 0 ? 0.7 : 1), '#070c1670');
-  else drawShadow(ctx, x, y + half - 2, minion.hitRadius * (lift > 0 ? 0.7 : 1), 3, '#070c1670');
+  if (view.iso) drawShadow(ctx, x, y + foot, minion.hitRadius * Math.SQRT2 * (lift > 0 ? 0.7 : 1), minion.hitRadius * Math.SQRT1_2 * (lift > 0 ? 0.7 : 1), '#070c1670');
+  else drawShadow(ctx, x, y + foot, minion.hitRadius * (lift > 0 ? 0.7 : 1), 3, '#070c1670');
   if (minion.elite !== null || prey) {
     const color = prey ? '#ffd889' : ELITE_COLORS[minion.elite!.id] ?? '#ffd889';
     ctx.save();
@@ -416,7 +421,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     ctx.globalAlpha = 0.55 + 0.25 * Math.sin(time * 5 + minion.id);
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(x, y + half - 2, minion.hitRadius + 6, (minion.hitRadius + 6) * 0.45, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + foot, minion.hitRadius + 6, (minion.hitRadius + 6) * 0.45, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -453,7 +458,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
   if (minion.state === 'reviving') {
     // Le ossa a terra, schiacciate: tra poco si rialzano.
     ctx.globalAlpha = 0.6;
-    ctx.drawImage(raster, left, Math.round(y + half - raster.height * 0.35), raster.width, Math.round(raster.height * 0.35));
+    ctx.drawImage(raster, left, Math.round(y + foot + 2 - raster.height * 0.35), raster.width, Math.round(raster.height * 0.35));
     ctx.restore();
     return;
   }

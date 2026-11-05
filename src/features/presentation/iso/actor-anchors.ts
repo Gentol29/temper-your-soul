@@ -2,6 +2,7 @@ import type { Boss } from '../../boss/boss';
 import type { Minion } from '../../minions/minion';
 import { bossArt } from '../boss-art';
 import { minionArt } from '../minion-art';
+import { minionFootOffset } from '../minion-art/minion-art';
 import type { ViewBox } from './occluders';
 
 /*
@@ -18,10 +19,9 @@ export function bossFeet(boss: Boss): number {
   return Math.round(bossArt(boss.definition.art).shadow.offsetY);
 }
 
-/** I piedi di un servitore: la sua ombra, a meta' altezza del disegno meno due pixel. */
+/** I piedi di un servitore: la sua ombra, sul punto a terra del disegno. */
 export function minionFeet(minion: Minion): number {
-  const art = minionArt(minion.definition.visual);
-  return Math.round((art.frames[0]!.length * art.scale) / 2 - 2);
+  return minionFootOffset(minionArt(minion.definition.visual));
 }
 
 /** Misure del disegno di un servitore (pixel), per l'ingombro nella vista. */
