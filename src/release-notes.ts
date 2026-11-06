@@ -159,6 +159,13 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.16.5', date: '2026-11-06',
+    changes: [
+      'Solo documentazione: la correzione dello zaino del rifugio della v0.16.04 è stata provata a mano dall’utente (doppio clic, clic destro e «Rimuovi» aggiornano subito slot, ritratto e statistiche) e il difetto è segnato come risolto in docs/bugs.md. Nessuna modifica al gioco.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.16.4', date: '2026-11-06',
     changes: [
       'Zaino del rifugio: equipaggiando un oggetto (doppio clic o clic destro) o rimuovendolo dalla finestra «Personaggio e zaino», slot, ritratto e statistiche si aggiornano subito, senza chiudere e riaprire la finestra. Prima l’oggetto veniva equipaggiato e salvato ma la finestra non si ridisegnava.',
