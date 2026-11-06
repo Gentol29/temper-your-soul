@@ -1,5 +1,17 @@
 # Bug e problemi rilevati
 
+## Zaino del rifugio: l'equipaggiamento non si vede finché non si riapre (corretto, 6 novembre 2026, non pubblicato)
+
+Segnalato dall'utente: equipaggiando un oggetto dalla finestra «Personaggio e zaino» del rifugio (doppio clic o clic
+destro) la finestra restava uguale; slot, ritratto e statistiche si aggiornavano solo chiudendola e riaprendola.
+Riprodotto nel server di sviluppo: l'oggetto veniva equipaggiato e salvato, ma non ridisegnato. Causa: dopo la modifica
+la finestra si ridisegnava richiamando `HubScreen.openProfile()`, che esce subito se `inputLocked` è vero, e
+`inputLocked` è vero proprio perché la finestra dello zaino è aperta. Correzione in `hub-screen.ts`: il ridisegno usa
+`showProfile()`, senza i controlli di apertura. Verificato nel browser con uno script (slot, ritratto e Difesa 46 → 40
+aggiornati senza riaprire); nessun test automatico, perché l'HUB in DOM non è coperto dai test. Ritorna alla prima pagina
+dello zaino, come prima della correzione quando si riapriva. Prova giocata dell'utente ancora da fare. Tocca l'area
+Inventario in carico a simonragaz87-sudo: procedere autorizzato dall'utente, da segnalare nella pull request.
+
 ## Calo di FPS dopo l'ultimo mostro di un dungeon (risolto in v0.16.00, 5 novembre 2026)
 
 Segnalato dall'utente: dopo l'ultima uccisione di una stanza gli FPS scendevano a circa 30. Riprodotto nel gioco vero

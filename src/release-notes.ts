@@ -159,6 +159,14 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.16.4', date: '2026-11-06',
+    changes: [
+      'Zaino del rifugio: equipaggiando un oggetto (doppio clic o clic destro) o rimuovendolo dalla finestra «Personaggio e zaino», slot, ritratto e statistiche si aggiornano subito, senza chiudere e riaprire la finestra. Prima l’oggetto veniva equipaggiato e salvato ma la finestra non si ridisegnava.',
+      'Salvataggi, protocollo e regole invariati. Tocca l’area Inventario in carico a simonragaz87-sudo, con l’autorizzazione dell’utente (docs/bugs.md). Prova giocata ancora da fare.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.16.3', date: '2026-11-06',
     changes: [
       'Guerriero e Arciere resi in 3D con Blender come il Mago (nessuna IA), maschile e femminile: otto direzioni scelte dalla mira (cinque rese e tre specchiate), riposo, camminata e le quattro azioni, anche per gli alleati in cooperativa. Stessa altezza del Mago e piedi sulla stessa riga. Guerriero a viso scoperto con piastra, maglia, spallacci dorati, tabarro cremisi, mantello corto scuro e barba; Arciere in cuoio con cappuccio abbassato, mantellina, sciarpa cremisi, testa ovale con capelli ai lati e barba corta. Il corpo femminile è più esile.',
