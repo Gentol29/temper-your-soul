@@ -7,7 +7,7 @@ import type { Minion } from '../minions/minion';
 import { bossFx } from './boss-fx';
 import { minionArt } from './minion-art';
 import { minionFootOffset } from './minion-art/minion-art';
-import { mageViewFromAim } from './mage-sprite';
+import { spriteViewFromAim } from './sprite-view';
 import { directionSeries } from './minion-art/minion-directions';
 import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
@@ -64,7 +64,8 @@ export function drawPlayer(
   // Verso e passo seguono le direzioni come appaiono sullo schermo (in isometria il mondo e' ruotato).
   const aimOnScreen = view.delta(player.aim.x - player.position.x, player.aim.y - player.position.y);
   const facing = aimOnScreen.x < 0 ? -1 : 1;
-  const aimView = mageViewFromAim(aimOnScreen.x, aimOnScreen.y);
+  // Tutte le classi sono rese in otto direzioni: la mira sceglie la vista.
+  const aimView = spriteViewFromAim(aimOnScreen.x, aimOnScreen.y);
   const previous=previousPositions.get(player),dx=previous?view.delta(player.position.x-previous.x,player.position.y-previous.y).x:0;
   const walkDirection:1|-1=Math.abs(dx)>.01?(dx*facing<0?-1:1):previous?.direction??1;
   previousPositions.set(player,{x:player.position.x,y:player.position.y,direction:walkDirection});

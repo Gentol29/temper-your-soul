@@ -76,8 +76,10 @@ describe('Mago reso in 3D', () => {
     }
   });
 
-  it('le altre classi non cambiano con la vista', () => {
-    const warrior: CharacterAppearance = { body: 'male', characterClass: 'warrior', equipment: {} };
-    expect(characterPixels(warrior, 'game', 0, false, { state: 'idle', frame: 0, view: 'N' })).toBe(characterPixels(warrior, 'game', 0, false, { state: 'idle', frame: 0 }));
+  it('ogni vista ha la sua voce nella cache, anche per le altre classi', () => {
+    for (const characterClass of ['mage', 'warrior', 'archer'] as const) {
+      const appearance: CharacterAppearance = { body: 'male', characterClass, equipment: {} };
+      expect(characterPixels(appearance, 'game', 0, false, { state: 'idle', frame: 0, view: 'N' }), characterClass).not.toBe(characterPixels(appearance, 'game', 0, false, { state: 'idle', frame: 0, view: 'S' }));
+    }
   });
 });
