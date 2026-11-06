@@ -159,6 +159,16 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version: '0.16.3', date: '2026-11-06',
+    changes: [
+      'Guerriero e Arciere resi in 3D con Blender come il Mago (nessuna IA), maschile e femminile: otto direzioni scelte dalla mira (cinque rese e tre specchiate), riposo, camminata e le quattro azioni, anche per gli alleati in cooperativa. Stessa altezza del Mago e piedi sulla stessa riga. Guerriero a viso scoperto con piastra, maglia, spallacci dorati, tabarro cremisi, mantello corto scuro e barba; Arciere in cuoio con cappuccio abbassato, mantellina, sciarpa cremisi, testa ovale con capelli ai lati e barba corta. Il corpo femminile è più esile.',
+      'Modulari come il Mago: armatura e stivali ricolorano il corpo senza cambiarne la sagoma; armi e scudi sono i disegni canonici agganciati alle mani del modello. L’arco si tende con corda e freccia fra le due mani, la faretra sta sulla schiena (dietro o davanti secondo la vista), le armi lunghe restano dentro il fotogramma e a riposo o in marcia non coprono mai il viso. Le armi non cambiano con la vista: nelle viste frontali l’arco punta comunque a destra.',
+      'Rifugio in otto direzioni: il personaggio guarda dove si muove, anche in diagonale, e tiene l’ultima direzione da fermo; i compagni la prendono dal loro spostamento sullo schermo, senza cambiare il protocollo cooperativo.',
+      'Peso: dati di Guerriero e Arciere circa 380 KB ciascuno in forma di matrici. Il corpo C disegnato resta nel codice ma non è più usato in gioco. Salvataggi, protocollo, hitbox e regole invariati. Autorizzazione dell’area riferita dall’utente, da confermare (docs/ripartizione-compiti.md). Prova giocata ancora da fare: tutte le direzioni in partita e nel rifugio.',
+    ],
+    balanceChanges: [],
+  },
+  {
     version: '0.16.2', date: '2026-11-05',
     changes: [
       'Nuovo luogotenente della Palude: la Regina serpente prende il posto del Rospo re a metà discesa. Modello 3D reso con Blender: foglio direzionale 128 × 128 px con 8 direzioni e 6 fotogrammi di ondeggiamento, respiro e torsione calcolati sulla mesh (senza scheletro), palette scura di 32 colori e contorno di 1 px. Guarda il giocatore come lo vede lo schermo, con isteresi ai confini fra due direzioni; in furia anima più in fretta, da rallentato a metà.',

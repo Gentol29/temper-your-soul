@@ -5,25 +5,20 @@ import { MAGE_FRAMES, MAGE_OUTLINE, MAGE_SYMBOLS, MAGE_VOID, type MageMaterial }
 import { PixelPainter } from './pixel-painter';
 import { SHADOW_EQUIPMENT, SHADOW_GRIP, drawShadowHeld, shadowTrim, type ShadowMaterial } from './shadow-equipment';
 import { SHADOW_ANIMATION, shadowMotionForSlot } from './shadow-motion';
+import { SPRITE_VIEWS, spriteViewFromAim, type SpriteView } from './sprite-view';
 
 /*
  * Il Mago reso in 3D (`mage-sprite-data.ts`). Ogni pixel ricorda materiale e tono: armatura e stivali sono rampe di colore, le
  * armi sono i disegni canonici di `shadow-equipment.ts` agganciati alle mani del modello. Solo aspetto.
  */
 
-/** Le viste rese; le altre tre sono le stesse specchiate, come il resto della figura quando si mira a sinistra. */
-export const MAGE_VIEWS = ['S', 'SE', 'E', 'NE', 'N'] as const;
-export type MageView = (typeof MAGE_VIEWS)[number];
+/** Le viste rese; le altre tre sono le stesse specchiate (vedi `sprite-view.ts`). */
+export const MAGE_VIEWS = SPRITE_VIEWS;
+export type MageView = SpriteView;
 const DEFAULT_VIEW: MageView = 'SE';
 
-/** La vista da mostrare per una mira sullo schermo (dx, dy): la figura si specchia gia' per il segno di dx. */
-export function mageViewFromAim(dx: number, dy: number): MageView {
-  const degrees = (Math.atan2(dy, Math.abs(dx)) * 180) / Math.PI;
-  if (degrees > 67.5) return 'S';
-  if (degrees > 22.5) return 'SE';
-  if (degrees > -22.5) return 'E';
-  return degrees > -67.5 ? 'NE' : 'N';
-}
+/** La vista da mostrare per una mira sullo schermo (dx, dy). */
+export const mageViewFromAim = spriteViewFromAim;
 
 /** Quanti fotogrammi ha ogni animazione: i 12 del gioco si distribuiscono su questi. */
 const MAGE_CLIP_FRAMES = { idle: 4, walk: 6, attack: 6 } as const;

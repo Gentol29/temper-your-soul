@@ -3,6 +3,8 @@ import { ITEM_CLASSES } from '../items/item-classes';
 import type { CharacterPixels } from './character-art';
 import type { CharacterMotion } from './adventurer-body';
 import { magePixels } from './mage-sprite';
+import { heroPixels } from './hero-sprite';
+import { ARCHER_SPEC, WARRIOR_SPEC } from './hero-specs';
 import { PixelPainter } from './pixel-painter';
 import { SHADOW_ANIMATION, shadowMotionForSlot, torsoPoint } from './shadow-motion';
 import { SHADOW_EQUIPMENT, SHADOW_GRIP, drawShadowHeld, drawShadowArmor, drawShadowBoot, drawShadowCape, shadowTrim } from './shadow-equipment';
@@ -12,8 +14,10 @@ const c={armor:'#302d30',light:'#51484b',shade:'#201c24',cloth:'#3d2932',clothLi
 /** Corpo C scelto dall'utente: strati articolati; nessun oggetto fittizio quando uno slot è vuoto. */
 export function shadowCharacterPixels(appearance:CharacterAppearance,animation:CharacterMotion):CharacterPixels {
   const kind=appearance.characterClass??ITEM_CLASSES[appearance.equipment.primary_hand?.familyId??'']??ITEM_CLASSES[appearance.equipment.armor?.familyId??'']??'warrior';
-  // Il Mago e' reso in 3D: stessi agganci, stessa modularita', un compositore proprio.
+  // Tutte le classi sono rese in 3D: stessi agganci, stessa modularita'; il Mago ha un compositore proprio.
   if(kind==='mage')return magePixels(appearance,animation);
+  if(kind==='warrior')return heroPixels(WARRIOR_SPEC,appearance,animation);
+  if(kind==='archer')return heroPixels(ARCHER_SPEC,appearance,animation);
   const f=animation.frame,female=appearance.body==='female',pose=animation.state==='cast'?'attack':animation.state;
   const motion=shadowMotionForSlot(kind,f,pose,animation.attackSlot);
   const lookup=(slot:keyof CharacterAppearance['equipment'])=>{const item=appearance.equipment[slot],art=item?SHADOW_EQUIPMENT[item.familyId]:undefined;return art?.slot===slot?art:undefined;};

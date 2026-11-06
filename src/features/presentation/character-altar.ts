@@ -111,7 +111,7 @@ export class CharacterAltar {
     c.globalCompositeOperation = 'source-over';
 
     for (const [width, y] of [[14, 13], [24, 14], [14, 15]] as const) rect(c, INK, HERO.x - width / 2, HERO.y + y, width, 1);
-    drawGameCharacter(c, this.appearance, HERO.x, HERO.y, t, false, 1);
+    drawGameCharacter(c, this.appearance, HERO.x, HERO.y, t, false);
     this.drawEmbers(c, t, flash);
     if (flash > 0) {
       // Il lampo: una colonna di luce che sale dai gradini e si spegne a fasce.
