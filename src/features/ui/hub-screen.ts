@@ -102,7 +102,9 @@ export class HubScreen {
   private dialog(title:string,compact=false):HTMLElement {
     this.closeDialog();const veil=el('div','hub-dialog'),card=el('div','hub-dialog-card menu-card');if(compact)card.classList.add('hub-dialog-compact');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label',title);const close=el('button','relic-button secondary',compact?'×':'Chiudi · ESC');close.setAttribute('aria-label','Chiudi · ESC');close.onclick=()=>this.closeDialog();const header=el('header','hub-dialog-head');header.append(el('h2','',title),close);card.append(header);veil.append(card);this.root.append(veil);this.panel=veil;close.focus();return card;
   }
-  openProfile():void{if(this.inputLocked)return;if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.openProfile();}}));}
+  openProfile():void{if(this.inputLocked)return;if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;this.showProfile();}
+  /** Ridisegna lo zaino senza i controlli di apertura: con la finestra già aperta `inputLocked` è vero e bloccherebbe l'aggiornamento. */
+  private showProfile():void{this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.showProfile();}}));}
  private openService(id:string,name:string):void {
     if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;
     const card=this.dialog(name),character=this.character;
