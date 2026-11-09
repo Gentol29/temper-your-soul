@@ -3,7 +3,6 @@ import type { Camera } from '../../core/camera';
 import { clamp, TAU, Vec2 } from '../../core/vec2';
 import { FEEDBACK, type Effects, type Particle } from './effects';
 import { canvasFont } from './fonts';
-import { ISO_BODY_LIFT, TOP_DOWN_VIEW, type SceneView } from './iso/scene-view';
 
 export function drawText(
   ctx: CanvasRenderingContext2D,
@@ -30,21 +29,11 @@ function decalNoise(seed: number, index: number): number {
  * Le tracce dello scontro sul pavimento (sotto la luce, quindi illuminate come il resto dell'ambiente): bruciature
  * scure con un filo del colore della zona, resti a macchie del colore del servitore. Svaniscono nell'ultimo terzo.
  */
-export function drawDecals(ctx: CanvasRenderingContext2D, effects: Effects, camera: Camera, view: SceneView = TOP_DOWN_VIEW): void {
+export function drawDecals(ctx: CanvasRenderingContext2D, effects: Effects, camera: Camera): void {
   if (effects.decals.length === 0) return;
   ctx.save();
   for (const decal of effects.decals) {
     if (!camera.isVisible(new Vec2(decal.x, decal.y), decal.radius + 8)) continue;
-    // In isometria la bruciatura (larga come la zona che l'ha lasciata) sta a terra sotto la proiezione; i resti, gia'
-    // schiacciati, dritti nel loro punto.
-    if (decal.kind === 'scorch') view.ground(ctx, () => drawDecal(ctx, decal));
-    else view.at(ctx, decal.x, decal.y, 0, () => drawDecal(ctx, decal));
-  }
-  ctx.restore();
-}
-
-function drawDecal(ctx: CanvasRenderingContext2D, decal: Effects['decals'][number]): void {
-  {
     const fade = clamp(decal.remaining / (decal.total / 3), 0, 1);
     if (decal.kind === 'scorch') {
       ctx.globalAlpha = 0.32 * fade;
@@ -84,6 +73,7 @@ function drawDecal(ctx: CanvasRenderingContext2D, decal: Effects['decals'][numbe
       }
     }
   }
+  ctx.restore();
 }
 
 /** Onde, fendenti e scintille d'impatto, a luce additiva. */
@@ -130,15 +120,8 @@ export function drawGlowEffects(ctx: CanvasRenderingContext2D, effects: Effects)
 }
 
 /** Particelle (scie, scoppi), a luce additiva. Si disegnano sotto i proiettili nemici, che non devono sbiadire. */
-export function drawParticles(ctx: CanvasRenderingContext2D, effects: Effects, view: SceneView = TOP_DOWN_VIEW): void {
-  // In isometria ogni particella si muove sullo schermo attorno al punto proiettato da cui e' partita, all'altezza del corpo.
-  const particles = view.iso
-    ? effects.particles.map((p) => {
-      const shift = view.shift(p.ax ?? p.x, p.ay ?? p.y, ISO_BODY_LIFT);
-      return { ...p, x: p.x + shift.x, y: p.y + shift.y };
-    })
-    : effects.particles;
-  if (!drawWebGLParticles(ctx, particles)) drawCanvasParticles(ctx, particles);
+export function drawParticles(ctx: CanvasRenderingContext2D, effects: Effects): void {
+  if (!drawWebGLParticles(ctx, effects.particles)) drawCanvasParticles(ctx, effects.particles);
 }
 
 /** Ripiego senza GPU, usato anche nello studio per confrontare i due percorsi. */
@@ -167,7 +150,7 @@ const NUMERIC = /^[−+-]?\d+$/;
  * Numeri del danno e nomi degli attacchi: grassetto con contorno scuro (leggibili su ogni pavimento), un piccolo "pop"
  * all'apparizione e dissolvenza nell'ultimo terzo della vita.
  */
-export function drawFloatingTexts(ctx: CanvasRenderingContext2D, effects: Effects, view: SceneView = TOP_DOWN_VIEW): void {
+export function drawFloatingTexts(ctx: CanvasRenderingContext2D, effects: Effects): void {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.lineJoin = 'round';
@@ -177,16 +160,13 @@ export function drawFloatingTexts(ctx: CanvasRenderingContext2D, effects: Effect
     ctx.globalAlpha = clamp(t.remaining / (t.total / 3), 0, 1);
     // I numeri in Silkscreen come l'HUD; nomi degli attacchi e scritte nel carattere di sistema, piu' leggibile.
     ctx.font = canvasFont(Math.round(t.size * pop), t.pixel || NUMERIC.test(t.text) ? 'pixel' : 'text', 'bold');
-    // In isometria il testo sta sopra il punto proiettato del suo destinatario, mai sotto la matrice del pavimento.
-    view.at(ctx, t.anchorX ?? t.x, t.anchorY ?? t.y, ISO_BODY_LIFT, () => {
-      if (t.outline) {
-        ctx.strokeStyle = '#120d16';
-        ctx.lineWidth = 3;
-        ctx.strokeText(t.text, t.x, t.y);
-      }
-      ctx.fillStyle = t.color;
-      ctx.fillText(t.text, t.x, t.y);
-    });
+    if (t.outline) {
+      ctx.strokeStyle = '#120d16';
+      ctx.lineWidth = 3;
+      ctx.strokeText(t.text, t.x, t.y);
+    }
+    ctx.fillStyle = t.color;
+    ctx.fillText(t.text, t.x, t.y);
   }
   ctx.restore();
 }
@@ -226,13 +206,10 @@ export const LOW_HEALTH = 0.3;
  */
 export function drawBossIndicator(ctx: CanvasRenderingContext2D, camera: Camera, player: Vec2, boss: Vec2, label = 'BOSS', color = '#f0b380'): void {
   const { width: w, height: h } = camera;
-  // Nella vista (in isometria i punti del mondo si proiettano; dall'alto sono gli stessi numeri).
-  const target = camera.projection.toView(boss.x, boss.y);
-  const from = camera.projection.toView(player.x, player.y);
-  const bx = target.x - camera.position.x;
-  const by = target.y - camera.position.y;
+  const bx = boss.x - camera.position.x;
+  const by = boss.y - camera.position.y;
   if (!(bx < 30 || bx > w - 30 || by < 85 || by > h - 80)) return;
-  const a = Math.atan2(target.y - from.y, target.x - from.x);
+  const a = Math.atan2(boss.y - player.y, boss.x - player.x);
   const r = Math.min(
     (w / 2 - 40) / Math.max(0.001, Math.abs(Math.cos(a))),
     (h / 2 - 95) / Math.max(0.001, Math.abs(Math.sin(a))),

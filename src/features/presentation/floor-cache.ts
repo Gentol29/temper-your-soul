@@ -31,7 +31,7 @@ export class FloorCache {
       if (tile) chunks.delete(key);
       else {
         tile = document.createElement('canvas'); tile.width = size; tile.height = size;
-        const painter = tile.getContext('2d')!; painter.translate(-cx * size, -cy * size);
+        const painter = tile.getContext('2d')!; painter.imageSmoothingEnabled = false; painter.translate(-cx * size, -cy * size);
         const view = new Camera(); view.setViewSize(size, size); view.position = new Vec2(cx * size, cy * size);
         this.paint(painter, arena, view);
       }

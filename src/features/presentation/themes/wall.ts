@@ -1,21 +1,13 @@
 import type { Camera } from '../../../core/camera';
 import { Vec2 } from '../../../core/vec2';
 import type { ArenaDefinition, ArenaThemeId, Solid } from '../../arena/arena';
-import { drawFacade } from './scenery';
-import { drawTile, tileAt, tileSheet, tileVariants, TILE_SIZE } from './tiles';
+import { litColor } from '../lights';
+import { drawWallCaps, fillSurface } from './scenery';
+import { drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SIZE } from './tiles';
 
-/*
- * Muri in vista a tre quarti. Il muro in alto mostra la sua faccia: una fascia sotto la cima, alta fin dove arrivano
- * i piedi del giocatore quando ci si avvicina, con un'ombra corta sul pavimento. Il muro in basso ha la cima davanti
- * alle figure (chi ci passa vicino ci finisce dietro). Solo aspetto: il confine di gioco resta dato dai margini.
- */
-
-/** Distanza tra il centro del giocatore e i suoi piedi, nel disegno (vedi `drawPlayer`). */
-const FEET = 14;
-
-/** Altezza della faccia del muro in alto: arriva ai piedi del giocatore al suo punto piu' vicino. */
+/** Fascia interna del muro nord fino al bordo camminabile della mappa. */
 export function wallFaceHeight(arena: ArenaDefinition): number {
-  return Math.max(18, Math.min(40, arena.playerMargin + FEET - arena.wallThickness));
+  return Math.max(0, arena.playerMargin - arena.wallThickness);
 }
 
 /** Come si disegna una faccia: colori e motivo. */
@@ -138,7 +130,7 @@ function drawFaceBand(ctx: CanvasRenderingContext2D, left: number, top: number, 
 export function drawTopWallFace(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, style: WallFaceStyle): void {
   const top = arena.wallThickness;
   const height = wallFaceHeight(arena);
-  if (style.tiles !== undefined && drawFacade(ctx, arena, camera, style.tiles, top + height, style)) return;
+  if (style.tiles !== undefined && drawWallCaps(ctx, arena, camera, style.tiles, top + height, style)) return;
   if (camera.position.y > top + height + 24) return;
   const left = Math.max(arena.wallThickness, Math.floor(camera.position.x / 32) * 32 - 32);
   const right = Math.min(arena.width - arena.wallThickness, camera.position.x + camera.width + 32);
@@ -176,28 +168,48 @@ function drawCapSlabs(ctx: CanvasRenderingContext2D, solid: Solid, capHeight: nu
   }
 }
 
-/**
- * Un massiccio in vista a tre quarti: la cima piatta con il bordo chiaro e una faccia in basso alta al piu' 26
- * unita'. L'ingombro di gioco e' tutto il rettangolo: la faccia sta dentro, non lo allunga.
- */
+/** Il massiccio occupa tutto il rettangolo solido, con un bordo interno di due pixel. */
 export function drawSolidBlock(ctx: CanvasRenderingContext2D, solid: Solid, camera: Camera, look: BlockLook): void {
   const center = new Vec2(solid.x + solid.width / 2, solid.y + solid.height / 2);
   if (!camera.isVisible(center, Math.hypot(solid.width, solid.height) / 2 + 30)) return;
-  const face = Math.min(26, Math.round(solid.height * 0.3));
-  const capHeight = solid.height - face;
+  const { x, y, width, height } = solid;
   ctx.fillStyle = look.cap;
-  ctx.fillRect(solid.x, solid.y, solid.width, capHeight);
+  ctx.fillRect(x, y, width, height);
   ctx.save();
   ctx.beginPath();
-  ctx.rect(solid.x, solid.y, solid.width, capHeight);
+  ctx.rect(x, y, width, height);
   ctx.clip();
-  if (!fillWithTiles(ctx, look.tiles, 'cap', solid.x, solid.y, solid.width, capHeight)) drawCapSlabs(ctx, solid, capHeight, look);
+  if (!fillWithTiles(ctx, look.tiles, 'cap', x, y, width, height)) drawCapSlabs(ctx, solid, height, look);
   ctx.restore();
-  ctx.fillStyle = '#00000033';
-  ctx.fillRect(solid.x + 6, solid.y + 6, solid.width - 12, capHeight - 12);
   ctx.fillStyle = look.edge;
-  ctx.fillRect(solid.x, solid.y, solid.width, 2);
-  ctx.fillRect(solid.x, solid.y, 2, capHeight);
-  ctx.fillRect(solid.x + solid.width - 2, solid.y, 2, capHeight);
-  drawFaceBand(ctx, solid.x, solid.y + capHeight, solid.width, face, look.face);
+  ctx.fillRect(x, y, width, 2);
+  ctx.fillRect(x, y, 2, height);
+  ctx.fillStyle = look.face.dark;
+  ctx.fillRect(x + width - 2, y, 2, height);
+  ctx.fillRect(x, y + height - 2, width, 2);
+}
+
+/**
+ * La cima del muro in basso, ridisegnata davanti alle figure: chi passa vicino al muro ci finisce dietro. Si disegna
+ * dopo la luce, quindi i colori si scuriscono con il buio della scena (`ambient`) come il muro sotto.
+ */
+export function drawBottomWallLip(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, cap: string, edge: string, ambient: string, theme?: ArenaThemeId): void {
+  const top = arena.height - arena.wallThickness;
+  if (camera.position.y + camera.height < top) return;
+  const left = Math.max(0, camera.position.x - 4);
+  const right = Math.min(arena.width, camera.position.x + camera.width + 4);
+  if (right <= left) return;
+  if (theme !== undefined && tileSheet(theme) !== null && tileGrid(theme, 'cap') !== undefined) {
+    fillSurface(ctx, theme, 'cap', left, top, right - left, arena.wallThickness);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = ambient;
+    ctx.fillRect(left, top, right - left, arena.wallThickness);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = litColor(cap, ambient);
+    ctx.fillRect(left, top, right - left, arena.wallThickness);
+  }
+  ctx.fillStyle = litColor(edge, ambient);
+  ctx.fillRect(left, top, right - left, 2);
 }

@@ -486,3 +486,7 @@ Su richiesta esplicita dell’utente, l’incremento raccoglie tutti i lavori lo
 Su feedback dell’utente, particelle casuali tolte soltanto al lancio e nella scia degli attacchi base; effetti su danno, morti, buff e altre abilità conservati. Animazioni Hi-bit proprie per fendente, freccia/onda del tiro e quattro elementi del Mago. Premi XP/oro a 16 px nello stesso Silkscreen, con riga libera rispetto ai testi già saliti. AGENTS.md e CLAUDE.md allineati alla direzione grafica obbligatoria.
 
 Sviluppo nella worktree `codex/vfx-attacchi-hi-bit`, riallineata alle PR #12 e #13; integrazione diretta in main autorizzata dall’utente come v0.11.00, con lavoro della camera preservato nella sua worktree. 862 test in 78 file e build/tipi; controllo tecnico browser e mutazioni rilevate/ripristinate. [Specifica](attacchi-base-hi-bit.md). Prossimo passo: prova giocata dell’utente di effetti, premi e cooperativa.
+
+## Dungeon in vista ortogonale · 9 novembre 2026
+
+Tutte le stanze e le arene dei quattro dungeon usano la griglia del mondo. WASD, cursore, pericoli a terra, basamenti e strati PixiJS condividono gli assi X/Y. Il raggio di ogni impronta viene dai dati di collisione. Da confermare giocando in singolo e in cooperativa la leggibilità degli ostacoli, delle porte e dei colpi con la camera in movimento.

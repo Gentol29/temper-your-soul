@@ -7,7 +7,7 @@ const at = new Vec2(300, 200);
 const detonation = (visual?: string, team: 'player' | 'enemy' = 'player') =>
   ({ type: 'zone_detonated' as const, team, position: at, radius: 66, ...(visual === undefined ? {} : { visual }) });
 
-describe('impatto isometrico della meteora', () => {
+describe('impatto della meteora sul pavimento', () => {
   it('riconosce solo la meteora del giocatore', () => {
     expect(isMeteorImpact(detonation())).toBe(true);
     expect(isMeteorImpact(detonation('meteor'))).toBe(true);
@@ -69,7 +69,7 @@ describe('impatto isometrico della meteora', () => {
     it('a terra non va oltre l\'ellisse del danno: non promette un\'area piu\' grande di quella vera', () => {
       // Dal livello del pavimento in giu', ogni pixel sta nell'ellisse 2:1 del raggio di gioco, piu' lo spessore
       // dell'onda d'urto e il contorno scuro (al massimo 5 pixel su 93, circa il 5%).
-      const rx = 93 + 5, ry = 46.5 + 3;
+      const rx = METEOR_IMPACT.groundRadiusX + 5, ry = METEOR_IMPACT.groundRadiusY + 3;
       for (let f = 0; f < frames; f++) for (let y = pivotY; y < h; y++) for (let x = 0; x < w; x++) {
         if (!alphaAt(f, x, y)) continue;
         expect(((x - pivotX) / rx) ** 2 + ((y - pivotY) / ry) ** 2, `fotogramma ${f} (${x}, ${y})`).toBeLessThanOrEqual(1);

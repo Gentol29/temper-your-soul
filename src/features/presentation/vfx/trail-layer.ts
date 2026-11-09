@@ -1,5 +1,4 @@
 import type * as PixiTypes from 'pixi.js';
-import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
 import { compositePixi, pixiLayer, type Pixi } from '../webgl-renderer';
 import { emberPoint, METEOR_IMPACT, type MeteorEmber } from './meteor-impact';
 import { moteLook, TRAILS, type ProjectileTrails } from './projectile-trails';
@@ -46,10 +45,9 @@ function emberLook(ember: MeteorEmber): { readonly color: string; readonly alpha
 
 /**
  * Disegna le scie dei colpi e le schegge della meteora e le compone nel punto corrente della scena (sotto i colpi dei
- * giocatori, sopra le figure). Le scie partono dal loro punto del pavimento proiettato, all'altezza del colpo, e si
- * muovono sullo schermo; le schegge volano sul pavimento (mondo) con un'altezza sullo schermo, proiettate ogni fotogramma.
+ * giocatori, sopra le figure). La camera trasla insieme colpi, scie e schegge.
  */
-export function drawProjectileTrails(ctx: CanvasRenderingContext2D, trails: ProjectileTrails, view: SceneView = TOP_DOWN_VIEW, embers: readonly MeteorEmber[] = []): void {
+export function drawProjectileTrails(ctx: CanvasRenderingContext2D, trails: ProjectileTrails, embers: readonly MeteorEmber[] = []): void {
   const live = embers.filter((ember) => ember.age >= 0);
   if (trails.motes.length === 0 && live.length === 0) return;
   const layer = pixiLayer();
@@ -62,10 +60,9 @@ export function drawProjectileTrails(ctx: CanvasRenderingContext2D, trails: Proj
     list.length = 0;
     for (let i = 0; i < trails.motes.length; i++) {
       const mote = trails.motes[i]!, particle = pool[i]!;
-      const shift = view.shift(mote.x, mote.y, TRAILS.lift);
       const look = moteLook(mote);
-      particle.x = Math.round(mote.x + shift.x + mote.dx);
-      particle.y = Math.round(mote.y + shift.y + mote.dy);
+      particle.x = Math.round(mote.x + mote.dx);
+      particle.y = Math.round(mote.y + mote.dy);
       particle.scaleX = particle.scaleY = mote.size;
       particle.tint = tintOf(TRAILS.styles[mote.style].ramp[look.tone]!);
       particle.alpha = look.alpha;
@@ -73,9 +70,9 @@ export function drawProjectileTrails(ctx: CanvasRenderingContext2D, trails: Proj
     }
     for (let i = 0; i < live.length; i++) {
       const ember = live[i]!, particle = pool[trails.motes.length + i]!;
-      const at = emberPoint(ember), shift = view.shift(at.x, at.y, 0), look = emberLook(ember);
-      particle.x = Math.round(at.x + shift.x);
-      particle.y = Math.round(at.y + shift.y - at.z);
+      const at = emberPoint(ember), look = emberLook(ember);
+      particle.x = Math.round(at.x);
+      particle.y = Math.round(at.y - at.z);
       particle.scaleX = particle.scaleY = ember.size;
       particle.tint = tintOf(look.color);
       particle.alpha = look.alpha;

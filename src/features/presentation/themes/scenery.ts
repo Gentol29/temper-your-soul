@@ -1,5 +1,5 @@
 import type { Camera } from '../../../core/camera';
-import type { ArenaDefinition, ArenaThemeId, Pillar } from '../../arena/arena';
+import type { ArenaDefinition, ArenaThemeId } from '../../arena/arena';
 import { preloadSheets, sheetImage } from '../boss-art/sheet-images';
 import { drawLight } from '../lights';
 import { SCENERY_ATLASES, type SceneryPiece } from './scenery-atlas';
@@ -19,26 +19,6 @@ export function preloadScenery(): void {
 
 function sheetOf(theme: ArenaThemeId): HTMLImageElement | null {
   return sheetImage(SCENERY_ATLASES[theme].url);
-}
-
-/** Il foglio delle scenografie del tema, se e' pronto (per la vista isometrica). */
-export function scenerySheet(theme: ArenaThemeId): HTMLImageElement | null {
-  return sheetOf(theme);
-}
-
-/** I pezzi di un ruolo del foglio del tema (facciate, lesene, pilastri...). */
-export function sceneryPieces(theme: ArenaThemeId, role: string): readonly SceneryPiece[] {
-  return piecesOf(theme, role);
-}
-
-/** Valore pseudocasuale stabile in [0, 1), lo stesso delle scenografie dall'alto. */
-export function sceneryNoise(x: number, y: number, salt = 0): number {
-  return noise(x, y, salt);
-}
-
-/** Un elemento di una lista scelto da un valore in [0, 1). */
-export function sceneryPick<T>(list: readonly T[], h: number): T | undefined {
-  return pick(list, h);
 }
 
 /** Vero quando foglio delle scenografie e foglio dei tile del tema sono pronti. */
@@ -67,17 +47,6 @@ function pick<T>(list: readonly T[], h: number): T | undefined {
 
 function put(ctx: CanvasRenderingContext2D, sheet: CanvasImageSource, piece: SceneryPiece, x: number, y: number): void {
   ctx.drawImage(sheet, piece.x, piece.y, piece.w, piece.h, Math.round(x), Math.round(y), piece.w, piece.h);
-}
-
-/** Un'ellisse a righe intere: un'ombra a terra senza bordi sfumati. */
-export function pixelEllipse(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, color: string): void {
-  ctx.fillStyle = color;
-  const top = Math.round(cy - ry);
-  for (let row = 0; row < ry * 2; row += 2) {
-    const t = (row + 1 - ry) / ry;
-    const half = Math.round(rx * Math.sqrt(Math.max(0, 1 - t * t)));
-    if (half > 0) ctx.fillRect(Math.round(cx - half), top + row, half * 2, 2);
-  }
 }
 
 const rings = new Map<string, HTMLCanvasElement>();
@@ -160,59 +129,18 @@ function drawWallBands(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, ca
   ctx.fillRect(t, arena.height - t - 2, arena.width - t * 2, 2);
 }
 
-/**
- * Il muro in alto come una facciata: moduli gotici appoggiati a `base` (dove arrivano i piedi di chi si avvicina), lesene
- * sui giunti e, sopra, la stessa pietra che sale nel buio. La camera non ha limiti, quindi la facciata puo' salire oltre
- * il bordo della stanza: l'ingombro di gioco resta quello di prima. Falso se i fogli non ci sono.
- */
-export function drawFacade(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, base: number, edge: WallEdge): boolean {
-  const sheet = sheetOf(theme);
-  const modules = piecesOf(theme, 'facade');
-  if (sheet === null || tileSheet(theme) === null || modules.length === 0) return false;
+/** Fasce di pietra viste dall'alto sui quattro lati della stanza. */
+export function drawWallCaps(ctx: CanvasRenderingContext2D, arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, base: number, edge: WallEdge): boolean {
+  if (tileSheet(theme) === null) return false;
   drawWallBands(ctx, arena, camera, theme, base, edge);
-  const { x: camX, y: camY } = camera.position;
-  if (camY > base + 40) return true;
-  const width = modules[0]!.w;
-  const tallest = Math.max(...modules.map((module) => module.h));
-  const roof = base - tallest;
-  // Sopra le facciate: pietra che sale e si spegne a bande.
-  if (camY < roof) {
-    fillSurface(ctx, theme, 'wall', 0, roof - 96, arena.width, 96);
-    for (const [offset, alpha] of [[0, '50'], [24, '90'], [48, 'c8'], [72, 'f0']] as const) {
-      ctx.fillStyle = `#050408${alpha}`;
-      ctx.fillRect(0, roof - offset - 24, arena.width, 24);
-    }
-  }
-  // Oltre i bordi della stanza c'e' solo il buio dei muri.
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, roof - 96, arena.width, base - roof + 96);
-  ctx.clip();
-  const first = Math.max(0, Math.floor(camX / width) - 1);
-  const last = Math.min(Math.ceil(arena.width / width), Math.ceil((camX + camera.width) / width) + 1);
-  const pilasters = piecesOf(theme, 'pilaster');
-  const hangs = piecesOf(theme, 'hang');
-  for (let k = first; k < last; k++) {
-    const module = pick(modules, noise(k, 3, arena.width));
-    if (module !== undefined) put(ctx, sheet, module, k * width, base - module.h);
-  }
-  for (let k = first; k <= last; k++) {
-    const h = noise(k, 11, arena.width);
-    if (h < 0.42 && hangs.length > 0) {
-      const hang = pick(hangs, h / 0.42);
-      if (hang !== undefined) put(ctx, sheet, hang, k * width + width * (0.3 + noise(k, 13) * 0.4) - hang.w / 2, base - hang.h - 4);
-    }
-    const pilaster = pick(pilasters, noise(k, 7));
-    if (pilaster !== undefined) put(ctx, sheet, pilaster, k * width - pilaster.w / 2, base - pilaster.h);
-  }
-  ctx.restore();
-  // Base della facciata e ombra corta sul pavimento.
+  const left = Math.max(0, Math.floor(camera.position.x) - 4);
+  const right = Math.min(arena.width, Math.ceil(camera.position.x + camera.width) + 4);
+  if (camera.position.y > base + 4 || right <= left) return true;
+  fillSurface(ctx, theme, 'cap', left, 0, right - left, base);
+  ctx.fillStyle = edge.light;
+  ctx.fillRect(left, base - 3, right - left, 1);
   ctx.fillStyle = edge.dark;
-  ctx.fillRect(0, base - 2, arena.width, 2);
-  for (const [offset, alpha] of [[0, '60'], [5, '38'], [10, '1c']] as const) {
-    ctx.fillStyle = `#000000${alpha}`;
-    ctx.fillRect(arena.wallThickness, base + offset, arena.width - arena.wallThickness * 2, 5);
-  }
+  ctx.fillRect(left, base - 2, right - left, 2);
   return true;
 }
 
@@ -221,10 +149,9 @@ const SCATTER_DENSITY: Readonly<Record<ArenaThemeId, number>> = { crypt: 0.42, s
 const SCATTER_CELL = 168;
 
 /**
- * Gli arredi a terra nel rettangolo del mondo visibile (dall'alto e' la vista stessa; in isometria il rettangolo che la
- * contiene): pezzo, centro della base e valore stabile.
+ * Gli arredi a terra nel rettangolo di mondo visibile: pezzo, centro della base e valore stabile.
  */
-export function forScatter(arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, margin: number, visit: (piece: SceneryPiece, x: number, y: number, h: number) => void): void {
+function forScatter(arena: ArenaDefinition, camera: Camera, theme: ArenaThemeId, margin: number, visit: (piece: SceneryPiece, x: number, y: number, h: number) => void): void {
   const list = piecesOf(theme, 'scatter');
   if (list.length === 0) return;
   const bounds = camera.worldBounds();
@@ -266,89 +193,6 @@ export function drawFloorSceneryLights(ctx: CanvasRenderingContext2D, arena: Are
     const pulse = Math.sin(clock * (1.6 + h * 3) + x * 0.02);
     drawLight(ctx, x - piece.w / 2 + light.x, y - piece.h + light.y, light.color, light.radius + pulse * 4, light.intensity * (0.85 + pulse * 0.15));
   });
-}
-
-/** Un pezzo della scenografia posato per un pilastro. */
-interface PlacedPiece {
-  readonly piece: SceneryPiece;
-  readonly left: number;
-  readonly top: number;
-  readonly floor: number;
-  /** Chi sta sopra questa riga passa dietro al pezzo. */
-  readonly baseline: number;
-}
-
-const placedPieces = new WeakMap<Pillar, readonly PlacedPiece[]>();
-
-/**
- * I pezzi di un pilastro, fissi dalla posizione. Devono coprire il cerchio di collisione, o figure e colpi si fermerebbero
- * nel vuoto: si sceglie un pezzo della larghezza giusta, e per i cerchi piu' larghi di qualunque pezzo un gruppo.
- */
-function pillarPieces(theme: ArenaThemeId, pillar: Pillar): readonly PlacedPiece[] {
-  const known = placedPieces.get(pillar);
-  if (known !== undefined) return known;
-  const all = ['pillarS', 'pillarM', 'pillarL'].flatMap((role) => piecesOf(theme, role));
-  if (all.length === 0) return [];
-  const { x, y } = pillar.position;
-  const r = pillar.radius;
-  const sag = Math.round(r * 0.68);
-  const placed: PlacedPiece[] = [];
-  const place = (piece: SceneryPiece, cx: number, floor: number): void => {
-    placed.push({ piece, left: Math.round(cx - piece.w / 2), top: floor - piece.h, floor, baseline: floor - sag });
-  };
-  const byWidth = [...all].sort((a, b) => a.w - b.w);
-  const fits = all.filter((piece) => piece.w >= r * 1.6 && piece.w <= r * 2.8);
-  if (fits.length > 0) {
-    place(pick(fits, noise(x, y, 5))!, x, Math.round(y + sag));
-  } else if (byWidth[0]!.w > r * 2.8) {
-    place(byWidth[0]!, x, Math.round(y + sag));
-  } else {
-    // Piu' largo di tutti i pezzi: un gruppo, dietro e davanti, dai piu' larghi.
-    const widest = byWidth.slice(-3);
-    const width = widest[0]!.w;
-    const rows: readonly (readonly [number, number])[] = r > 80 ? [[-0.25, 0.7], [sag / r, 1]] : [[sag / r, 1]];
-    let index = 0;
-    for (const [row, span] of rows) {
-      const across = r * 2 * span;
-      const count = Math.max(2, Math.ceil(across / (width * 0.8)));
-      for (let k = 0; k < count; k++) {
-        const piece = widest[(index + Math.floor(noise(x, y, 6) * widest.length)) % widest.length]!;
-        const cx = x + (count === 1 ? 0 : (k / (count - 1) - 0.5) * (across - piece.w));
-        const edge = Math.abs(cx - x) / r;
-        place(piece, cx, Math.round(y + r * row * Math.sqrt(Math.max(0.2, 1 - edge * edge))));
-        index++;
-      }
-    }
-    placed.sort((a, b) => a.floor - b.floor);
-  }
-  placedPieces.set(pillar, placed);
-  return placed;
-}
-
-/** Un pilastro come oggetto della scenografia, con la sua ombra e la sua luce. Falso se i fogli non ci sono. */
-export function drawScenicPillar(ctx: CanvasRenderingContext2D, pillar: Pillar, camera: Camera, theme: ArenaThemeId, clock: number): boolean {
-  const sheet = sheetOf(theme);
-  const pieces = sheet === null ? [] : pillarPieces(theme, pillar);
-  if (sheet === null || pieces.length === 0) return false;
-  const reach = pillar.radius + Math.max(...pieces.map(({ piece }) => Math.max(piece.w, piece.h))) + 20;
-  if (!camera.isVisible(pillar.position, reach)) return true;
-  pixelEllipse(ctx, pillar.position.x + 5, pillar.position.y + pillar.radius * 0.62, pillar.radius * 1.15, Math.max(5, pillar.radius * 0.42), '#04040870');
-  for (const { piece, left, top } of pieces) {
-    put(ctx, sheet, piece, left, top);
-    const light = piece.light;
-    if (light !== undefined) {
-      const pulse = Math.sin(clock * 2 + left);
-      drawLight(ctx, left + light.x, top + light.y, light.color, light.radius + pulse * 5, light.intensity * (0.85 + pulse * 0.15));
-    }
-  }
-  return true;
-}
-
-/** Il portale gotico di una porta, se i fogli ci sono: il foglio e il pezzo. */
-export function gateFrame(theme: ArenaThemeId): { readonly sheet: HTMLImageElement; readonly piece: SceneryPiece } | null {
-  const sheet = sheetOf(theme);
-  const piece = piecesOf(theme, 'gate')[0];
-  return sheet === null || piece === undefined ? null : { sheet, piece };
 }
 
 /** Un pezzo qualsiasi del tema, appoggiato con il centro della base in (`x`, `y`). Falso se non c'e'. */

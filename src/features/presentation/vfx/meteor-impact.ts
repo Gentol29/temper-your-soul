@@ -1,11 +1,10 @@
 import type { GameEvent } from '../../combat/events';
-import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
 
 /*
- * Impatto della meteora in isometria: un foglio di 16 fotogrammi 192x160 (SDXL + Pixel Art XL in locale sulle pose
+ * Impatto della meteora: un foglio di 16 fotogrammi 192x160 (SDXL + Pixel Art XL in locale sulle pose
  * disegnate con i 12 principi dell'animazione, ridotte a pixel Hi-bit; provenienza in `src/assets/vfx/frames/LEGGIMI.md`).
- * Il punto d'impatto del foglio (96, 118) sta sul punto del pavimento proiettato; l'onda d'urto disegnata arriva
- * all'ellisse 2:1 del raggio di gioco (66 nel foglio) e il foglio si scala con il raggio della zona. In piu' schegge e
+ * Il punto d'impatto del foglio (96, 118) sta al centro della zona. I semiassi dell'onda nel foglio vengono entrambi riportati
+ * al raggio della zona sul pavimento. In piu' schegge e
  * braci (disegnate con PixiJS in `trail-layer.ts`) volano ad arco e ricadono dentro l'area di danno. Solo aspetto:
  * nessun numero casuale, nessuna regola. Valori estetici provvisori.
  */
@@ -18,8 +17,9 @@ export const METEOR_IMPACT = {
   /** Punto d'impatto nel fotogramma (centro dell'ellisse a terra). */
   pivotX: 96,
   pivotY: 118,
-  /** Raggio di gioco per cui e' disegnato il foglio. */
-  baseRadius: 66,
+  /** Semiassi in pixel dell’onda nel foglio originale. */
+  groundRadiusX: 93,
+  groundRadiusY: 46.5,
   embers: { count: 26, life: 1.1, gravity: 340, startHeight: 10, rise: [80, 150] as readonly [number, number], reach: [0.3, 0.9] as readonly [number, number] },
 } as const;
 
@@ -123,22 +123,18 @@ export function meteorImpactReady(): boolean {
   return sheetImage() !== null;
 }
 
-/** Riquadro della vista occupato dall'esplosione (per l'ordine con le figure e gli ostacoli). */
-export function impactBox(impact: MeteorImpact, view: SceneView = TOP_DOWN_VIEW): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } {
-  const s = impact.radius / METEOR_IMPACT.baseRadius, at = view.point(impact.x, impact.y);
-  return { x: Math.floor(at.x - METEOR_IMPACT.pivotX * s), y: Math.floor(at.y - METEOR_IMPACT.pivotY * s), width: Math.ceil(METEOR_IMPACT.frameWidth * s), height: Math.ceil(METEOR_IMPACT.frameHeight * s) };
-}
-
-/** Disegna un impatto con il punto d'impatto sul pavimento proiettato. Falso se il foglio non e' ancora caricato. */
-export function drawMeteorImpact(ctx: CanvasRenderingContext2D, impact: MeteorImpact, view: SceneView = TOP_DOWN_VIEW): boolean {
+/** Disegna un impatto con il punto d'impatto sul pavimento. Falso se il foglio non e' ancora caricato. */
+export function drawMeteorImpact(ctx: CanvasRenderingContext2D, impact: MeteorImpact): boolean {
   const image = sheetImage(), frame = impactFrame(impact.age);
   if (image === null || frame === null) return image !== null;
-  const { frameWidth: w, frameHeight: h, pivotX, pivotY, baseRadius } = METEOR_IMPACT;
-  const s = impact.radius / baseRadius, shift = view.shift(impact.x, impact.y, 0);
-  const x = Math.round(impact.x) + shift.x, y = Math.round(impact.y) + shift.y;
+  const { frameWidth: w, frameHeight: h, pivotX, pivotY } = METEOR_IMPACT;
+  // Semiassi dell’onda nel foglio originale. Sul pavimento occupa il cerchio di gioco.
+  const sx = impact.radius / METEOR_IMPACT.groundRadiusX;
+  const sy = impact.radius / METEOR_IMPACT.groundRadiusY;
+  const x = Math.round(impact.x), y = Math.round(impact.y);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(image, frame * w, 0, w, h, Math.round(x - pivotX * s), Math.round(y - pivotY * s), Math.round(w * s), Math.round(h * s));
+  ctx.drawImage(image, frame * w, 0, w, h, Math.round(x - pivotX * sx), Math.round(y - pivotY * sy), Math.round(w * sx), Math.round(h * sy));
   ctx.restore();
   return true;
 }

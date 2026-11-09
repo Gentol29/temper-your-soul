@@ -19,7 +19,7 @@ Prima leggi `CLAUDE.md` (sezione Dungeon), `docs/game-design.md` e un dungeon es
 
 1. `src/features/dungeons/<id>/`: `ArenaDefinition`, `BossStats`, schemi con gli attrezzi di `boss/pattern-kit.ts` (anelli, ventagli, `schedule`, cariche), `DungeonDefinition`; valori in tabelle con nome e commento "provvisorio".
 2. Registro in `dungeons.ts`; soglia in `dungeon-access.ts`; XP in `character/progression.ts`; bottino in `loot/loot-tables.ts` (voci esplicite).
-3. Rappresentazione: tema mappa in `presentation/themes/` e la sua grafica isometrica in `presentation/iso/` registrata in `ISO_THEME_ART` (`iso/view-mode.ts`, obbligatoria: tutte le mappe sono in isometria), grafica del boss in `presentation/boss-art/`, aspetti di proiettili e zone in `presentation/looks/`, artwork della scheda.
+3. Rappresentazione: tema mappa ortogonale in pixel art in `presentation/themes/`, allineato alle coordinate e agli ostacoli di `ArenaDefinition`, grafica del boss in `presentation/boss-art/`, aspetti di proiettili e zone in `presentation/looks/`, artwork della scheda.
 4. Audio: tema d'ambiente e musica in `audio/audio-catalog.ts` (`ambienceFor`/`musicFor` per il nuovo `ArenaThemeId`), suoni delle zone per materiale in `ZONE_SOUNDS`. Risorse con la skill `tys-risorse-libere`.
 5. Nuove famiglie di oggetti con la skill `tys-nuova-famiglia`.
 

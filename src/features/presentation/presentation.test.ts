@@ -435,12 +435,10 @@ describe('leggibilità (fase 0 dello studio sulla grafica)', () => {
     }
   });
 
-  it('la faccia del muro in alto arriva ai piedi del giocatore e resta fra 18 e 40 unità', () => {
+  it('la fascia del muro nord termina al margine di movimento del giocatore', () => {
     for (const dungeon of DUNGEONS) {
       const face = wallFaceHeight(dungeon.arena);
-      expect(face).toBeGreaterThanOrEqual(18);
-      expect(face).toBeLessThanOrEqual(40);
-      expect(dungeon.arena.wallThickness + face).toBeLessThanOrEqual(dungeon.arena.playerMargin + 14);
+      expect(dungeon.arena.wallThickness + face).toBe(dungeon.arena.playerMargin);
     }
   });
 });

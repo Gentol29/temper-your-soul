@@ -4,7 +4,7 @@ import type * as PixiModules from './pixi-modules';
 /*
  * Strato WebGL della rappresentazione, con PixiJS. Durante la migrazione il gioco disegna ancora la scena in Canvas 2D;
  * PixiJS disegna i suoi strati sulla propria tela e li compone nel contesto 2D nel punto esatto dell'ordine di disegno
- * (`compositePixi`), con la stessa trasformazione (camera e scostamenti dell'isometria). Cosi' la profondita' resta
+ * (`compositePixi`), con la stessa trasformazione (traslazione della camera). Cosi' la profondita' resta
  * quella della scena: i muri in primo piano coprono ancora cio' che sta dietro.
  *
  * PixiJS si carica alla prima richiesta, in modo asincrono: finche' non e' pronto, o se WebGL manca, chi chiama usa il

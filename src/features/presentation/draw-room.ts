@@ -1,4 +1,3 @@
-import { gateFrame } from './themes/scenery';
 import type { Camera } from '../../core/camera';
 import { TAU, Vec2 } from '../../core/vec2';
 import { drawFlyingGold } from './gold-flight';
@@ -13,9 +12,6 @@ import { ROOM_MOOD, type MoodFrame } from './room-mood';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
 import { wallFaceHeight } from './themes/wall';
 import { canvasFont } from './fonts';
-import { TOP_DOWN_VIEW, type SceneView } from './iso/scene-view';
-import { permutedRect } from './iso/iso-scenery';
-import { canvasBlitter, shearOntoWall } from './iso/iso-shear';
 
 /*
  * La stanza della discesa nel mondo: i cancelli delle porte (chiusi finche' la stanza non e' libera), i cartelli con
@@ -63,8 +59,6 @@ export interface RoomLook {
   readonly nextVein?: string;
   /** Il destinatario vivo: l'oro vola verso di lui e non richiede prossimità. */
   readonly collector?: Vec2;
-  /** Come la stanza va nella vista (isometrica per la Cripta); senza, dall'alto. */
-  readonly scene?: SceneView;
 }
 
 function pickupHidden(view: RoomView, pickup: RoomView['pickups'][number], localId: string): boolean {
@@ -82,10 +76,6 @@ function pickupHidden(view: RoomView, pickup: RoomView['pickups'][number], local
  * aperte e i premi accendono una luce nella mappa.
  */
 export function drawRoomFloor(ctx: CanvasRenderingContext2D, look: RoomLook, clock: number): void {
-  if (look.scene?.iso === true) {
-    drawRoomFloorIso(ctx, look, look.scene, clock);
-    return;
-  }
   const { view, arena } = look;
   const gate = GATES[arena.theme];
   const wall = ROOM_LAYOUT.wallThickness;
@@ -95,15 +85,8 @@ export function drawRoomFloor(ctx: CanvasRenderingContext2D, look: RoomLook, clo
   for (const door of view.doors) {
     const open = raised > 0.5;
     // La soglia: una lastra davanti al cancello, che si accende quando il gruppo ci sta sopra.
-    if (gateFrame(arena.theme) !== null) {
-      drawGothicThreshold(ctx, door.x, wall + face, wall + ROOM_LAYOUT.doorDepth, open ? gate.glow : '#000000', open ? (door.progress > 0 ? 0.42 : 0.2) : 0.3);
-    } else {
-      ctx.save();
-      ctx.fillStyle = open ? `${gate.glow}${door.progress > 0 ? '40' : '18'}` : '#00000030';
-      ctx.fillRect(door.x - ROOM_LAYOUT.doorHalfWidth, wall, ROOM_LAYOUT.doorHalfWidth * 2, ROOM_LAYOUT.doorDepth);
-      ctx.restore();
-    }
-    if (!drawGothicGate(ctx, door.x, wall + face, arena.theme, gate, raised, clock)) drawGate(ctx, door.x, 0, wall + face, gate, raised, clock, false);
+    drawGothicThreshold(ctx, door.x, wall + face, wall + ROOM_LAYOUT.doorDepth, open ? gate.glow : '#000000', open ? (door.progress > 0 ? 0.42 : 0.2) : 0.3);
+    drawGate(ctx, door.x, 0, wall + face, gate, raised, clock, false);
     if (raised > 0) drawLight(ctx, door.x, wall + face, gate.glow, 170, (0.55 + 0.25 * door.progress) * raised);
     if (door.progress > 0) {
       ctx.save();
@@ -125,10 +108,6 @@ export function drawRoomFloor(ctx: CanvasRenderingContext2D, look: RoomLook, clo
  * dopo l'arrivo e alza un po' di polvere; senza, e' sempre chiusa.
  */
 export function drawRoomFront(ctx: CanvasRenderingContext2D, look: RoomLook, clock: number): void {
-  if (look.scene?.iso === true) {
-    drawRoomFrontIso(ctx, look, look.scene, clock);
-    return;
-  }
   const wall = ROOM_LAYOUT.wallThickness;
   const gate = GATES[look.arena.theme];
   const x = look.arena.width / 2;
@@ -159,184 +138,34 @@ function drawGateDust(ctx: CanvasRenderingContext2D, x: number, top: number, col
 /** I premi a terra, a piena luce (sopra la mappa di luce, sotto le figure). */
 export function drawRoomPickups(ctx: CanvasRenderingContext2D, look: RoomLook, clock: number): void {
   const { view } = look;
-  const scene = look.scene ?? TOP_DOWN_VIEW;
   for (const pickup of view.pickups) {
     if (pickupHidden(view, pickup, look.localId)) continue;
     if (pickup.kind === 'gold') {
-      if (look.collector) {
-        // In isometria il volo va dal punto della vista del premio al corpo di chi lo raccoglie (piedi sul punto proiettato).
-        if (scene.iso) drawFlyingGold(ctx, scene.point(pickup.x, pickup.y).sub(new Vec2(0, PICKUP_FEET)), scene.point(look.collector.x, look.collector.y).sub(new Vec2(0, PICKUP_FEET)), pickup.age ?? 0, pickup.id);
-        else drawFlyingGold(ctx, new Vec2(pickup.x, pickup.y), look.collector, pickup.age ?? 0, pickup.id);
-      }
+      if (look.collector) drawFlyingGold(ctx, new Vec2(pickup.x, pickup.y), look.collector, pickup.age ?? 0, pickup.id);
       continue;
     }
-    scene.at(ctx, pickup.x, pickup.y, PICKUP_FEET, () => drawPickup(ctx, pickup, clock));
+    const icon = PICKUP_ICONS[pickup.kind];
+    const bob = Math.sin(clock * 3 + pickup.id) * 3;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const gradient = ctx.createRadialGradient(pickup.x, pickup.y, 2, pickup.x, pickup.y, 34);
+    gradient.addColorStop(0, '#ffe9a055');
+    gradient.addColorStop(1, '#ffe9a000');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(pickup.x - 34, pickup.y - 34, 68, 68);
+    ctx.restore();
+    ctx.fillStyle = '#070c1670';
+    ctx.beginPath();
+    ctx.ellipse(pickup.x, pickup.y + 14, 12, 4, 0, 0, TAU);
+    ctx.fill();
+    drawSprite(ctx, icon.frame, pickup.x, pickup.y - 4 + bob, 3, icon.palette);
   }
-}
-
-/** Quanto sta sotto il punto del premio la sua ombra (come i piedi del personaggio). */
-const PICKUP_FEET = 14;
-
-function drawPickup(ctx: CanvasRenderingContext2D, pickup: RoomView['pickups'][number], clock: number): void {
-  const icon = PICKUP_ICONS[pickup.kind];
-  const bob = Math.sin(clock * 3 + pickup.id) * 3;
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  const gradient = ctx.createRadialGradient(pickup.x, pickup.y, 2, pickup.x, pickup.y, 34);
-  gradient.addColorStop(0, '#ffe9a055');
-  gradient.addColorStop(1, '#ffe9a000');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(pickup.x - 34, pickup.y - 34, 68, 68);
-  ctx.restore();
-  ctx.fillStyle = '#070c1670';
-  ctx.beginPath();
-  ctx.ellipse(pickup.x, pickup.y + 14, 12, 4, 0, 0, TAU);
-  ctx.fill();
-  drawSprite(ctx, icon.frame, pickup.x, pickup.y - 4 + bob, 3, icon.palette);
-}
-
-// --- Vista isometrica ------------------------------------------------------------------------------------------------
-
-/** Fin dove arriva la soglia di gioco di una porta verso la stanza (il rettangolo di `onDoor`). */
-const THRESHOLD_BOTTOM = ROOM_LAYOUT.wallThickness + ROOM_LAYOUT.doorDepth + 40;
-
-const thresholds = new Map<string, { readonly canvas: HTMLCanvasElement; readonly left: number; readonly top: number }>();
-
-/**
- * Le porte in isometria: il portale composto come dall'alto e appoggiato al muro di fondo in alto a destra (la linea
- * y = muro), la soglia dipinta sull'intero rettangolo di gioco della porta e disposta a rombo, l'anello del passaggio a
- * terra. Le luci stanno nel loro punto della vista.
- */
-function drawRoomFloorIso(ctx: CanvasRenderingContext2D, look: RoomLook, scene: SceneView, clock: number): void {
-  const { view, arena } = look;
-  const gate = GATES[arena.theme];
-  const wall = ROOM_LAYOUT.wallThickness;
-  const raised = look.mood?.exits ?? (view.doorsOpen ? 1 : 0);
-  const open = raised > 0.5;
-  for (const door of view.doors) {
-    const color = open ? gate.glow : '#000000';
-    const strength = open ? (door.progress > 0 ? 0.42 : 0.2) : 0.3;
-    const half = ROOM_LAYOUT.doorHalfWidth;
-    const key = `${door.x}|${wall}|${color}|${strength}`;
-    let threshold = thresholds.get(key);
-    if (threshold === undefined) {
-      threshold = permutedRect((paint) => drawGothicThreshold(paint, door.x, wall, THRESHOLD_BOTTOM, color, strength), door.x - half, wall, half * 2, THRESHOLD_BOTTOM - wall);
-      thresholds.set(key, threshold);
-    }
-    ctx.drawImage(threshold.canvas, threshold.left, threshold.top);
-    drawGateOnWall(ctx, door.x, arena.theme, gate, raised, clock);
-    if (raised > 0) scene.at(ctx, door.x, wall + 10, 0, () => drawLight(ctx, door.x, wall + 10, gate.glow, 170, (0.55 + 0.25 * door.progress) * raised));
-    if (door.progress > 0) {
-      scene.ground(ctx, () => {
-        ctx.strokeStyle = gate.glow;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(door.x, door.y, 30, -Math.PI / 2, -Math.PI / 2 + door.progress * TAU);
-        ctx.stroke();
-      });
-    }
-  }
-  for (const pickup of view.pickups) {
-    if (pickup.kind !== 'gold' && !pickupHidden(view, pickup, look.localId)) scene.at(ctx, pickup.x, pickup.y, PICKUP_FEET, () => drawLight(ctx, pickup.x, pickup.y, '#ffe9a0', 120, 0.7));
-  }
-}
-
-let gateCanvas: HTMLCanvasElement | null = null;
-
-function scratchCanvas(width: number, height: number): CanvasRenderingContext2D {
-  gateCanvas ??= document.createElement('canvas');
-  if (gateCanvas.width !== width || gateCanvas.height !== height) {
-    gateCanvas.width = width;
-    gateCanvas.height = height;
-  }
-  const paint = gateCanvas.getContext('2d')!;
-  paint.setTransform(1, 0, 0, 1, 0, 0);
-  paint.clearRect(0, 0, width, height);
-  paint.imageSmoothingEnabled = false;
-  return paint;
-}
-
-/** Il portale di una porta, composto di fronte (vano, luce, grata, arco) e appoggiato colonna per colonna al muro di fondo. */
-function drawGateOnWall(ctx: CanvasRenderingContext2D, x: number, theme: ArenaThemeId, gate: (typeof GATES)[ArenaThemeId], raised: number, clock: number): void {
-  const wall = ROOM_LAYOUT.wallThickness;
-  const frame = gateFrame(theme);
-  const width = frame === null ? (ROOM_LAYOUT.doorHalfWidth + 2) * 2 : frame.piece.w;
-  const height = frame === null ? 54 : frame.piece.h;
-  const paint = scratchCanvas(width, height);
-  if (frame === null || !drawGothicGate(paint, width / 2, height, theme, gate, raised, clock)) drawGate(paint, width / 2, 2, height - 4, gate, raised, clock, false);
-  const left = Math.round(x - width / 2);
-  shearOntoWall(canvasBlitter(ctx), gateCanvas!, 0, 0, width, height, 'ne', wall, left - wall);
-}
-
-/** L'ingresso in isometria: la grata sul bordo davanti in basso a sinistra (linea y = H), con la polvere quando cade. */
-function drawRoomFrontIso(ctx: CanvasRenderingContext2D, look: RoomLook, scene: SceneView, clock: number): void {
-  const wall = ROOM_LAYOUT.wallThickness;
-  const gate = GATES[look.arena.theme];
-  const x = look.arena.width / 2;
-  const width = (ROOM_LAYOUT.doorHalfWidth + 2) * 2;
-  const height = 40;
-  const paint = scratchCanvas(width, height);
-  drawGate(paint, width / 2, 2, height - 4, gate, 1 - (look.mood?.entrance ?? 1), clock, true);
-  shearOntoWall(canvasBlitter(ctx), gateCanvas!, 0, 0, width, height, 'ne', look.arena.height, Math.round(x - width / 2) - look.arena.height, -8);
-  const since = look.mood?.sinceImpact ?? null;
-  const top = look.arena.height - wall;
-  if (since !== null && since < ROOM_MOOD.dustTime) scene.at(ctx, x, top, 0, () => drawGateDust(ctx, x, top, gate.dust, since / ROOM_MOOD.dustTime));
 }
 
 /**
  * Un cancello alto `height` nel muro. `raised` dice quanto e' alzata la grata (0 giu', 1 tutta dentro il muro): sale e
  * scende scorrendo, con le punte in basso. Le uscite aperte brillano; l'ingresso aperto resta buio.
  */
-/**
- * Una porta come portale gotico del tema: il vano buio, la luce quando si apre, la grata che sale e, sopra, l'arco. La
- * soglia di gioco resta quella di `ROOM_LAYOUT`. Falso se i fogli non ci sono.
- */
-function drawGothicGate(ctx: CanvasRenderingContext2D, x: number, base: number, theme: ArenaThemeId, gate: (typeof GATES)[ArenaThemeId], raised: number, clock: number): boolean {
-  const frame = gateFrame(theme);
-  const hole = frame?.piece.hole;
-  if (frame === null || hole === undefined) return false;
-  const { sheet, piece } = frame;
-  const left = Math.round(x - piece.w / 2);
-  const top = base - piece.h;
-  const hx = left + hole.x;
-  const hy = top + hole.y;
-  const lift = Math.max(0, Math.min(1, raised));
-  ctx.save();
-  ctx.fillStyle = '#07060a';
-  ctx.fillRect(hx, hy, hole.w, hole.h);
-  if (lift > 0) {
-    // La luce viene da oltre la porta: piu' forte in basso, a gradini come il resto.
-    const pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(clock * 4 + x));
-    ctx.fillStyle = gate.glow;
-    for (let y = 0; y < hole.h; y += 4) {
-      ctx.globalAlpha = (0.1 + 0.8 * ((y + 4) / hole.h) ** 1.4) * pulse * lift;
-      ctx.fillRect(hx, hy + y, hole.w, Math.min(4, hole.h - y));
-    }
-    ctx.globalAlpha = 1;
-  }
-  const hanging = hole.h * (1 - lift);
-  if (hanging > 0.5) {
-    for (let bx = hx + 4; bx < hx + hole.w - 2; bx += 10) {
-      ctx.fillStyle = gate.bar;
-      ctx.fillRect(bx, hy, 3, hanging);
-      ctx.fillStyle = gate.frame;
-      ctx.fillRect(bx + 3, hy, 1, hanging);
-      // Punte in fondo alle sbarre.
-      ctx.fillStyle = gate.bar;
-      ctx.fillRect(bx - 1, hy + hanging - 3, 5, 2);
-    }
-    for (const at of [0.3, 0.68]) {
-      ctx.fillStyle = gate.frame;
-      ctx.fillRect(hx, Math.round(hy + hanging * at), hole.w, 3);
-      ctx.fillStyle = gate.bar;
-      ctx.fillRect(hx, Math.round(hy + hanging * at), hole.w, 1);
-    }
-  }
-  ctx.drawImage(sheet, piece.x, piece.y, piece.w, piece.h, left, top, piece.w, piece.h);
-  ctx.restore();
-  return true;
-}
-
 /** La soglia sotto un portale: una luce che si spegne a gradini verso la stanza e due angoli che segnano dove finisce. */
 function drawGothicThreshold(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number, color: string, strength: number): void {
   const half = ROOM_LAYOUT.doorHalfWidth;
@@ -405,29 +234,9 @@ function drawGate(
 /** Sopra i personaggi: i cartelli delle porte (tipo di stanza, premio, teschio per le piu' dure) e i nomi dei premi. */
 export function drawRoomLabels(ctx: CanvasRenderingContext2D, look: RoomLook): void {
   const { view } = look;
-  const scene = look.scene ?? TOP_DOWN_VIEW;
   view.doors.forEach((door, index) => {
     const option = look.nextOptions[index];
     if (option === undefined) return;
-    scene.at(ctx, door.x, ROOM_LAYOUT.wallThickness + ROOM_LAYOUT.doorDepth + 18, 0, () => drawDoorSign(ctx, look, door, option));
-  });
-  for (const pickup of view.pickups) {
-    if (pickup.kind === 'gold' || pickupHidden(view, pickup, look.localId)) continue;
-    scene.at(ctx, pickup.x, pickup.y, PICKUP_FEET, () => {
-      ctx.save();
-      ctx.font = canvasFont(9, 'text');
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#ffe9a0';
-      ctx.fillText(PICKUP_ICONS[pickup.kind].label, pickup.x, pickup.y + 28);
-      ctx.restore();
-    });
-  }
-}
-
-/** Il cartello di una porta: tipo di stanza, teschio per le piu' dure, vena dietro la porta. */
-function drawDoorSign(ctx: CanvasRenderingContext2D, look: RoomLook, door: RoomView['doors'][number], option: DoorOption): void {
-  const { view } = look;
-  {
     const room = ROOM_LABELS[option.kind].name.toUpperCase();
     const reward = '';
     const text = reward !== '' ? `${room} · ${reward}` : room;
@@ -450,6 +259,15 @@ function drawDoorSign(ctx: CanvasRenderingContext2D, look: RoomLook, door: RoomV
       ctx.fillStyle = view.doorsOpen ? '#d8c0e8' : '#8a7a90';
       ctx.fillText(look.nextVein, door.x, y + 13);
     }
+    ctx.restore();
+  });
+  for (const pickup of view.pickups) {
+    if (pickup.kind === 'gold' || pickupHidden(view, pickup, look.localId)) continue;
+    ctx.save();
+    ctx.font = canvasFont(9, 'text');
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffe9a0';
+    ctx.fillText(PICKUP_ICONS[pickup.kind].label, pickup.x, pickup.y + 28);
     ctx.restore();
   }
 }

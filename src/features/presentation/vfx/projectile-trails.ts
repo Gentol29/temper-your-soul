@@ -31,8 +31,6 @@ export interface TrailStyle {
 export const TRAILS = {
   /** Particelle vive al massimo: oltre, le piu' vecchie lasciano il posto. */
   max: 1600,
-  /** Altezza sullo schermo da cui partono, come il colpo (`ISO_BODY_LIFT`). */
-  lift: 14,
   styles: {
     'mage-fireball': { ramp: ['#f0bd72', '#e77c40', '#cb4939', '#792d3b'], spacing: 7, burst: 2, life: 0.45, sizes: [1, 2], rise: -26, drag: 0.08, spread: 14 },
     'mage-water-orb': { ramp: ['#cce4df', '#91c7cc', '#537b8c', '#35495c'], spacing: 9, burst: 1, life: 0.5, sizes: [1, 2], rise: 34, drag: 0.06, spread: 10 },

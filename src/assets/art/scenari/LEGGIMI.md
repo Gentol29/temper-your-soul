@@ -19,9 +19,3 @@ Cripta: ardesia e cremisi, con statue, ossari, sarcofagi. Palude: gotico sommers
 Generate in locale con SDXL 1.0 e Pixel Art XL, prompt e scelte in `scenari-prompts.json` e `scenari-progetto.json` degli strumenti esterni (README · Strumenti esterni). Gli originali restano fuori dal progetto, nella cartella di lavoro esterna di chi le ha generate.
 
 Licenze: SDXL 1.0 OpenRAIL++-M, Pixel Art XL OpenRAIL-M. Scelta del proprietario se tenerli: vedi `docs/produzione-grafica.md`.
-
-## Oggetti della Cripta in isometria
-
-In `crypt.png` i ruoli `pillarS`, `pillarM`, `pillarL` e `scatter` non vengono dal generatore: sono modelli 3D fatti con forme semplici e resi con Blender 5.1 (motore Workbench, nessuna IA), con strumenti esterni. Camera ortografica a 30° con l'oggetto ruotato di 45° (isometria 2:1), 64 px per 2,25 m (un po' piu' grandi dei mob, resi a 44 px per 2,25 m), senza antialiasing. Rifiniti con quattro toni per materiale, linee interne fra le parti e contorno scuro di 1 px, rosso brace vicino alle fiamme.
-
-`foot` nell'atlante è il punto dello sprite che poggia sul centro del cerchio di collisione. Questi pezzi non hanno basamento: i raggi degli ostacoli della Cripta sono ridotti per coincidere con la loro larghezza. Gli altri ruoli di questo foglio restano quelli del generatore locale.

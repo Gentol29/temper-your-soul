@@ -198,8 +198,8 @@ describe('tile dei dungeon (fase 6)', () => {
       expect(call.dy % TILE_SIZE).toBe(0);
       expect(call.dw).toBe(TILE_SIZE);
     }
-    // La faccia in basso usa i mattoni del muro della cripta.
+    // Il bordo del massiccio resta sul piano delle lastre.
     const walls = tileVariants('crypt', 'wall');
-    expect(drawn.some((call) => walls.some((tile) => tile.x === call.sx && tile.y === call.sy))).toBe(true);
+    expect(drawn.some((call) => walls.some((tile) => tile.x === call.sx && tile.y === call.sy))).toBe(false);
   });
 });

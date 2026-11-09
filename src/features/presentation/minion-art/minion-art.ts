@@ -20,22 +20,6 @@ export interface MinionArt {
   readonly walks?: boolean;
   /** Disegnato di profilo, verso destra: si specchia quando va a sinistra. */
   readonly faces?: boolean;
-  /**
-   * 8 serie di fotogrammi, una per direzione sullo schermo, nell'ordine S, SE, E, NE, N, NW, W, SW (`minion-directions.ts`).
-   * Se c'e', il servitore mostra la serie della direzione in cui va e `frames` e' solo la serie di riferimento (SE).
-   */
-  readonly directions?: readonly (readonly SpriteFrame[])[];
-  /**
-   * La riga del fotogramma che poggia sul punto di gioco. Serve a chi e' resa in 3D: il corpo puo' scendere sotto quel punto
-   * (una coda verso la camera) o restarne sopra (chi vola). Senza, i piedi stanno in fondo al fotogramma.
-   */
-  readonly footRow?: number;
-}
-
-/** Di quanti pixel il punto a terra di un servitore sta sotto il centro del suo disegno. */
-export function minionFootOffset(art: MinionArt): number {
-  const height = art.frames[0]!.length * art.scale;
-  return Math.round(art.footRow === undefined ? height / 2 - 2 : art.footRow * art.scale - height / 2);
 }
 
 /** Una copia del fotogramma con alcune righe cambiate (per il secondo fotogramma). */

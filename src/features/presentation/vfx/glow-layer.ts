@@ -1,6 +1,5 @@
 import type * as PixiTypes from 'pixi.js';
 import type { DangerZone } from '../../combat/danger-zone';
-import { TOP_DOWN_VIEW, type SceneView } from '../iso/scene-view';
 import { compositePixi, pixiLayer, type Pixi } from '../webgl-renderer';
 import { flashIntensity, isFallingMeteor, METEOR_GLOW, fallingMeteorOffset, sparkLook, sparkPoint, type MeteorGlow } from './meteor-glow';
 
@@ -11,7 +10,7 @@ import { flashIntensity, isFallingMeteor, METEOR_GLOW, fallingMeteorOffset, spar
  * Senza WebGL non si disegna nulla (e' decorazione). Solo aspetto.
  */
 
-/** Ellisse 2:1 (luce sul pavimento) o cerchio (alone in aria), a quattro gradini di opacita': niente sfumature continue. */
+/** Alone circolare, a quattro gradini di opacita': niente sfumature continue. */
 function haloCanvas(width: number, height: number): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = width; canvas.height = height;
@@ -54,12 +53,12 @@ function ensure(pixi: Pixi): GlowScene {
   });
   sparks.blendMode = 'add';
   group.addChild(halos, sparks);
-  scene = { group, halos, sparks, ground: texture(haloCanvas(64, 32)), round: texture(haloCanvas(24, 24)) };
+  scene = { group, halos, sparks, ground: texture(haloCanvas(64, 64)), round: texture(haloCanvas(24, 24)) };
   return scene;
 }
 
 /** Disegna luci e scintille della meteora e le somma alla scena. Le zone servono per le meteore ancora in caduta. */
-export function drawMeteorGlow(ctx: CanvasRenderingContext2D, glow: MeteorGlow, zones: readonly DangerZone[], view: SceneView = TOP_DOWN_VIEW): void {
+export function drawMeteorGlow(ctx: CanvasRenderingContext2D, glow: MeteorGlow, zones: readonly DangerZone[]): void {
   const falling = zones.filter(isFallingMeteor);
   if (glow.sparks.length === 0 && glow.flashes.length === 0 && falling.length === 0) return;
   const layer = pixiLayer();
@@ -82,29 +81,28 @@ export function drawMeteorGlow(ctx: CanvasRenderingContext2D, glow: MeteorGlow, 
     };
     // Meteore in caduta: luce sul pavimento che cresce avvicinandosi e alone attorno alla testa.
     for (const zone of falling) {
-      const shift = view.shift(zone.position.x, zone.position.y, 0);
-      const gx = Math.round(zone.position.x) + shift.x, gy = Math.round(zone.position.y) + shift.y;
+      const gx = Math.round(zone.position.x), gy = Math.round(zone.position.y);
       const r = zone.radius, u = zone.progress, head = fallingMeteorOffset(u);
-      halo(s.ground, gx, gy, r * 2.4 * (0.5 + u * 0.5), r * 1.2 * (0.5 + u * 0.5), METEOR_GLOW.ground.color, METEOR_GLOW.ground.alpha * u);
+      halo(s.ground, gx, gy, r * 2.4 * (0.5 + u * 0.5), r * 2.4 * (0.5 + u * 0.5), METEOR_GLOW.ground.color, METEOR_GLOW.ground.alpha * u);
       halo(s.round, gx + head.x, gy + head.y, METEOR_GLOW.head.size, METEOR_GLOW.head.size, METEOR_GLOW.head.color, METEOR_GLOW.head.alpha);
     }
-    // Lampi d'impatto: ellisse del danno (2:1 sul pavimento) e un nucleo piu' chiaro.
+    // Lampi d'impatto: cerchio del danno e un nucleo piu' chiaro.
     for (const flash of glow.flashes) {
-      const shift = view.shift(flash.x, flash.y, 0), k = flashIntensity(flash.age);
-      const gx = Math.round(flash.x) + shift.x, gy = Math.round(flash.y) + shift.y;
-      const w = flash.radius * 2.83 * METEOR_GLOW.flash.scale, h = w / 2;
-      halo(s.ground, gx, gy, w, h, METEOR_GLOW.flash.color, METEOR_GLOW.flash.alpha * k);
-      halo(s.ground, gx, gy - 6, w * 0.45, h * 0.6, METEOR_GLOW.flash.core, METEOR_GLOW.flash.alpha * k);
+      const k = flashIntensity(flash.age);
+      const gx = Math.round(flash.x), gy = Math.round(flash.y);
+      const w = flash.radius * 2 * METEOR_GLOW.flash.scale;
+      halo(s.ground, gx, gy, w, w, METEOR_GLOW.flash.color, METEOR_GLOW.flash.alpha * k);
+      halo(s.ground, gx, gy - 6, w * 0.45, w * 0.45, METEOR_GLOW.flash.core, METEOR_GLOW.flash.alpha * k);
     }
     for (let i = used; i < haloPool.length; i++) haloPool[i]!.visible = false;
-    // Scintille: punto del pavimento proiettato piu' scostamento sullo schermo e altezza.
+    // Scintille: punto del pavimento piu' scostamento sullo schermo e altezza.
     const list = s.sparks.particleChildren;
     list.length = 0;
     while (sparkPool.length < glow.sparks.length) sparkPool.push(new pixi.Particle({ texture: pixi.Texture.WHITE, anchorX: 0.5, anchorY: 0.5 }));
     glow.sparks.forEach((spark, i) => {
-      const p = sparkPoint(spark), shift = view.shift(p.x, p.y, 0), look = sparkLook(spark), particle = sparkPool[i]!;
-      particle.x = Math.round(p.x + shift.x + p.dx);
-      particle.y = Math.round(p.y + shift.y + p.dy);
+      const p = sparkPoint(spark), look = sparkLook(spark), particle = sparkPool[i]!;
+      particle.x = Math.round(p.x + p.dx);
+      particle.y = Math.round(p.y + p.dy);
       particle.scaleX = particle.scaleY = spark.size;
       particle.tint = tintOf(look.color);
       particle.alpha = look.alpha;

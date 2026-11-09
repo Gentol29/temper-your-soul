@@ -5,8 +5,7 @@ import type { CoverState } from '../match/match';
 import { FEEDBACK } from './effects';
 import { drawLight } from './lights';
 import { sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
-import { pixelEllipse } from './themes/scenery';
-import { ACTIVE_TILE_ATLASES, drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SCALE, TILE_SIZE } from './themes/tiles';
+import { ACTIVE_TILE_ATLASES, drawTile, tileAt, tileGrid, tileSheet, tileVariants, TILE_SIZE } from './themes/tiles';
 
 /*
  * Pozzi, ponti e ripari delle stanze della fase 5. Solo aspetto: le regole sono in `arena.ts` e `match.ts`. I tile
@@ -78,7 +77,7 @@ function visiblePart(rect: Solid, camera: Camera, margin: number): Solid | null 
  * Il fondo del pozzo: i tile 3 x 3 del tema (angoli, lati, centro) adattati al rettangolo, o un riempimento scuro. Si
  * disegnano solo le colonne e le righe di `view`: un fiume lungo quanto la stanza non costa piu' della parte inquadrata.
  */
-export function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaThemeId, view: Solid): void {
+function drawChasmBed(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaThemeId, view: Solid): void {
   const look = HAZARD_LOOKS[theme];
   const sheet = tileSheet(theme);
   const pieces = tileVariants(theme, 'chasm');
@@ -209,7 +208,7 @@ function drawChasm(ctx: CanvasRenderingContext2D, rect: Solid, theme: ArenaTheme
 }
 
 /** Un ponte: il vuoto sotto, le assi (tile del tema) che sporgono un poco sulle rive, le ringhiere con i pali. */
-export function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaThemeId, camera: Camera): void {
+function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme: ArenaThemeId, camera: Camera): void {
   if (!visible(camera, bridge)) return;
   const look = HAZARD_LOOKS[theme];
   const ns = bridge.along === 'ns';
@@ -298,43 +297,30 @@ export function drawBridge(ctx: CanvasRenderingContext2D, bridge: Bridge, theme:
 }
 
 /**
- * Un riparo: lo sprite del tema ripetuto lungo il rettangolo, appoggiato al suo lato basso, con l'ombra. Sotto i due
- * terzi della vita compaiono le crepe, sotto un terzo si spezza; appena colpito trema e schiarisce.
+ * Un riparo: lo sprite del tema ripetuto entro il rettangolo del riparo. Sotto i due
+ * terzi della vita compaiono le crepe, sotto un terzo si spezza; appena colpito si schiarisce.
  */
 function drawCover(ctx: CanvasRenderingContext2D, solid: Solid, left: number, theme: ArenaThemeId, camera: Camera, flash: number): void {
   if (!visible(camera, solid)) return;
   const look = HAZARD_LOOKS[theme];
-  const shake = flash > 0 ? Math.sin(flash * 90) * 2 : 0;
   const scenic = tileGrid(theme, 'chasmBed') !== undefined;
-  if (scenic) {
-    pixelEllipse(ctx, solid.x + solid.width / 2 + 4, solid.y + solid.height - 2, solid.width / 2 + 4, 9, '#00000059');
-  } else {
-    ctx.fillStyle = '#00000059';
-    ctx.beginPath();
-    ctx.ellipse(solid.x + solid.width / 2 + 4, solid.y + solid.height - 2, solid.width / 2 + 4, 9, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
   const sheet = tileSheet(theme);
   const sprite = tileVariants(theme, 'cover')[0];
   const pieces: Solid[] = [];
-  if (sheet !== null && sprite !== undefined) {
-    const width = sprite.w * TILE_SCALE;
-    const height = sprite.h * TILE_SCALE;
-    const count = Math.max(1, Math.round(solid.width / width));
-    const slot = solid.width / count;
-    for (let k = 0; k < count; k++) {
-      const x = Math.round(solid.x + k * slot + (slot - width) / 2 + shake);
-      const y = Math.round(solid.y + solid.height - height);
-      drawTile(ctx, sheet, sprite, x, y);
-      pieces.push({ x, y, width, height });
-    }
-  } else {
-    const body = { x: solid.x + shake, y: solid.y - 8, width: solid.width, height: solid.height + 8 };
+  // Assi e panche riempiono il rettangolo colpibile anche nei ripari corti o verticali.
+  const count = sprite === undefined ? 1 : Math.max(1, Math.round(solid.width / sprite.w));
+  for (let i = 0; i < count; i++) {
+    const x = Math.round(solid.x + solid.width * i / count);
+    const right = Math.round(solid.x + solid.width * (i + 1) / count);
+    const piece = { x, y: solid.y, width: right - x, height: solid.height };
+    pieces.push(piece);
     ctx.fillStyle = look.cover;
-    ctx.fillRect(body.x, body.y, body.width, body.height);
+    ctx.fillRect(x, piece.y, piece.width, piece.height);
+    if (sheet !== null && sprite !== undefined) {
+      ctx.drawImage(sheet, sprite.x, sprite.y, sprite.w, sprite.h, x, piece.y, piece.width, piece.height);
+    }
     ctx.fillStyle = look.coverEdge;
-    ctx.fillRect(body.x, body.y, body.width, 4);
-    pieces.push(body);
+    ctx.fillRect(x, piece.y, piece.width, 2);
   }
   // Crepe che si allargano con il danno: una sotto i due terzi, tre sotto un terzo, con un filo chiaro accanto (la
   // scheggiatura) perche' si leggano anche sui ripari gia' venati. Sotto un terzo il riparo scurisce e perde pezzi.

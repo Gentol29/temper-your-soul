@@ -1,10 +1,3 @@
-/*
- * Le 8 direzioni degli sprite dei servitori resi con Blender (`blender-sprites.ts`). Solo aspetto.
- * L'ordine delle serie e' quello degli sprite: la prima guarda la camera (giu' sullo schermo), poi in senso antiorario
- * sul disegno. Si sceglie dall'angolo SULLO SCHERMO (`SceneView.angle`: 0 = destra, pi/2 = giu'), cosi' in isometria lo
- * sprite guarda dove va il servitore come lo vede il giocatore.
- */
-
 /** Nomi delle direzioni nell'ordine delle serie di fotogrammi di uno sprite. */
 export const SPRITE_DIRECTIONS = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'] as const;
 export type SpriteDirection = (typeof SPRITE_DIRECTIONS)[number];

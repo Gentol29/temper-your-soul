@@ -742,7 +742,11 @@ Etichette dei servizi e nomi dei visitatori passano dal canvas ingrandito a test
 
 Riscontro successivo del proprietario, 4 novembre: le collisioni sembrano a posto nella prova svolta. Restano tali sagome; la Forgia si usa a distanza dal suo fronte (652, 300) → (758, 345), con lo stesso raggio di 62 unità, per renderla accessibile anche arrivando da sinistra. Tooltip e priorità dei bersagli usano il punto del fronte più vicino al giocatore. Su richiesta esplicita i nomi dell’HUB e il tooltip diminuiscono di 2 px: a scala 3× i nomi passano da 24 a 22 px, il tooltip da 16 a 14 px. Eccezione locale alle misure DOM precedenti, senza cambiare Silkscreen né i font del canvas. Nuovo accesso, nuova leggibilità e cooperativa ancora da confermare giocando.
 
-## Cripta isometrica · proposta locale, 5 novembre 2026
+## Dungeon in vista ortogonale · 9 novembre 2026
+
+Tutte le stanze e le arene dei quattro dungeon usano la griglia del mondo. WASD, cursore, pericoli a terra, basamenti e strati PixiJS condividono gli assi X/Y. Il raggio di ogni impronta viene dai dati di collisione. Da confermare giocando in singolo e in cooperativa la leggibilità degli ostacoli, delle porte e dei colpi con la camera in movimento.
+
+## Proposta isometrica storica (superata) · proposta locale, 5 novembre 2026
 
 Richiesta dell'utente: mappa della Cripta in isometria a 45° con lastre che si ripetono alla Hades, mantenendo texture e tile esistenti, solo aspetto e collisioni coerenti con il disegno, Hi-bit. Se funziona si estenderà agli altri dungeon (basta registrare la grafica isometrica del tema in `iso/view-mode.ts`).
 

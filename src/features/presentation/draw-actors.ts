@@ -1,14 +1,14 @@
+import { rasterDisc } from './pixel-disc';
 import type { CharacterAppearance } from '../character/appearance';
 import { CHARACTER_ART, characterPixels, DEFAULT_APPEARANCE, type CharacterPixels } from './character-art';
 import { SHADOW_ANIMATION } from './shadow-motion';
+import { BODY_RADIUS } from '../combat/collision';
 import { Vec2 } from '../../core/vec2';
 import type { Boss } from '../boss/boss';
 import type { Minion } from '../minions/minion';
 import { bossFx } from './boss-fx';
 import { minionArt } from './minion-art';
-import { minionFootOffset } from './minion-art/minion-art';
 import { spriteViewFromAim } from './sprite-view';
-import { directionSeries } from './minion-art/minion-directions';
 import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
 import { sheetImage, sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
@@ -16,7 +16,6 @@ import type { ActorPoses } from './poses';
 import { playerCastFrame } from './poses';
 import { drawSprite, type Palette, type SpriteFrame } from './sprites';
 import { canvasFont } from './fonts';
-import { TOP_DOWN_VIEW, type SceneView } from './iso/scene-view';
 
 /** Un raster per fotogramma/equipaggiamento, liberato insieme all'art dalla cache.
  * Evita migliaia di cambi di colore/fillRect per ogni giocatore e fotogramma. */
@@ -33,11 +32,9 @@ function rasterOf(art: CharacterPixels): HTMLCanvasElement {
   rasterFrames.set(art, raster); return raster;
 }
 
-function drawShadow(ctx: CanvasRenderingContext2D, x: number, y: number, radiusX: number, radiusY: number, color: string): void {
+function drawFootprint(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string): void {
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.ellipse(x, y, radiusX, radiusY, 0, 0, 7);
-  ctx.fill();
+  rasterDisc(x, y, radius, (left, top, width) => ctx.fillRect(left, top, width, 1));
 }
 
 /**
@@ -51,22 +48,20 @@ export function drawPlayer(
   time: number,
   visible: boolean,
   appearance: CharacterAppearance = DEFAULT_APPEARANCE,
-  view: SceneView = TOP_DOWN_VIEW,
 ): void {
-  // In isometria l'ombra e' il corpo di gioco proiettato (cerchio di raggio 10: ellisse 2:1).
-  drawShadow(ctx, player.position.x, player.position.y + 14, 14, view.iso ? 7 : 5, '#080b1480');
+  drawFootprint(ctx, player.position.x, player.position.y, BODY_RADIUS.player, '#080b1480');
   if (!visible) return;
   const slots = ['primary_hand','secondary_hand','armor','boots'] as const;
   const slotIndex=player.skillBar.skills.findIndex(skill=>skill?.id===poses.playerSkillId);
   const attackSlot=slots[slotIndex] ?? 'primary_hand',skill=player.skillBar.skillAt(slotIndex);
   const cadence=skill?skill.cooldown/(slotIndex===0?1+player.buffValue('attackSpeed'):1):undefined;
   const castFrame=playerCastFrame(poses.playerCast,cadence);
-  // Verso e passo seguono le direzioni come appaiono sullo schermo (in isometria il mondo e' ruotato).
-  const aimOnScreen = view.delta(player.aim.x - player.position.x, player.aim.y - player.position.y);
+  // Verso e passo seguono le direzioni come appaiono sullo schermo.
+  const aimOnScreen = player.aim.sub(player.position);
   const facing = aimOnScreen.x < 0 ? -1 : 1;
   // Tutte le classi sono rese in otto direzioni: la mira sceglie la vista.
   const aimView = spriteViewFromAim(aimOnScreen.x, aimOnScreen.y);
-  const previous=previousPositions.get(player),dx=previous?view.delta(player.position.x-previous.x,player.position.y-previous.y).x:0;
+  const previous=previousPositions.get(player),dx=previous?player.position.x - previous.x:0;
   const walkDirection:1|-1=Math.abs(dx)>.01?(dx*facing<0?-1:1):previous?.direction??1;
   previousPositions.set(player,{x:player.position.x,y:player.position.y,direction:walkDirection});
   const count=SHADOW_ANIMATION.frames;
@@ -107,9 +102,6 @@ function rimAlpha(rim: string): number {
   return rim.length >= 9 ? parseInt(rim.slice(7, 9), 16) / 255 : 1;
 }
 
-/** L'ultima direzione mostrata da ogni boss con foglio direzionale. */
-const bossDirections = new WeakMap<Boss, number>();
-
 const NO_LOOK: BossLook ={ flash: 0, offset: Vec2.ZERO, death: null, clock: 0 };
 
 /** Lampo bianco all'inizio della morte (quota della sequenza) e dissolvenza finale, per i boss con foglio di sprite. */
@@ -130,7 +122,6 @@ function drawSheetBoss(
   cast: number | null,
   time: number,
   look: BossLook,
-  direction: number,
 ): void {
   const { layout, scale } = sheet;
   const frame = sheetFrame(sheet, {
@@ -140,7 +131,6 @@ function drawSheetBoss(
     cast,
     transform: look.transform ?? null,
     death: look.death,
-    direction,
   });
   const { width, height } = layout.cell;
   const sx = frame.column * width;
@@ -205,15 +195,14 @@ function whitePalette(palette: Palette): Palette {
  * caricato, altrimenti la grafica a matrici. In furia ha un alone pulsante del suo colore; quando e' colpito lampeggia
  * di bianco e sobbalza; morendo trema e si frantuma.
  */
-export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Player, poses: ActorPoses, time: number, look: BossLook = NO_LOOK, view: SceneView = TOP_DOWN_VIEW): void {
+export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Player, poses: ActorPoses, time: number, look: BossLook = NO_LOOK): void {
   const art = bossArt(boss.definition.art);
   const sheet = bossSheet(boss.definition.art);
-  const image = sheet === null ? null : sheetImage(sheet.layout.url);
+  // I fogli direzionali 3D servono al bestiario. In arena queste figure usano la pixel art classica.
+  const image = sheet === null || sheet.directional !== undefined ? null : sheetImage(sheet.layout.url);
   const x = Math.round(boss.position.x + look.offset.x);
   const y = Math.round(boss.position.y + look.offset.y);
-  // In isometria l'ombra e' il cerchio di gioco proiettato, sotto i piedi.
-  if (view.iso) drawShadow(ctx, boss.position.x, boss.position.y + art.shadow.offsetY, boss.stats.hitRadius * Math.SQRT2, boss.stats.hitRadius * Math.SQRT1_2, '#070c1680');
-  else drawShadow(ctx, boss.position.x, boss.position.y + art.shadow.offsetY, art.shadow.radiusX, art.shadow.radiusY, '#070c1680');
+  drawFootprint(ctx, boss.position.x, boss.position.y, boss.stats.hitRadius, '#070c1680');
   if (boss.isEnraged || look.death !== null) {
     // Alone della furia (e della morte): un bagliore del colore del boss che pulsa sotto lo sprite.
     const glow = bossFx(boss.definition.art).rage.glow;
@@ -230,15 +219,9 @@ export function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, player: Play
     ctx.fill();
     ctx.restore();
   }
-  const facingLeft = view.delta(player.position.x - boss.position.x, player.position.y - boss.position.y).x < 0;
+  const facingLeft = player.position.x < boss.position.x;
   if (sheet !== null && image !== null) {
-    let direction = 0;
-    if (sheet.directional !== undefined) {
-      // Guarda il giocatore come lo vede lo schermo; l'isteresi evita il tremolio ai confini fra due direzioni.
-      direction = directionSeries(view.angle(player.position.x - boss.position.x, player.position.y - boss.position.y), bossDirections.get(boss));
-      bossDirections.set(boss, direction);
-    }
-    drawSheetBoss(ctx, boss, sheet, image, facingLeft, x, y, look.death === null ? poses.bossCastProgress : null, time, look, direction);
+    drawSheetBoss(ctx, boss, sheet, image, facingLeft, x, y, look.death === null ? poses.bossCastProgress : null, time, look);
     return;
   }
   const frame = Math.floor(time * (boss.isSlowed ? 2 : 5)) % 4;
@@ -343,25 +326,23 @@ export function minionRaster(frame: SpriteFrame, palette: Palette, scale: number
 }
 
 /** Dove era ogni servitore all'ultimo disegno, quando si e' mosso l'ultima volta e verso dove: solo per l'aspetto, non per le regole. */
-const minionSteps = new WeakMap<Minion, { x: number; y: number; movedAt: number; left: boolean; series: number }>();
+const minionSteps = new WeakMap<Minion, { x: number; y: number; movedAt: number; left: boolean }>();
 /** Chi, fra i servitori disegnati di profilo, guarda a sinistra: la morte (`combat-vfx.ts`) ha solo l'id. */
 export const minionsFacingLeft = new Set<number>();
 const STILL_AFTER = 0.14;
 
 /** Vero se il servitore si e' mosso da poco: chi sta fermo non deve camminare sul posto. */
-function minionIsMoving(minion: Minion, time: number, view: SceneView): boolean {
+function minionIsMoving(minion: Minion, time: number): boolean {
   const { x, y } = minion.position;
   const step = minionSteps.get(minion);
   if (step === undefined) {
-    minionSteps.set(minion, { x, y, movedAt: time, left: false, series: 0 });
+    minionSteps.set(minion, { x, y, movedAt: time, left: false });
     return true;
   }
   if (Math.abs(x - step.x) + Math.abs(y - step.y) > 0.05) {
     // Chi sale o scende quasi dritto non si volta a ogni minimo scarto.
-    const d = view.delta(x - step.x, y - step.y);
-    if (Math.abs(d.x) > 0.25 * Math.abs(d.y)) step.left = d.x < 0;
-    // Gli sprite a 8 direzioni guardano dove si va sullo schermo (con un margine ai confini, contro il tremolio).
-    step.series = directionSeries(view.angle(x - step.x, y - step.y), step.series);
+    const dx = x - step.x;
+    if (Math.abs(dx) > 0.25 * Math.abs(y - step.y)) step.left = dx < 0;
     step.x = x;
     step.y = y;
     step.movedAt = time;
@@ -407,11 +388,11 @@ export const ELITE_COLORS: Readonly<Record<string, string>> = {
  * si rialza; le elite hanno un anello del colore del modificatore e la barra sempre visibile; gli scudi un velo.
  * `rim` e' il bordo chiaro della sagoma (dal tema della mappa); chi dorme non ce l'ha, perche' deve sembrare pietra.
  */
-export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: number, flash: number, prey = false, rim = '', view: SceneView = TOP_DOWN_VIEW): void {
+export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: number, flash: number, prey = false, rim = ''): void {
   const art = minionArt(minion.definition.visual);
   const { x, y } = minion.position;
   const half = (art.frames[0]!.length * art.scale) / 2;
-  const foot = minionFootOffset(art);
+  const foot = Math.round(half - 2);
   if (minion.state === 'burrowed' || minion.state === 'emerging') {
     // Un cumulo di terra che si muove; quando sta per uscire trema.
     const shake = minion.state === 'emerging' ? Math.sin(time * 60) * 2 : 0;
@@ -425,8 +406,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     return;
   }
   const lift = minion.state === 'airborne' ? Math.sin(Math.max(0, Math.min(1, 1 - minion.stateTimer / Math.max(0.01, minion.definition.leap?.flight ?? 0.5))) * Math.PI) * 60 : 0;
-  if (view.iso) drawShadow(ctx, x, y + foot, minion.hitRadius * Math.SQRT2 * (lift > 0 ? 0.7 : 1), minion.hitRadius * Math.SQRT1_2 * (lift > 0 ? 0.7 : 1), '#070c1670');
-  else drawShadow(ctx, x, y + foot, minion.hitRadius * (lift > 0 ? 0.7 : 1), 3, '#070c1670');
+  drawFootprint(ctx, x, y, minion.hitRadius, '#070c1670');
   if (minion.elite !== null || prey) {
     const color = prey ? '#ffd889' : ELITE_COLORS[minion.elite!.id] ?? '#ffd889';
     ctx.save();
@@ -434,7 +414,7 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     ctx.globalAlpha = 0.55 + 0.25 * Math.sin(time * 5 + minion.id);
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(x, y + foot, minion.hitRadius + 6, (minion.hitRadius + 6) * 0.45, 0, 0, Math.PI * 2);
+    ctx.arc(x, y, minion.hitRadius + 6, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -446,12 +426,11 @@ export function drawMinion(ctx: CanvasRenderingContext2D, minion: Minion, time: 
     ctx.drawImage(glowRaster(art.glow, radius), Math.round(x - radius), Math.round(y - radius - lift));
     ctx.restore();
   }
-  const moving = minionIsMoving(minion, time, view);
+  const moving = minionIsMoving(minion, time);
   const stands = art.walks === true && !moving;
   const count = art.frames.length;
   const frameIndex = dormant || stands ? 0 : ((Math.floor(time * (art.fps ?? 6) + minion.id) % count) + count) % count;
-  const series = art.directions?.[minionSteps.get(minion)?.series ?? 0] ?? art.frames;
-  const sprite = series[frameIndex]!;
+  const sprite = art.frames[frameIndex]!;
   const bob = dormant || art.bob === false ? 0 : Math.sin(time * 8 + minion.id) * 1.5;
   const palette = dormant ? stonePalette(art.palette) : art.palette;
   const outline = dormant ? '' : rim;
