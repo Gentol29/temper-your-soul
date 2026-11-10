@@ -40,14 +40,15 @@ function sendProfile(id:string):void{for(const[ws,c]of clients)if(c.id===id&&ser
 function publishSocial():void{for(const[ws,c]of clients)if(world.characters.has(c.id)){const state=world.parties.view(c.id,performance.now()),key=JSON.stringify(state);if(key!==c.social){c.social=key;send(ws,{type:'social_party',state});}}}
 function publish():void{for(const[ws,c]of clients){if(!service.profiles.has(c.id))continue;const room=world.locations.get(c.id);const state:PartyState=room?room.state():{code:'HUB',dungeonId:'crypt',mode:'descent',grade:0,playing:false,members:[...world.characters].filter(([id])=>id===c.id).map(([id,character])=>({id,name:character.name!,character:world.hub.publicCharacter(id),appearance:character.appearance(),gearScore:character.gearScore}))};if(room!==c.room){c.room=room;c.encoder=new SnapshotEncoder();}send(ws,{type:'party',playerId:c.id,state});}}
 function problem(ws:WebSocket,error:unknown):void{send(ws,{type:'error',message:error instanceof Error&&!('code'in error)?error.message:'Salvataggio sul server non riuscito. Riprova.'});publishSocial();}
-function seedOf(m:Record<string,unknown>):ProfileSeed{if(typeof m.name!=='string'||!['warrior','archer','mage'].includes(String(m.characterClass))||!['male','female'].includes(String(m.body)))throw new Error('Dati iniziali non validi.');return{name:m.name,characterClass:m.characterClass as ProfileSeed['characterClass'],body:m.body as ProfileSeed['body']};}
+// Il seme arriva solo con la creazione del personaggio, dopo un accesso che ha risposto `character_required`.
+function seedOf(raw:unknown):ProfileSeed|null{if(raw===undefined)return null;if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Dati iniziali non validi.');const m=raw as Record<string,unknown>;if(typeof m.name!=='string'||!['warrior','archer','mage'].includes(String(m.characterClass))||!['male','female'].includes(String(m.body)))throw new Error('Dati iniziali non validi.');return{name:m.name,characterClass:m.characterClass as ProfileSeed['characterClass'],body:m.body as ProfileSeed['body']};}
 async function handle(ws:WebSocket,c:Connection,m:Record<string,unknown>):Promise<void>{
  const now=performance.now();
  if(m.type==='ping'&&typeof m.sent==='number'&&Number.isFinite(m.sent)){send(ws,{type:'pong',sent:m.sent});return;}
  if(m.type==='login'){
   if(m.protocol!==NETWORK.protocolVersion)throw new Error('Client e server diversi: ricarica il gioco.');
   if(c.loggingIn||service.profiles.has(c.id))throw new Error('Accesso già in corso.');c.loggingIn=true;
-  try{await service.login(c.id,m.token,seedOf(m),()=>clients.has(ws)&&ws.readyState===WebSocket.OPEN);if(!clients.has(ws))return;sendProfile(c.id);publish();publishSocial();}finally{c.loggingIn=false;}return;
+  try{const outcome=await service.login(c.id,m.token,seedOf(m.creation),()=>clients.has(ws)&&ws.readyState===WebSocket.OPEN);if(outcome==='disconnected'||!clients.has(ws))return;if(outcome==='character_required'){send(ws,{type:'character_required'});return;}sendProfile(c.id);publish();publishSocial();}finally{c.loggingIn=false;}return;
  }
  if(!service.profiles.has(c.id))throw new Error('Accedi prima con il tuo account.');
  const room=world.locations.get(c.id);

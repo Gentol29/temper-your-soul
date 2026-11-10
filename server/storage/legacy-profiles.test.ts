@@ -16,6 +16,12 @@ it('legge lo schema Supabase reale e mantiene la revisione in microsecondi',asyn
  expect(query.mock.calls[0]![1].slice(0,7)).toEqual(['a','Eroe','mage',1,0,0,10]);
  expect(query.mock.calls[1]![0]).toContain('EXTRACT(EPOCH');
 });
+it('cercare un account senza riga non inserisce nulla; con la riga carica il personaggio senza seme',async()=>{
+ const p=profile(),query=vi.fn().mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[{character:JSON.parse(serializeCharacter(p.character)),name:'Eroe',class:'mage',xp:0,gold:5,revision:'9'}]});
+ const repo=new LegacyProfiles({query} as unknown as Pool,{});
+ expect(await repo.find('nuovo')).toBeNull();expect(query).toHaveBeenCalledTimes(1);expect(query.mock.calls[0]![0]).not.toContain('INSERT');
+ const found=await repo.find('a');expect(found!.character.name).toBe('Eroe');expect(found!.gold).toBe(5);expect(found!.revision).toBe(9);
+});
 it('scrive JSON completo e metadati coerenti senza creare colonne o perdere i record',async()=>{
  const p=profile();p.character.totalXp=350;p.character.recordVictory('crypt',60);p.gold=125;
  const query=vi.fn().mockResolvedValue({rowCount:1,rows:[{revision:String(p.revision+17)}]}),release=vi.fn();

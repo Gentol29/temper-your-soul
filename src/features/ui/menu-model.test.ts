@@ -10,7 +10,7 @@ describe('comandi del menu principale', () => {
     expect(primaryEntries({...withCharacter,authenticated:true}).find(e=>e.id==='logout')).toMatchObject({label:'Logout',unavailable:null});
   });
   it('sono quelli del progetto, in italiano e nell\'ordine previsto', () => {
-    expect(primaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Entra', 'Nuovo personaggio', 'Impostazioni']);
+    expect(primaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Entra', 'Impostazioni']);
   });
 
   it('con un personaggio sono tutti disponibili e ognuno ha un tooltip', () => {
@@ -21,10 +21,14 @@ describe('comandi del menu principale', () => {
     expect(primaryEntries(withCharacter)[0]!.hint).toContain('Vesna');
   });
 
-  it('senza personaggi restano solo creazione, elenco e impostazioni, e chi e\' bloccato dice perche\'', () => {
+  it('il personaggio si crea dopo l\'accesso, non dal menu: nessun comando ne crea un altro', () => {
+    expect(primaryEntries({ ...withCharacter, authenticated: true }).map((entry) => entry.id)).toEqual(['continue', 'settings', 'logout']);
+  });
+
+  it('senza personaggio restano solo le impostazioni, e chi e\' bloccato dice perche\'', () => {
     const entries = primaryEntries(empty);
     const open = entries.filter((entry) => entry.unavailable === null).map((entry) => entry.id);
-    expect(open).toEqual(['new_character', 'settings']);
+    expect(open).toEqual(['settings']);
     for (const entry of entries) if (entry.unavailable !== null) expect(entry.unavailable.length, entry.id).toBeGreaterThan(0);
   });
 
@@ -71,7 +75,7 @@ describe('selezione da tastiera', () => {
 });
 
 describe('accesso al mondo pubblico', () => {
- it('i comandi principali non richiedono un codice di invito',()=>{expect(primaryEntries(withCharacter).map(e=>e.id)).toEqual(['continue','new_character','settings']);});
+ it('i comandi principali non richiedono un codice di invito',()=>{expect(primaryEntries(withCharacter).map(e=>e.id)).toEqual(['continue','settings']);});
  it('il comando Entra descrive il rifugio condiviso',()=>{expect(primaryEntries(withCharacter)[0]!.hint).toContain('rifugio');});
  it('la connessione espone accesso in corso e stato online',()=>{expect(connectionLabel({connecting:true,online:false,latency:null,failed:false}).tone).toBe('busy');expect(connectionLabel({connecting:false,online:true,latency:null,failed:false}).text).toBe('Online');});
 });

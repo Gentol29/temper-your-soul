@@ -1,0 +1,59 @@
+/*
+ * Schermata di accesso: la prima che si vede. Un solo riquadro al centro, sopra il rifugio dipinto.
+ * Stesso linguaggio di forge-menu.css: ferro e rame, ombre nette, Silkscreen solo a multipli di 8.
+ */
+#screen-login { align-items: center; padding: 24px 16px; background: #08070a8c; backdrop-filter: none; }
+.login-card { display: grid; gap: 12px; width: min(480px, 100%); margin: auto; padding: 24px 28px 28px; }
+.login-brand { display: flex; align-items: center; justify-content: center; gap: 12px; padding-bottom: 12px; box-shadow: 0 1px 0 var(--forge-iron); }
+.login-brand .brand {
+  margin: 0;
+  font: 500 24px/1 var(--relic-title);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: transparent;
+  background: linear-gradient(#fff3d8 0 38%, #e9c99a 38% 62%, #b98a5e 62%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(2px 0 0 var(--forge-ink)) drop-shadow(-2px 0 0 var(--forge-ink)) drop-shadow(0 -2px 0 var(--forge-ink)) drop-shadow(0 2px 0 var(--forge-ink)) drop-shadow(3px 4px 0 #6a1c26);
+}
+.login-card h2 { margin: 0; color: var(--forge-text); font: 400 24px/1.1 var(--relic-title); }
+.login-card h2:focus { outline: none; }
+.login-access { display: grid; gap: 12px; min-height: 48px; }
+.login-access-text, .login-access-note { margin: 0; color: var(--forge-text); font-size: 16px; line-height: 1.5; }
+.login-access-note { color: var(--forge-amber); }
+.login-access-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.login-access .relic-button { padding: 12px 16px; font: 400 16px var(--relic-title); }
+/* Audio e schermo si regolano anche prima di accedere: il menu con le impostazioni arriva dopo. */
+.login-settings { justify-self: start; margin-top: 4px; padding: 8px 12px; font: 400 16px var(--relic-title); }
+
+/* Email e password: campi larghi, etichette sempre visibili. */
+.account-login-form { display: grid; gap: 8px; }
+.account-login-form label { margin-top: 4px; color: var(--forge-muted); font-size: 16px; }
+.account-login-form input { box-sizing: border-box; width: 100%; padding: 12px; font: 16px var(--relic-title); color: var(--forge-text); background: var(--forge-ink); border: 1px solid var(--forge-iron-light); border-radius: 0; }
+.account-login-form input:focus-visible { outline: 2px solid var(--forge-amber); }
+.account-login-form p { margin: 0; color: var(--forge-muted); font-size: 16px; line-height: 1.5; }
+.account-login-form .account-login-status { color: var(--forge-amber); }
+.account-login-status:empty, .account-login-help:empty { display: none; }
+.account-login-form [hidden] { display: none; }
+.account-login-form button[type=submit] { margin-top: 8px; }
+/* L'azione principale e' una sola: entrare. */
+.forge-screen .account-login-form button[type=submit]:not(:disabled) {
+  background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink);
+}
+.forge-screen .account-login-form button[type=submit]:not(:disabled):hover {
+  background: var(--forge-corners), linear-gradient(#a8343c 0 2px, var(--forge-crimson-light) 2px calc(100% - 3px), #3a1018 calc(100% - 3px));
+  box-shadow: inset 0 0 0 1px var(--forge-copper-light), 0 2px 0 var(--forge-ink);
+}
+
+/* Accanto alla creazione: l'accesso e' fatto, il personaggio resta legato all'account. */
+#screen-characters .account-creation-note { padding: 10px 12px 12px; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
+#screen-characters .account-creation-note .eyebrow { display: block; margin-bottom: 8px; }
+#screen-characters .account-creation-note p { margin: 0 0 8px; color: var(--forge-text); font-size: 16px; line-height: 1.5; }
+#screen-characters .account-creation-note p:last-child { margin-bottom: 0; color: var(--forge-muted); }
+
+@media (max-width: 560px) {
+  .login-card { padding: 16px; }
+  .login-brand .brand { font-size: 16px; }
+  .login-card h2 { font-size: 16px; }
+}

@@ -159,6 +159,17 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version:'0.17.2',date:'2026-11-10',
+    changes:[
+      'Accesso prima del personaggio: la prima schermata chiede subito email e password (oppure porta al provider configurato). Solo dopo l’autenticazione, se l’account non ha ancora un personaggio, si apre la creazione; poi si entra nel rifugio collegato al server. Chi ha già un personaggio entra direttamente dopo l’accesso.',
+      'Il server non crea più il profilo durante l’accesso: verifica il token, cerca il personaggio dell’account e, se manca, risponde che va creato senza scrivere nulla. Nome, classe e sesso arrivano soltanto con la creazione, dopo l’accesso; un personaggio esistente non viene mai sostituito.',
+      'Menu principale raggiungibile solo con account e personaggio: Entra, Impostazioni, Logout. Tolto «Nuovo personaggio»: ogni account ha un personaggio, creato una volta. I profili locali restano salvati nel browser, ma non servono più per entrare e non vengono mostrati.',
+      'Schermata di accesso con stati leggibili: server non raggiungibile con Riprova; connessione interrotta, sessione scaduta o account già connesso in un’altra scheda con Riconnetti ed Esci dall’account. Dalla creazione si può soltanto uscire dall’account.',
+      'Protocollo applicativo 21 → 22: riavviare il server e ricaricare i client. Salvataggi, schema del database e bilanciamento invariati. Controlli automatici: 1.085 test, tipi e build. Prova tecnica nel browser con server locale, account fittizi e profili in memoria; accesso con account Supabase reale, conferma email e prova giocata ancora da eseguire.',
+    ],
+    balanceChanges:[],
+  },
+  {
     version:'0.17.1',date:'2026-11-10',
     changes:[
       'Corretto l’ingresso nel mondo online attraverso un tunnel: con ALLOWED_ORIGINS compilato il server chiudeva il WebSocket (codice 1008, «Connessione non disponibile») se l’indirizzo del tunnel non era in elenco, mentre l’accesso con email e password lo accettava già. Ora il WebSocket ammette anche la pagina servita dallo stesso host, come /auth; le altre origini restano rifiutate.',

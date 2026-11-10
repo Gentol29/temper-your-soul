@@ -1,6 +1,6 @@
 # Mondo condiviso e profili PostgreSQL
 
-Release **v0.17.00** del 10 novembre 2026. Protocollo applicativo **21**, codec compatto ordinato v2, salvataggi **v10** con lettura dei precedenti formati, incluso v9. Riavviare server e client insieme.
+Release **v0.17.00** del 10 novembre 2026. Protocollo applicativo **21** (22 dalla v0.17.02, vedi [Ordine dell’accesso](#ordine-dellaccesso--v01702)), codec compatto ordinato v2, salvataggi **v10** con lettura dei precedenti formati, incluso v9. Riavviare server e client insieme.
 
 L’account verificato entra direttamente nel mondo pubblico `HUB`. Il rifugio usa artwork, collisioni e servizi esistenti, con fino a 64 sessioni sul processo e posizioni interpolate tramite `NetworkView.Hub`. Non esistono lobby chiuse, inviti `?party=`, leader o stato Pronto. Su richiesta successiva del proprietario è ripristinato il party sociale: icona originale, quattro posti, inviti nel pannello o interagendo con un giocatore nell’HUB, accettazione/rifiuto e uscita dal gruppo mantenendo account e avatar connessi. Gli inviti scadono dopo 60 secondi; capienza e durata sono tarature in `SOCIAL_PARTY`. I gruppi non riservano istanze o posti in dungeon: il portale apre un’istanza pubblica per dungeon/modalità; gli accessi successivi si uniscono alla stessa istanza in corso, fino a 32 giocatori. Si applicano ancora requisiti GS e sblocchi. Le tarature di combattimento restano quelle esistenti: il bilanciamento con più di quattro persone richiede una prova giocata.
 
@@ -9,6 +9,20 @@ Il pannello party non gestisce il logout. Esc chiude le finestre aperte e poi to
 `LoadingIndicator` è un componente riutilizzabile inline o sovrapposto. Il suo stato conta operazioni concorrenti e chiude ciascuna nel `finally`, anche in caso di errore: niente durata finta o percentuale inventata. È usato per configurazione accesso, login, registrazione, logout, handshake WebSocket, ingresso/ritorno dal dungeon e salvataggi del personaggio. Rispetta la preferenza di movimento ridotto.
 
 La simulazione avanza a 60 Hz; istantanee e input a 30 Hz. Identità/aspetto alla comparsa o modifica, movimento in tuple, rimozioni esplicite e controllo della sequenza. Un nuovo client riceve tutte le definizioni necessarie. I delta non vengono saltati per mascherare un ritardo; un client troppo lento viene disconnesso. L’uscita rimuove avatar ed evocazioni senza KO e non termina l’incontro degli altri.
+
+## Ordine dell’accesso · v0.17.02
+
+Richiesta del 10 novembre 2026: l’autenticazione va fatta prima della creazione del personaggio. Fino alla v0.17.01 il messaggio di accesso portava già nome, classe e sesso, quindi il personaggio andava creato in locale prima di poter accedere.
+
+1. **Accesso.** Il gioco si apre sulla schermata che chiede email e password, con Accedi e Crea account (oppure il pulsante verso il provider esterno, se configurato). Senza sessione non esistono menu, creazione o rifugio. Un ritorno dal provider con token nell’indirizzo salta il modulo.
+2. **Personaggio.** Il client invia `login` con il solo token. Il server verifica l’identità e cerca il profilo con `ProfileStore.find`, che non scrive nulla. Se manca risponde `character_required`: l’account resta libero e il client apre la creazione. Alla conferma il client accede di nuovo aggiungendo `creation` (nome, classe, sesso); il token viene verificato un’altra volta e il profilo nasce con `ProfileStore.load`, che non sovrascrive mai un profilo esistente.
+3. **Rifugio.** Con il profilo caricato il server inserisce l’avatar nell’HUB e il gioco entra nel rifugio. Agli accessi successivi basta il token.
+
+Il menu principale mostra Entra, Impostazioni e Logout; «Nuovo personaggio» è stato tolto perché ogni account ha un personaggio. Logout, sessione scaduta e connessione interrotta riportano alla schermata di accesso, che propone Riconnetti ed Esci dall’account. Dalla creazione si può soltanto uscire dall’account. I profili locali del browser restano salvati e non vengono letti né mostrati in questo flusso; `ui/character-profiles.ts` e i relativi stili non sono più raggiungibili e si possono rimuovere in una pulizia dedicata.
+
+Protocollo applicativo **22**: riavviare il server e ricaricare i client. Schema del database, salvataggi e bilanciamento invariati. Codice: `ui/account-gate.ts` (schermata e connessione), `ui/access-model.ts` (tappe, senza DOM), `network/party-client.ts`, `server/world-service.ts`.
+
+Verifiche: **1.085 test in 106 file**, tipi e build. I test nuovi coprono le tappe, l’accesso senza scritture, la creazione dopo `character_required` su WebSocket reali, il rientro con il solo token, dati di creazione non previsti e la ricerca del profilo nei due adattatori. Controllo tecnico nel browser con un server locale isolato, account fittizi e profili in memoria: registrazione, messaggio di conferma email, accesso, creazione, ingresso nell’HUB, menu, logout, rientro diretto con il personaggio salvato, password errata, seconda scheda con lo stesso account, server spento durante il gioco e all’avvio, modalità provider. Nessun account Supabase creato e nessuna email inviata; accesso con account reale, conferma email e prova giocata restano da eseguire dall’utente.
 
 ## Collegamento al provider esistente
 

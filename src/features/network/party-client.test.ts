@@ -13,12 +13,35 @@ class FakeSocket {
  emit(type:string,data?:unknown){for(const listener of this.listeners.get(type)??[])listener({data});}
 }
 afterEach(()=>vi.unstubAllGlobals());
-function setup(){vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{setInterval:()=>1,clearInterval:()=>{}});const c=Character.createStarter();c.completeCreation('Eroe','male','mage');const client=new PartyClient(()=>{},()=>{},()=>{},()=>{});client.connect(c);return{client,c,socket:FakeSocket.instances.at(-1)!};}
+function setup(){vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{setInterval:()=>1,clearInterval:()=>{}});const c=Character.createStarter();c.completeCreation('Eroe','male','mage');const client=new PartyClient(()=>{},()=>{},()=>{},()=>{});client.connect();return{client,c,socket:FakeSocket.instances.at(-1)!};}
 it('un socket precedente non può applicare profili dopo la disconnessione',()=>{
  const {client,c,socket}=setup(),changed=vi.fn();client.profileChanged=changed;socket.emit('open');client.leave();socket.emit('message',JSON.stringify({type:'profile',character:serializeCharacter(c),gold:0,revision:1}));expect(changed).not.toHaveBeenCalled();expect(client.profile).toBeNull();
 });
 it('il login non trasmette inventario, oro o un accountId dichiarato dal browser',()=>{
  const {client,socket}=setup();socket.emit('open');const login=JSON.parse(socket.sent[0]!);expect(login.type).toBe('login');expect(login.character).toBeUndefined();expect(login.identity).toBeUndefined();expect(login.gold).toBeUndefined();client.leave();
+});
+it('l’accesso parte con il solo token: nome, classe e sesso non precedono l’autenticazione',()=>{
+ const {client,socket}=setup();socket.emit('open');const login=JSON.parse(socket.sent[0]!);
+ expect(Object.keys(login).sort()).toEqual(['protocol','token','type']);expect(login.creation).toBeUndefined();client.leave();
+});
+it('senza personaggio il server chiede la creazione: socket chiuso senza errore, poi nuovo accesso con le scelte',()=>{
+ vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{setInterval:()=>1,clearInterval:()=>{}});
+ const error=vi.fn(),disconnected=vi.fn(),client=new PartyClient(()=>{},()=>{},error,disconnected);client.connect();
+ const first=FakeSocket.instances.at(-1)!;first.emit('open');first.emit('message',JSON.stringify({type:'character_required'}));
+ expect(client.characterRequired).toBe(true);expect(client.lost).toBe(false);expect(client.connecting).toBe(false);expect(client.pendingOperation).toBeNull();
+ expect(error).not.toHaveBeenCalled();expect(disconnected).not.toHaveBeenCalled();
+ client.connect({name:'Vesna',characterClass:'archer',body:'female'});const second=FakeSocket.instances.at(-1)!;expect(second).not.toBe(first);
+ expect(client.pendingOperation).toBe('Creazione del personaggio…');second.emit('open');
+ expect(JSON.parse(second.sent[0]!).creation).toEqual({name:'Vesna',characterClass:'archer',body:'female'});
+ second.emit('message',JSON.stringify({type:'party',playerId:'a',state:{code:'HUB',dungeonId:'crypt',mode:'descent',grade:0,members:[],playing:false}}));
+ expect(client.characterRequired).toBe(false);expect(client.state?.code).toBe('HUB');client.leave();
+});
+it('una creazione rifiutata lascia sulla creazione; uscire dall’account riparte dall’accesso',()=>{
+ const {client,socket}=setup();socket.emit('open');socket.emit('message',JSON.stringify({type:'character_required'}));
+ client.connect({name:'Vesna',characterClass:'archer',body:'female'});const retry=FakeSocket.instances.at(-1)!;retry.emit('open');
+ retry.emit('message',JSON.stringify({type:'error',message:'Nome o classe non validi.'}));
+ expect(client.characterRequired).toBe(true);expect(client.lost).toBe(true);expect(client.state).toBeNull();
+ client.leave();expect(client.characterRequired).toBe(false);expect(client.lost).toBe(false);
 });
 it('Torna al rifugio invia solo il comando, senza inventario e senza chiudere il socket',()=>{
  const {client,socket}=setup();socket.emit('open');const count=socket.sent.length;client.returnToHub();expect(JSON.parse(socket.sent.at(-1)!)).toEqual({type:'return_hub'});client.leave();client.send({type:'return_hub'});expect(socket.sent).toHaveLength(count+1);

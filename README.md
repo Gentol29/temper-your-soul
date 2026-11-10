@@ -2,6 +2,8 @@
 
 **v0.17.00 · 10 novembre 2026:** MMO con HUB pubblico condiviso, profili PostgreSQL autorevoli e accesso/registrazione Supabase nel gioco. Fino a 64 presenze nel mondo, dungeon pubblici fino a 32 ingressi e party sociali con quattro posti e inviti. Esc torna al menu mantenendo la connessione; Logout esce dall’account. Simulazione a 60 Hz, codec ordinato v2 a 30 Hz, protocollo applicativo 21, salvataggi v10 con migrazioni precedenti conservate. [Configurazione, schema e limiti](docs/mmo-persistente.md).
 
+**v0.17.02 · 10 novembre 2026 · ramo `feature/login-prima-del-personaggio`:** l’accesso precede il personaggio. La prima schermata chiede email e password; dopo l’autenticazione chi non ha un personaggio lo crea, poi entra nel rifugio collegato al server. Protocollo applicativo 22. [Ordine dell’accesso](docs/mmo-persistente.md#ordine-dellaccesso--v01702).
+
 Il `.env` è locale ed escluso da Git. Verificati connessione PostgreSQL reale, UPSERT/rollback in tabella temporanea e interfaccia con due account fittizi; prova giocata con account reali ancora da eseguire. Rilevata RLS disabilitata sui profili remoti: [difetto aperto](docs/bugs.md), da risolvere prima dell’uso pubblico. Le sezioni datate sotto conservano lo storico del progetto.
 
 Gioco d’azione 2D per browser in **TypeScript strict**, Canvas 2D e DOM, senza motore di gioco né dipendenze runtime nel browser (server cooperativo Node con WebSocket). I principi sono ispirati ad Ashen Realm: le abilità dipendono dall’equipaggiamento. Il prototipo originale si chiamava Emberfall; il nome del gioco attuale è **Temper your soul**.
@@ -154,7 +156,7 @@ Verifica automatica della revisione: `npm run verify` superato, **555 test in 42
 
 Il mondo richiede PostgreSQL e autenticazione configurati nel `.env`: seguire [mmo-persistente.md](docs/mmo-persistente.md) e `.env.example`. Dopo `npm run build`, avviare `npm run server` sulla porta 4173. In sviluppo avviare anche Vite: il proxy inoltra `/party`, `/online-config` e `/auth`. Il percorso `/party` è mantenuto per il trasporto WebSocket, senza codici di stanza o link di invito.
 
-Dopo Accedi si entra nell’HUB comune. Il server verifica l’account e carica il personaggio da `profiles`; un account nuovo riceve livello 1 e set bianco di classe. Inventario, economia, premi e scambi sono validati e salvati sul server. Le istanze di dungeon sono pubbliche e accettano nuovi ingressi fino alla capienza. Il gruppo sociale non riserva posti in dungeon.
+Il gioco si apre sulla schermata di accesso. Dopo Accedi il server verifica l’account e carica il personaggio da `profiles`; se l’account non ne ha uno si apre la creazione (nome, sesso, classe) e il personaggio nasce al livello 1 con il set bianco di classe. Poi si entra nell’HUB comune. Inventario, economia, premi e scambi sono validati e salvati sul server. Le istanze di dungeon sono pubbliche e accettano nuovi ingressi fino alla capienza. Il gruppo sociale non riserva posti in dungeon.
 
 Per un tunnel puntare a 4173: la pagina servita dal tunnel stesso è ammessa senza aggiungerla ad `ALLOWED_ORIGINS`, che serve solo per pagine ospitate su un’altra origine; per i link di conferma email configurare anche gli URL di Supabase Auth. `npm run tunnel` avvia cloudflared e stampa l’indirizzo: non vengono più generati metadati o inviti per la vecchia lobby. Server e tunnel devono restare attivi. Il server serve soltanto `dist/`. In produzione sono necessari HTTPS/WSS e permessi appropriati sui dati.
 

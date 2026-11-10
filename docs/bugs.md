@@ -1,5 +1,9 @@
 # Bug e problemi rilevati
 
+## Sviluppo con Vite: `/auth` rifiuta l’origine con `ALLOWED_ORIGINS` vuoto (rilevato il 10 novembre 2026, aperto)
+
+Rilevato provando l’accesso dalla pagina servita da Vite, con le richieste inoltrate al server sulla 4173: `/auth/login` e `/auth/signup` rispondono 403 «Origine non consentita.» quando `ALLOWED_ORIGINS` è vuoto, mentre il WebSocket `/party` entra. Causa probabile: il proxy di Vite riscrive l’intestazione Host, quindi l’origine della pagina non coincide più con l’host visto dal server. `.env.example` indica invece di lasciare vuoto per lo sviluppo locale. Finché non si decide la correzione: aggiungere l’origine di Vite a `ALLOWED_ORIGINS`, oppure provare l’accesso dalla build servita da `npm run server`. Non corretto in questo incremento.
+
 ## Mondo online: WebSocket rifiutato attraverso un tunnel (corretto in v0.17.01, 10 novembre 2026)
 
 Rilevato tentando l’ingresso da un tunnel cloudflared reale: il gioco e `/online-config` rispondevano e `/auth/login` accettava l’origine, ma `/party` veniva chiuso subito con codice 1008 «Connessione non disponibile». Con `ALLOWED_ORIGINS` compilato il WebSocket ammetteva solo le origini in elenco, mentre `/auth` ammetteva anche quella del proprio host: ogni nuovo indirizzo di tunnel richiedeva di aggiornare il `.env`. Ora il WebSocket applica la stessa regola di `/auth`; un test con WebSocket reali copre origine estranea, in elenco e dello stesso host. Verificato solo dai test: l’ingresso attraverso un tunnel con account reale, a server aggiornato, resta da provare.
