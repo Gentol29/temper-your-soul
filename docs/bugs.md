@@ -1,5 +1,9 @@
 # Bug e problemi rilevati
 
+## Mondo online: WebSocket rifiutato attraverso un tunnel (corretto in v0.17.01, 10 novembre 2026)
+
+Rilevato tentando l’ingresso da un tunnel cloudflared reale: il gioco e `/online-config` rispondevano e `/auth/login` accettava l’origine, ma `/party` veniva chiuso subito con codice 1008 «Connessione non disponibile». Con `ALLOWED_ORIGINS` compilato il WebSocket ammetteva solo le origini in elenco, mentre `/auth` ammetteva anche quella del proprio host: ogni nuovo indirizzo di tunnel richiedeva di aggiornare il `.env`. Ora il WebSocket applica la stessa regola di `/auth`; un test con WebSocket reali copre origine estranea, in elenco e dello stesso host. Verificato solo dai test: l’ingresso attraverso un tunnel con account reale, a server aggiornato, resta da provare.
+
 ## Supabase: accesso diretto ai profili senza RLS (rilevato il 10 novembre 2026, aperto)
 
 Verificato tramite MCP: `public.profiles` ha RLS disabilitata e i ruoli `anon` / `authenticated` hanno privilegi di lettura e modifica sulla tabella. La Data API può quindi aggirare i comandi autorevoli del server. Non sono state modificate politiche o concessioni durante la configurazione locale. Prima dell’uso pubblico occorre concordare e applicare un accesso coerente con il server autorevole; l’Auth di Supabase resta separata dall’accesso ai dati di gioco. [Riferimento RLS](https://supabase.com/docs/guides/database/postgres/row-level-security).

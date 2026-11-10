@@ -10,7 +10,7 @@ import { HubDecoder } from '../src/features/network/hub-codec';
 
 const cleanup: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const close of cleanup.splice(0)) await close(); });
-async function runtime() {
+async function runtime(allowedOrigins?: readonly string[]) {
   const rows = new Map<string, PersistentProfile>();
   const store: ProfileStore = {
     async load(accountId: string, seed: ProfileSeed) {
@@ -21,7 +21,7 @@ async function runtime() {
     async save(profiles) { for (const p of profiles) { p.revision++; rows.set(p.accountId, copyProfile(p)); } },
   };
   const service = new WorldService(store, { verify: async token => { if (typeof token !== 'string' || !token.startsWith('verified-')) throw new Error('Token non valido'); return { id: token }; } });
-  const server = createWorldServer({ service }); server.server.listen(0, '127.0.0.1'); await once(server.server, 'listening');
+  const server = createWorldServer({ service, allowedOrigins }); server.server.listen(0, '127.0.0.1'); await once(server.server, 'listening');
   const address = server.server.address(); if (!address || typeof address === 'string') throw new Error('address');
   const port = address.port;
   const peers: WebSocket[] = [];
@@ -43,7 +43,7 @@ async function runtime() {
     const entered = await wait(m => m.type === 'party'); if (entered.type !== 'party') throw new Error('login');
     return { socket, messages, send, wait, id: entered.playerId };
   }
-  return { server, connect, rows };
+  return { server, connect, rows, port, peers };
 }
 it('32 WebSocket reali entrano nel medesimo HUB; i nuovi client ricevono tuple complete e vedono le disconnessioni', async () => {
   const { server, connect } = await runtime(), peers = await Promise.all(Array.from({ length: 32 }, (_, i) => connect(String(i))));
@@ -79,4 +79,19 @@ it('inviti e membri viaggiano sul WebSocket e lasciare il party mantiene l’ava
  await a.wait(m=>m.type==='social_party'&&m.state.members.length===2);
  b.send({type:'social_leave'});await a.wait(m=>m.type==='social_party'&&m.state.members.length===0&&server.service.world.parties.view(a.id,performance.now()).members.length===0);
  expect(server.service.world.characters.has(b.id)).toBe(true);expect(b.socket.readyState).toBe(WebSocket.OPEN);
+});
+it('con origini limitate il WebSocket ammette la pagina servita dallo stesso host e rifiuta le altre', async () => {
+  const { port, peers } = await runtime(['https://ammessa.example']);
+  // 0 = connessione viva (risponde al ping); altrimenti il codice con cui il server l'ha chiusa.
+  async function outcome(origin: string): Promise<number> {
+    const socket = new WebSocket(`ws://127.0.0.1:${port}/party`, { origin }); peers.push(socket);
+    return Promise.race([
+      once(socket, 'close').then(([code]) => code as number),
+      once(socket, 'open').then(() => { socket.ping(); return once(socket, 'pong'); }).then(() => 0),
+    ]);
+  }
+  expect(await outcome('https://estranea.example')).toBe(1008);
+  expect(await outcome('https://ammessa.example')).toBe(0);
+  expect(await outcome(`http://127.0.0.1:${port}`)).toBe(0);
+  expect(await outcome(`https://127.0.0.1:${port}`)).toBe(0);
 });

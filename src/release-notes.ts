@@ -159,6 +159,14 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version:'0.17.1',date:'2026-11-10',
+    changes:[
+      'Corretto l’ingresso nel mondo online attraverso un tunnel: con ALLOWED_ORIGINS compilato il server chiudeva il WebSocket (codice 1008, «Connessione non disponibile») se l’indirizzo del tunnel non era in elenco, mentre l’accesso con email e password lo accettava già. Ora il WebSocket ammette anche la pagina servita dallo stesso host, come /auth; le altre origini restano rifiutate.',
+      'Solo server: per ricevere la correzione aggiornare e riavviare npm run server. Protocollo, salvataggi e client invariati. Nuovo test con WebSocket reali su origine estranea, in elenco e dello stesso host. Difetto rilevato tentando l’accesso da un tunnel reale; ingresso con account reale dopo la correzione ancora da provare.',
+    ],
+    balanceChanges:[],
+  },
+  {
     version:'0.17.0',date:'2026-11-10',
     changes:[
       'Mondo pubblico persistente: accesso diretto all’HUB condiviso fino a 64 presenze e dungeon pubblici fino a 32 giocatori, con ingressi durante gli incontri e disconnessione senza KO per chi resta.',
