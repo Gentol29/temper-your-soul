@@ -156,7 +156,7 @@ Il mondo richiede PostgreSQL e autenticazione configurati nel `.env`: seguire [m
 
 Dopo Accedi si entra nell’HUB comune. Il server verifica l’account e carica il personaggio da `profiles`; un account nuovo riceve livello 1 e set bianco di classe. Inventario, economia, premi e scambi sono validati e salvati sul server. Le istanze di dungeon sono pubbliche e accettano nuovi ingressi fino alla capienza. Il gruppo sociale non riserva posti in dungeon.
 
-Per un tunnel puntare a 4173 e impostare l’origine HTTPS effettiva in `ALLOWED_ORIGINS`; per i link di conferma email configurare anche gli URL di Supabase Auth. `npm run tunnel` avvia cloudflared e stampa l’indirizzo: non vengono più generati metadati o inviti per la vecchia lobby. Server e tunnel devono restare attivi. Il server serve soltanto `dist/`. In produzione sono necessari HTTPS/WSS e permessi appropriati sui dati.
+Per un tunnel puntare a 4173: la pagina servita dal tunnel stesso è ammessa senza aggiungerla ad `ALLOWED_ORIGINS`, che serve solo per pagine ospitate su un’altra origine; per i link di conferma email configurare anche gli URL di Supabase Auth. `npm run tunnel` avvia cloudflared e stampa l’indirizzo: non vengono più generati metadati o inviti per la vecchia lobby. Server e tunnel devono restare attivi. Il server serve soltanto `dist/`. In produzione sono necessari HTTPS/WSS e permessi appropriati sui dati.
 
 Posizioni e istanze vivono nel processo; i profili persistono fra riavvii. Non sono ancora implementati shard, ripresa della run dopo disconnessione o permadeath. Configurazione locale e segreti non fanno parte del push.
 

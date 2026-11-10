@@ -69,8 +69,9 @@ async function handle(ws:WebSocket,c:Connection,m:Record<string,unknown>):Promis
  }
 }
 sockets.on('connection',(ws,req)=>{
- const allowed=options.allowedOrigins??[];
- if(shuttingDown||clients.size>=HUB_NETWORK.capacity+16||(req.headers.origin&&allowed.length&&!allowed.includes(req.headers.origin))){ws.close(1008,'Connessione non disponibile');return;}
+ const allowed=options.allowedOrigins??[],origin=req.headers.origin,host=req.headers.host;
+ // Come /auth: la pagina servita da questo stesso host (es. un tunnel appena creato) è sempre ammessa.
+ if(shuttingDown||clients.size>=HUB_NETWORK.capacity+16||(origin&&allowed.length&&!allowed.includes(origin)&&origin!==`http://${host}`&&origin!==`https://${host}`)){ws.close(1008,'Connessione non disponibile');return;}
  const c:Connection={id:randomUUID(),alive:true,window:performance.now(),messages:0,loggingIn:false,hub:new HubEncoder(),encoder:new SnapshotEncoder(),room:undefined};clients.set(ws,c);
  ws.on('pong',()=>{c.alive=true;});
  ws.on('message',bytes=>{const now=performance.now();if(now-c.window>1000){c.window=now;c.messages=0;}if(++c.messages>120){ws.close(1008,'Troppi messaggi');return;}try{const raw:unknown=JSON.parse(bytes.toString());if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Messaggio non valido.');void handle(ws,c,raw as Record<string,unknown>).catch(error=>problem(ws,error));}catch(error){problem(ws,error);}});
