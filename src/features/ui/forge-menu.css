@@ -236,24 +236,6 @@
 .forge-screen .admin-menu { margin: 16px 0 0; max-width: none; color: var(--forge-muted); border-color: var(--forge-iron-light); border-radius: 0; }
 .forge-screen .admin-menu summary { color: var(--forge-copper-light); }
 
-/* Cooperativa. */
-.coop-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 16px; }
-#party-panel.is-docked { position: static; display: block; width: auto; max-width: none; max-height: none; padding: 14px; contain: none; color: var(--forge-text); background: #1b181c99; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#party-panel.is-docked .party-heading > .relic-button { display: none; }
-#party-panel.is-docked .party-open { font: 400 24px var(--relic-title); }
-.party-readiness { color: var(--forge-amber); }
-.coop-join { display: grid; gap: 8px; padding: 14px; background: #1b181c99; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-.coop-join label { color: var(--forge-copper-light); font: 400 16px var(--relic-title); }
-.coop-join-row { display: flex; gap: 8px; }
-.coop-join input { flex: 1; min-width: 0; padding: 10px; color: var(--forge-text); font-size: 16px; background: var(--forge-ink); border: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
-.coop-join input:disabled { color: var(--forge-disabled); }
-.coop-join .relic-button { padding: 8px 16px; font: 400 16px var(--relic-title); }
-.coop-invite-message { min-height: 18px; margin: 0; color: var(--forge-amber); font-size: 16px; }
-.coop-invite-message:empty { display: none; }
-.coop-steps { display: grid; gap: 10px; margin: 16px 0 0; padding: 0 0 0 20px; color: var(--forge-copper-light); }
-.coop-steps li b { display: block; color: var(--forge-text); font: 400 16px/1.15 var(--relic-title); }
-.coop-steps li span { color: var(--forge-muted); font-size: 16px; line-height: 1.4; }
-
 /* Scelta del dungeon: stesse placche, nessuna regola nuova. */
 #screen-dungeons { background: #08070aa6; backdrop-filter: none; }
 #screen-dungeons .dungeon-card { background: #17151af2; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light), 0 2px 0 var(--forge-ink); }
@@ -319,7 +301,7 @@
   .menu-primary { top: auto; }
   .menu-status-item { padding: 4px 6px; font-size: 8px; }
   .menu-version { left: auto; right: 16px; bottom: 42px; transform: none; }
-  .characters-layout, .coop-layout { grid-template-columns: minmax(0, 1fr); }
+  .characters-layout { grid-template-columns: minmax(0, 1fr); }
   .forge-screen .character-creation { grid-template-columns: minmax(0, 1fr); }
   .forge-screen .character-creation > label, .forge-screen .creation-bodies, .forge-screen .creation-classes { grid-column: 1; grid-row: auto; }
   .forge-screen .screen-card.wide { padding: 16px; }
@@ -352,13 +334,6 @@
 @media (max-height: 820px) {
   #screen-dungeons .dungeon-card { grid-template-rows: 20px 48px 112px 34px 28px 28px 30px auto auto; }
 }
-
-/* Il riquadro del party dentro la pagina Cooperativa: i membri sono il contenuto principale. */
-#party-panel.is-docked .party-slot { background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
-#party-panel.is-docked .party-slot-empty { color: var(--forge-muted); background: #17151a; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#party-panel.is-docked .party-member-name { font-size: 16px; line-height: 18px; }
-#party-panel.is-docked :is(.party-member-status, .party-leader, .party-widget-status, .party-local-badge) { font-size: 16px; }
-#party-panel.is-docked .party-link { color: var(--forge-text); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 
 /* Cursori dell'audio: binario scuro e cursore quadrato di rame. */
 #settings-panel input[type=range] { appearance: none; height: 16px; background: none; }
@@ -454,10 +429,6 @@
 #party-panel .party-open { color: var(--forge-text); }
 #party-panel .party-slot { background: #211e22; border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
 #party-panel .party-slot-empty { color: var(--forge-muted); background: #17151a; box-shadow: inset 0 0 0 1px var(--forge-iron); }
-#party-panel .party-link { color: var(--forge-text); background: var(--forge-ink); border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--forge-iron-light); }
-#party-panel .party-inline-actions .party-danger { background: var(--forge-corners), linear-gradient(#5a2a2c, #2c1216); box-shadow: inset 0 0 0 1px #8a3c3f, 0 2px 0 var(--forge-ink); }
-#party-panel .party-inline-actions .party-ready, #party-panel .party-inline-actions .party-ready[aria-pressed=true] { color: var(--forge-text); background: var(--forge-corners), linear-gradient(#8a2a31 0 2px, var(--forge-crimson) 2px calc(100% - 3px), #2c0c13 calc(100% - 3px)); box-shadow: inset 0 0 0 1px var(--forge-copper), 0 2px 0 var(--forge-ink); }
-#party-panel .party-inline-actions .party-ready[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--forge-amber), 0 2px 0 var(--forge-ink); }
 .party-widget-status, .party-inline-note { color: var(--forge-muted); }
 
 #screen-bestiary { background: #08070ad9; backdrop-filter: none; }

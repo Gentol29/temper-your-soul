@@ -2,7 +2,7 @@ import type {HubView,HubPlayer} from '../network/hub-protocol';
 import type {ClientMessage} from '../network/protocol';
 import {deserializeCharacter} from '../character/save-format';
 import {tradeWindow} from './trade-window';
-import { HubState, HUB_MAP, HUB_SPAWN } from '../character/hub-state';
+import { HubState, HUB_MAP, HUB_SPAWN, HUB_STATIONS } from '../character/hub-state';
 import { hubInteractionDistance, hubInteractionPoint } from '../character/hub-interaction';
 import { hubArrivalFrame } from '../presentation/hub-arrival';
 import { Vec2 } from '../../core/vec2';
@@ -19,12 +19,22 @@ import { hideItemTooltip } from './item-slot';
 import { playerProfile } from './player-profile';
 import { HubLabels } from './hub-labels';
 import { snapHubLabel } from '../presentation/hub-projection';
+import { characterAction } from './character-actions';
+import { NetworkView } from '../presentation/network-view';
 export class HubScreen {
   readonly root=el('section','hub-screen hidden');
   private readonly canvas=el('canvas','hub-world');
   private readonly renderer:HubRenderer;
   private readonly labels=new HubLabels();
   private time=0;
+  private readonly networkView = new NetworkView.Hub();
+  private lastOnlineView: HubView | null = null;
+  private service: string | null = null;
+  refreshProfile(): void {
+    if (!this.panel || this.socialTrade) return;
+    if (this.service === 'profile') this.showProfile();
+    else if (this.service) { const station = HUB_STATIONS.find(s => s.id === this.service); if (station) this.openService(station.id, station.name); }
+  }
   private arrivalElapsed=Infinity;
   private readonly reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   get inputLocked():boolean{return this.dialogOpen||hubArrivalFrame(this.arrivalElapsed,this.reducedMotion.matches).active;}
@@ -60,7 +70,7 @@ export class HubScreen {
   /** Disegno a ogni fotogramma; il movimento resta a passo fisso. */
   render(dt:number):void {
     this.arrivalElapsed+=dt;
-    const peers=this.online?.view.players.filter(p=>p.id!==this.online!.id&&p.present!==false)??[];
+    const peers=this.networkView.sample(performance.now()).filter(p=>p.id!==this.online?.id&&p.present!==false);
     this.time+=dt;this.renderer.draw(this.state,this.character.appearance(),this.time,peers,this.arrivalElapsed,this.reducedMotion.matches);
     this.labels.draw(this.renderer,peers,!this.inputLocked);
     const target=this.interactionTarget();this.prompt.classList.toggle('hidden',!target||this.inputLocked);
@@ -74,18 +84,19 @@ export class HubScreen {
   }
   setOnline(online:{id:string;view:HubView;busy:boolean;send:(m:ClientMessage)=>void}|null):void {
     this.online=online;
+    const view = online?.view ?? null;
+    if (view !== this.lastOnlineView) { this.lastOnlineView = view; this.networkView.accept(view?.players ?? [], performance.now()); }
     if(!online){const hadTrade=Boolean(this.socialTrade);this.onlineId='';this.socialKey='';this.socialTrade='';if(hadTrade)this.closeDialog();return;}
     const me=online.view.players.find(p=>p.id===online.id);
     if(me&&(this.onlineId!==online.id||this.state.position.distanceTo(new Vec2(me.x,me.y))>40))this.state.position=new Vec2(me.x,me.y);
     this.onlineId=online.id;
-    const trade=online.view.trades.find(t=>t.players.includes(online.id)),invite=online.view.invites[online.id];
+    const trade=online.view.trades.find(t=>t.players.includes(online.id));
     const request=online.view.requests?.find(r=>r.from===online.id||r.to===online.id);
-    const key=JSON.stringify([trade,invite,request]);if(key===this.socialKey)return;this.socialKey=key;
+    const key=JSON.stringify([trade,request]);if(key===this.socialKey)return;this.socialKey=key;
     const wasSocial=Boolean(this.socialTrade);this.socialTrade='';
     if(trade){const peer=online.view.players.find(p=>trade.players.includes(p.id)&&p.id!==online.id);const card=this.dialog('Scambio con '+(peer?.name??'giocatore'));this.socialTrade=trade.id;card.append(tradeWindow(this.character,trade,online.id,peer?.name??'Giocatore',online.send));}
     else if(request){const incoming=request.to===online.id,peer=online.view.players.find(p=>p.id===(incoming?request.from:request.to));const card=this.dialog(incoming?'Richiesta di scambio':'Scambio in attesa',true);this.socialTrade=request.id;card.append(el('p','',incoming?`Accetti lo scambio da ${peer?.name??'giocatore'}?`:`In attesa della risposta di ${peer?.name??'giocatore'}…`));if(incoming){for(const [label,accept]of [['Sì',true],['No',false]] as const){const b=el('button','relic-button',label);b.onclick=()=>{online.send({type:'trade_accept',id:request.id,accept});this.socialTrade='';this.closeDialog();};card.append(b);}}}
     else if(wasSocial)this.closeDialog();
-    else if(invite){const from=online.view.players.find(p=>p.id===invite);const card=this.dialog('Invito al party',true);card.append(el('p','',`${from?.name??'Un giocatore'} ti invita nel party.`));for(const [label,accept]of [['Accetta',true],['Rifiuta',false]] as const){const b=el('button','relic-button',label);b.onclick=()=>{online.send({type:'party_accept',accept});this.closeDialog();};card.append(b);}}
   }
   private nearPlayer():HubPlayer|undefined{return this.online?.view.players.filter(p=>p.id!==this.online!.id&&p.present!==false).sort((a,b)=>this.state.position.distanceTo(new Vec2(a.x,a.y))-this.state.position.distanceTo(new Vec2(b.x,b.y))).find(p=>this.state.position.distanceTo(new Vec2(p.x,p.y))<HUB_MAP.interactionRadius);}
   private interactPlayer(peer:HubPlayer):void {
@@ -93,21 +104,22 @@ export class HubScreen {
     const action=(label:string,run:()=>void)=>{const b=el('button','relic-button hub-social-action',label);b.onclick=run;card.append(b);};
     action('Mostra profilo',()=>{const character=deserializeCharacter(peer.character);if(character)this.dialog('Profilo di '+peer.name).append(playerProfile(character,null,{showInventory:false}));});
     action('Scambia',()=>{online.send({type:'trade_request',target:peer.id});this.closeDialog();});
-    if(!peer.member&&online.view.players.find(p=>p.id===online.id)?.member)action('Invita al party',()=>{online.send({type:'party_invite',target:peer.id});this.closeDialog();});
+    action('Invita nel party',()=>{online.send({type:'social_invite',target:peer.id});this.closeDialog();});
   }
   private interactionTarget(){const peer=this.nearPlayer(),station=this.nearest();if(peer&&station&&hubInteractionDistance(station,this.state.position)<this.state.position.distanceTo(new Vec2(peer.x,peer.y)))return station;return peer??station;}
   private nearest(){return this.state.nearest();}
-  interact():void{if(this.inputLocked)return;const target=this.interactionTarget();if(!target)return;if('member' in target){this.interactPlayer(target);return;}if(target.id==='portal'){this.handlers.portal();return;}this.openService(target.id,target.name);}
+  interact():void{if(this.inputLocked)return;const target=this.interactionTarget();if(!target)return;if('character' in target){this.interactPlayer(target);return;}if(target.id==='portal'){this.handlers.portal();return;}this.openService(target.id,target.name);}
   closeDialog():boolean{if(!this.panel)return false;if(this.socialTrade){const trade=this.online?.view.trades.find(t=>t.id===this.socialTrade);if(trade?.committing)return false;this.online?.send({type:'trade_cancel'});this.socialTrade='';}hideItemTooltip();this.panel.remove();this.panel=null;return true;}
   private dialog(title:string,compact=false):HTMLElement {
     this.closeDialog();const veil=el('div','hub-dialog'),card=el('div','hub-dialog-card menu-card');if(compact)card.classList.add('hub-dialog-compact');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label',title);const close=el('button','relic-button secondary',compact?'×':'Chiudi · ESC');close.setAttribute('aria-label','Chiudi · ESC');close.onclick=()=>this.closeDialog();const header=el('header','hub-dialog-head');header.append(el('h2','',title),close);card.append(header);veil.append(card);this.root.append(veil);this.panel=veil;close.focus();return card;
   }
   openProfile():void{if(this.inputLocked)return;if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;this.showProfile();}
   /** Ridisegna lo zaino senza i controlli di apertura: con la finestra già aperta `inputLocked` è vero e bloccherebbe l'aggiornamento. */
-  private showProfile():void{this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.showProfile();}}));}
+  private showProfile():void{this.dialog('Personaggio e zaino').append(playerProfile(this.character,this.roster.gold,{onEquipmentChange:()=>{this.handlers.save();this.showProfile();}}));this.service='profile';}
  private openService(id:string,name:string):void {
     if((this.online?.busy||this.online?.view.requests?.some(r=>r.from===this.online!.id||r.to===this.online!.id)||this.online?.view.trades.some(t=>t.players.includes(this.online!.id))))return;
     const card=this.dialog(name),character=this.character;
+    this.service=id;
     if(id==='storage'){
       card.classList.add('hub-storage-dialog');card.append(storageWindow(character,this.roster.gold,()=>{this.handlers.save();this.refresh();}));return;
     }
@@ -120,7 +132,7 @@ export class HubScreen {
     const cost=HUB_PRICES.buy;
     card.append(el('p','hub-service-note','Equipaggiamento Comune di base della tua classe.'));
     STARTER_SETS[character.characterClass??'mage'].forEach((familyId,slot)=>list.append(hubOffer({uid:`preview-${slot}`,familyId,rarity:'common'},
-      {characterClass:character.characterClass,note:'Comune · Livello oggetto 1',label:`Acquista · ${cost} oro`,disabled:this.roster.gold<cost,action:()=>changed(()=>acquireBasic(this.roster,character,slot,false))})));
+      {characterClass:character.characterClass,note:'Comune · Livello oggetto 1',label:`Acquista · ${cost} oro`,disabled:this.roster.gold<cost,action:()=>changed(()=>characterAction({kind:'buy',slot},()=>acquireBasic(this.roster,character,slot,false)))})));
     card.append(list);
   }
 }

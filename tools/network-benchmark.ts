@@ -13,6 +13,10 @@ import { RoomEncounter } from '../src/features/run/encounter';
 import { roomArena, ROOM_TEMPLATES } from '../src/features/run/room-templates';
 import { snapshotOf, parseWire, applySnapshot, type BattleSnapshot } from '../src/features/network/protocol';
 import { SnapshotEncoder, SnapshotDecoder } from '../src/features/network/snapshot-codec';
+import { PublicWorld } from '../src/features/network/public-world';
+import { HubEncoder, HubDecoder } from '../src/features/network/hub-codec';
+import { Character } from '../src/features/character/character';
+import { Vec2 } from '../src/core/vec2';
 const options={rng:new SeededRng(10),dungeon:GLACIER,loadout:MAGE_SKILLS,members:['a','b','c','d'].map(id=>({id,loadout:MAGE_SKILLS}))};
 const match=new Match(options),replica=new Match(options);match.boss!.health.current=match.boss!.health.max*.49;
 for(const p of match.players.values())p.invulnerableFor=10000;
@@ -36,4 +40,20 @@ const roomEncoder=new SnapshotEncoder(),roomCompact=roomSnapshots.map(s=>JSON.st
 const roomDecoder=new SnapshotDecoder();start=performance.now();for(const text of roomCompact)applySnapshot(roomReplica,roomDecoder.decode(JSON.parse(text)));const roomMs=performance.now()-start;
 const descent={snapshots:roomSnapshots.length,maxMinions:Math.max(...roomSnapshots.map(s=>s.minions.length)),maxProjectiles:Math.max(...roomSnapshots.map(s=>s.projectiles.length)),
   compactBytes:bytes(roomCompact),bytesPerSecond:bytes(roomCompact)/40,decodeApplyMs:roomMs};
-console.log(JSON.stringify({duel,descent}, null, 2));
+const hubs = [32,64].map(players => {
+  const world = new PublicWorld(), encoder = new HubEncoder(), decoder = new HubDecoder();
+  for (let i=0;i<players;i++) {
+    const character = Character.createStarter(); character.completeCreation(`Eroe ${i}`, 'male', 'mage');
+    world.enter(String(i),character);
+  }
+  let fullBytes=0, compactBytes=0;
+  const started=performance.now();
+  for(let step=0;step<600;step++) {
+    const now=step*1000/60;
+    for(const id of world.characters.keys())world.hub.inputs.set(id,{move:Vec2.fromAngle(step/120+Number(id)),at:now});
+    world.tick(now);
+    if(step%2===0){const view=world.hub.view(),frame=encoder.encode(view);fullBytes+=Buffer.byteLength(JSON.stringify(view));const text=JSON.stringify(frame);compactBytes+=Buffer.byteLength(text);decoder.decode(JSON.parse(text));}
+  }
+  return {players,frames:300,fullBytes,compactBytes,reductionPercent:100*(1-compactBytes/fullBytes),perClientBytesPerSecond:compactBytes/10,encodeDecodeAndSimulationMs:performance.now()-started};
+});
+console.log(JSON.stringify({duel,descent,hubs}, null, 2));

@@ -31,6 +31,7 @@ export interface SnapshotFrame {
   cs?: ClassCombatSnapshot;
   type: 'frame'; q: number; t: number; s: MatchStatus;
   start?: [string, string, string[], BattleSetup];
+  roster?: [string[], BattleSetup];
   p: PlayerState[]; b: [number, number, number, 1 | 2, number, Charge | null] | null;
   ps?: ProjectileSpec[]; zs?: DangerZoneSpec[];
   a?: ProjectileBirth[]; r?: number[]; z?: ZoneBirth[]; d?: number[];
@@ -48,6 +49,7 @@ const flagsOf = (minion: MinionSnapshot): number =>
   (minion.shield ? MINION_FLAGS.shield : 0) | (minion.warded ? MINION_FLAGS.warded : 0) | (minion.prey ? MINION_FLAGS.prey : 0) | (minion.slowed ? MINION_FLAGS.slowed : 0);
 
 export class SnapshotEncoder {
+  private roster = '';
   private experience = '';
   private battle = '';
   private sequence = 0;
@@ -75,6 +77,9 @@ export class SnapshotEncoder {
         : [compact(snapshot.boss.position.x), compact(snapshot.boss.position.y), snapshot.boss.health, snapshot.boss.phase, compact(snapshot.boss.slowFor), snapshot.boss.charge],
     };
     if (initial) frame.start = [snapshot.id, snapshot.dungeonId, snapshot.players.map(p => p.id), snapshot.setup];
+    const roster = JSON.stringify(snapshot.players.map(p => p.id));
+    if (!initial && roster !== this.roster) frame.roster = [snapshot.players.map(p => p.id), snapshot.setup];
+    this.roster = roster;
     const experience=JSON.stringify(snapshot.setup.experience ?? {});
     if(experience!==this.experience){frame.ep=snapshot.setup.experience;this.experience=experience;}
     const specIndex = <T extends object>(spec: T, registry: Map<string, number>, added: T[]): number => {
@@ -170,6 +175,8 @@ export class SnapshotDecoder {
     }
     if (!this.battle || frame.q !== this.sequence + 1) throw new Error('Sequenza di rete interrotta. Rientra nel party.');
     this.sequence = frame.q;
+    if (frame.roster) [this.ids, this.setup] = frame.roster;
+    if (frame.p.length !== this.ids.length) throw new Error('Elenco giocatori di rete non valido.');
     this.projectileTypes.push(...(frame.ps ?? [])); this.zoneTypes.push(...(frame.zs ?? []));
     for (const [id, index, x, y, angle, lifetime] of frame.a ?? []) {
       const spec = this.projectileTypes[index]; if (!spec) throw new Error('Proiettile di rete sconosciuto.');

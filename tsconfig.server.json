@@ -10,6 +10,7 @@
   },
   "include": [
     "server",
-    "tools/network-benchmark.ts"
+    "tools/network-benchmark.ts",
+    "tools/verify-postgres.ts"
   ]
 }

@@ -1,14 +1,37 @@
-import type { Vec2 } from '../../core/vec2';
+import { Vec2 } from '../../core/vec2';
 import { SeededRng } from '../../core/rng';
 import { Match } from '../match/match';
 import { applySnapshot, type BattleSnapshot } from '../network/protocol';
+import type { HubPlayer } from '../network/hub-protocol';
 
 /** Un aggiornamento di ritardo visuale; nessuna predizione di collisioni, danni o risultati. */
 export const NETWORK_VIEW = { blendMs: 1000 / 30, staleMs: 250, teleportDistance: 64 } as const;
 interface Track { from: Vec2; to: Vec2; current: Vec2 }
 
+/** Stesso ritardo visuale per il rifugio; nessuna simulazione delle collisioni sul client. */
+class HubNetworkView {
+  private readonly tracks = new Map<string, { player: HubPlayer; from: Vec2; to: Vec2 }>();
+  private receivedAt = 0;
+  accept(players: readonly HubPlayer[], now: number): void {
+    const current = new Map(this.sample(now).map(player => [player.id, player]));
+    this.tracks.clear();
+    for (const player of players) {
+      const before = current.get(player.id), to = new Vec2(player.x, player.y);
+      const from = before ? new Vec2(before.x, before.y) : to;
+      const snap = now - this.receivedAt > NETWORK_VIEW.staleMs || from.distanceTo(to) > NETWORK_VIEW.teleportDistance;
+      this.tracks.set(player.id, { player, from: snap ? to : from, to });
+    }
+    this.receivedAt = now;
+  }
+  sample(now: number): HubPlayer[] {
+    const fraction = Math.min(1, Math.max(0, (now - this.receivedAt) / NETWORK_VIEW.blendMs));
+    return [...this.tracks.values()].map(track => { const p = track.from.lerp(track.to, fraction); return { ...track.player, x: p.x, y: p.y }; });
+  }
+}
+
 /** Copia dedicata al disegno. Lo stato autorevole usato da HUD/input/premi non viene interpolato. */
 export class NetworkView {
+  static readonly Hub = HubNetworkView;
   readonly match: Match;
   private readonly players = new Map<string, Track>();
   private readonly shots = new Map<number, Track>();

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { connectionLabel, inviteTarget, moveSelection, parseInviteCode, partyReadiness, primaryEntries } from './menu-model';
+import { connectionLabel, moveSelection, primaryEntries } from './menu-model';
 
 const withCharacter = { characterName: 'Vesna', inviteWaiting: false };
 const empty = { characterName: null, inviteWaiting: false };
 
 describe('comandi del menu principale', () => {
+  it('il logout compare soltanto nel menu di un account autenticato',()=>{
+    expect(primaryEntries(withCharacter).some(e=>e.id==='logout')).toBe(false);
+    expect(primaryEntries({...withCharacter,authenticated:true}).find(e=>e.id==='logout')).toMatchObject({label:'Logout',unavailable:null});
+  });
   it('sono quelli del progetto, in italiano e nell\'ordine previsto', () => {
     expect(primaryEntries(withCharacter).map((entry) => entry.label)).toEqual(['Entra', 'Nuovo personaggio', 'Impostazioni']);
   });
@@ -66,44 +70,22 @@ describe('selezione da tastiera', () => {
   });
 });
 
-describe('invito alla cooperativa', () => {
-  it('legge il codice da un link o scritto da solo', () => {
-    expect(parseInviteCode('https://esempio.trycloudflare.com/?party=a1b2c3d4e5f6a7b8c9')).toBe('a1b2c3d4e5f6a7b8c9');
-    expect(parseInviteCode('  a1b2c3d4e5f6a7b8c9  ')).toBe('a1b2c3d4e5f6a7b8c9');
-  });
-
-  it('un link di un altro indirizzo si apre, uno dello stesso entra da qui', () => {
-    const here = 'http://localhost:5173';
-    expect(inviteTarget('a1b2c3d4e5f6', here)).toEqual({ kind: 'join', code: 'a1b2c3d4e5f6' });
-    expect(inviteTarget('http://localhost:5173/?party=a1b2c3d4e5f6', here)).toEqual({ kind: 'join', code: 'a1b2c3d4e5f6' });
-    expect(inviteTarget('https://amici.trycloudflare.com/?party=a1b2c3d4e5f6', here)).toEqual({ kind: 'open', url: 'https://amici.trycloudflare.com/?party=a1b2c3d4e5f6' });
-    expect(inviteTarget('javascript:alert(1)//?party=a1b2c3d4e5f6', here)).toEqual({ kind: 'join', code: 'a1b2c3d4e5f6' });
-    expect(inviteTarget('ciao', here)).toBeNull();
-  });
-
-  it('rifiuta testi che non sono un invito', () => {
-    expect(parseInviteCode('')).toBeNull();
-    expect(parseInviteCode('ciao')).toBeNull();
-    expect(parseInviteCode('https://esempio.it/?altro=1')).toBeNull();
-    expect(parseInviteCode('https://esempio.it/?party=<script>')).toBeNull();
-  });
+describe('accesso al mondo pubblico', () => {
+ it('i comandi principali non richiedono un codice di invito',()=>{expect(primaryEntries(withCharacter).map(e=>e.id)).toEqual(['continue','new_character','settings']);});
+ it('il comando Entra descrive il rifugio condiviso',()=>{expect(primaryEntries(withCharacter)[0]!.hint).toContain('rifugio');});
+ it('la connessione espone accesso in corso e stato online',()=>{expect(connectionLabel({connecting:true,online:false,latency:null,failed:false}).tone).toBe('busy');expect(connectionLabel({connecting:false,online:true,latency:null,failed:false}).text).toBe('Online');});
 });
 
 describe('stati di sistema', () => {
   it('la connessione ha un\'etichetta per ogni stato', () => {
     const base = { connecting: false, online: false, latency: null, failed: false };
-    expect(connectionLabel(base)).toEqual({ text: 'Gioco in singolo', tone: 'idle' });
+    expect(connectionLabel(base)).toEqual({ text: 'Account non connesso', tone: 'idle' });
     expect(connectionLabel({ ...base, connecting: true }).tone).toBe('busy');
     expect(connectionLabel({ ...base, online: true, latency: 41 })).toEqual({ text: 'Online · 41 ms', tone: 'ok' });
     expect(connectionLabel({ ...base, failed: true })).toEqual({ text: 'Connessione persa', tone: 'bad' });
   });
 
-  it('come sul server, il leader non deve dichiararsi pronto e il gruppo incompleto puo\' partire', () => {
-    const leader = { id: 'a', name: 'Vesna', ready: false }, other = { id: 'b', name: 'Oren', ready: false };
-    expect(partyReadiness([], '', 4)).toContain('Nessun gruppo');
-    expect(partyReadiness([leader, other], 'a', 4)).toBe('Gruppo 2/4 · non ancora pronti: Oren.');
-    expect(partyReadiness([leader, { ...other, ready: true }], 'a', 4)).toContain('incompleto 2/4');
-    const full = [leader, { ...other, ready: true }, { id: 'c', name: 'Ina', ready: true }, { id: 'd', name: 'Teo', ready: true }];
-    expect(partyReadiness(full, 'a', 4)).toContain('completo 4/4');
+  it('il menu senza account indica esplicitamente che occorre accedere',()=>{
+    expect(connectionLabel({connecting:false,online:false,latency:null,failed:false})).toEqual({text:'Account non connesso',tone:'idle'});
   });
 });

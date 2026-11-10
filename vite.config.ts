@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     // Profili browser, log e build non sono sorgenti: su Windows i file Cookies possono essere bloccati.
     watch: { ignored: ['**/.tools/**', '**/dist/**'] },
-    proxy: { '/party': { target: 'ws://127.0.0.1:4173', ws: true }, '/health': 'http://127.0.0.1:4173' },
+    proxy: { '/party': { target: 'ws://127.0.0.1:4173', ws: true }, '/health': 'http://127.0.0.1:4173', '/online-config': 'http://127.0.0.1:4173', '/auth': 'http://127.0.0.1:4173' },
   },
   build: {
     target: 'es2022',

@@ -2,61 +2,56 @@ import { describe, expect, it } from 'vitest';
 import { Vec2 } from '../../core/vec2';
 import { SeededRng } from '../../core/rng';
 import { Character } from '../character/character';
-import { serializeCharacter } from '../character/save-format';
 import { DangerZone } from '../combat/danger-zone';
 import { Projectile } from '../combat/projectile';
 import { CRYPT } from '../dungeons/crypt';
 import { Match, type PlayerIntent } from '../match/match';
 import { MAGE_SKILLS } from '../skills/mage-skills';
-import { PartyRoom } from './party-room';
+import { DungeonRoom } from './dungeon-room';
 import { applySnapshot, cleanIntent, NETWORK, parseWire, snapshotOf } from './protocol';
 
-function character(name = 'Alice', veteran = true): string {
+function character(name = 'Alice', veteran = true): Character {
   const c = Character.createStarter(); c.completeCreation(name, 'female', 'mage');
   // Un veterano ha gia' battuto i boss: il duello e' aperto.
   if (veteran) for (const id of ['crypt', 'swamp', 'forge', 'glacier']) c.records[id] = { clears: 1, bestTimeSeconds: 60 };
-  return serializeCharacter(c);
+  return c;
 }
-function room(): PartyRoom { const r = new PartyRoom('test'); r.enter('a', character()); r.enter('b', character('Bruno')); return r; }
+function room(): DungeonRoom { const r = new DungeonRoom('test'); r.enter('a', character()); r.enter('b', character('Bruno')); return r; }
 function match(): Match {
   const m = new Match({ rng: new SeededRng(7), dungeon: CRYPT, loadout: MAGE_SKILLS, members: ['a', 'b'].map(id => ({ id, loadout: MAGE_SKILLS })) });
   m.boss!.attackTimer = 1e6; return m;
 }
 const idle: PlayerIntent = { move: Vec2.ZERO, aimOffset: new Vec2(100, 0), skills: [false, false, false, false] };
 
-describe('lobby autorevole', () => {
-  it('il creatore è leader; i membri non possono scegliere o avviare', () => {
-    const r = room(); expect(r.leaderId).toBe('a');
-    expect(() => r.choose('b', 'swamp')).toThrow('Solo il leader'); expect(() => r.start('b', 'id', 1)).toThrow('Solo il leader');
+describe('istanze pubbliche autorevoli', () => {
+  it('avvio senza leader o prontezza e due giocatori nella stessa simulazione', () => {
+    const r = room(); r.start('battle',1); expect(r.playing).toBe(true);expect(r.match!.players.size).toBe(2);
   });
-  it('richiede tutti pronti e il GS di ciascun membro, senza cambiare il mondo su rifiuto', () => {
-    const r = room(); expect(() => r.start('a', 'id', 1)).toThrow('pronti'); r.choose('a', 'forge'); r.ready.add('a'); r.ready.add('b');
-    expect(() => r.start('a', 'id', 1)).toThrow('100 GS'); expect(r.match).toBeNull();
-    r.choose('a', 'glacier'); r.ready.add('a'); r.ready.add('b'); expect(() => r.start('a', 'id', 1)).toThrow('200 GS');
+  it('verifica il GS di ciascun giocatore senza cambiare il mondo su rifiuto', () => {
+    const r = room();r.choose('forge');expect(()=>r.start('id',1)).toThrow('100 GS');expect(r.match).toBeNull();
+    r.choose('glacier');expect(()=>r.start('id',1)).toThrow('200 GS');
   });
-  it('cambiare destinazione azzera le conferme e avvia un unico boss condiviso', () => {
-    const r = room(); r.ready.add('a'); r.choose('a', 'swamp'); expect(r.ready.size).toBe(0);
-    r.ready.add('a'); r.ready.add('b'); r.start('a', 'battle', 2);
-    expect(r.match?.players.size).toBe(2); expect(r.match?.dungeon.id).toBe('swamp');
-    expect(() => r.enter('c', character('Carlo'))).toThrow('già in dungeon'); expect(() => r.choose('a', 'crypt')).toThrow('già iniziata');
+  it('destinazione stabile dopo l’avvio e ingresso tardivo nello stesso mondo', () => {
+    const r = room();r.choose('swamp');r.start('battle',2);const time=r.match!.time;
+    r.enter('c',character('Carlo'));expect(r.match!.players.size).toBe(3);expect(r.match!.time).toBe(time);expect(()=>r.choose('crypt')).toThrow('già iniziata');
   });
-  it('capienza e dati non fidati vengono validati; uscita del leader passa il comando', () => {
-    const r = room(); expect(() => r.enter('c', '{}')).toThrow('personaggio');
-    r.enter('c', character('Carlo')); r.enter('d', character('Diego')); expect(() => r.enter('e', character('Elena'))).toThrow('completo');
-    r.leave('a'); expect(r.leaderId).toBe('b');
+  it('capienza di 32 e dati non validi vengono controllati; nessun ruolo cambia all’uscita', () => {
+    const r = room();expect(()=>r.enter('c',Character.createStarter())).toThrow('personaggio');
+    for(let i=2;i<32;i++)r.enter(String(i),character('Eroe'));expect(()=>r.enter('full',character('Pieno'))).toThrow('completo');
+    r.leave('a');expect(r.characters.has('b')).toBe(true);expect(r.characters.size).toBe(31);
   });
   it('un input scaduto ferma movimento e attacchi', () => {
-    const r = room(); r.ready.add('a'); r.ready.add('b'); r.start('a', 'battle', 1);
+    const r = room(); r.start('battle', 1);
     const p = r.match!.players.get('a')!; const before = p.position;
     r.inputs.set('a', { intent: { ...idle, move: new Vec2(1, 0) }, receivedAt: 0 }); r.tick(NETWORK.staleInputMs + 1);
     expect(p.position).toEqual(before); r.tick(1); expect(p.position.x).toBeGreaterThan(before.x);
   });
-  it('la disconnessione mette KO il membro, senza lasciare attacchi premuti', () => {
-    const r = room(); r.ready.add('a'); r.ready.add('b'); r.start('a', 'battle', 1); r.leave('a');
-    expect(r.match!.players.get('a')!.health.isDead).toBe(true); expect(r.playing).toBe(true); expect(r.leaderId).toBe('b');
+  it('la disconnessione rimuove il membro senza KO o attacchi premuti', () => {
+    const r = room(); r.start('battle', 1); r.leave('a');
+    expect(r.match!.players.has('a')).toBe(false); expect(r.playing).toBe(true);
   });
   it('i premi sono estratti una volta per membro e restano identici negli snapshot successivi', () => {
-    const r = room(); r.chooseMode('a', 'duel', 0); r.ready.add('a'); r.ready.add('b'); r.start('a', 'battle', 7);
+    const r = room(); r.chooseMode('duel', 0); r.start('battle', 7);
     r.match!.boss!.health.current = 1;
     r.match!.zones.push(new DangerZone(999, { team: 'player', damage: 10, radius: 100, delay: 0 }, r.match!.boss!.position));
     r.tick(0); const first = r.snapshot()!;
@@ -69,7 +64,7 @@ describe('lobby autorevole', () => {
 
 describe('discesa in cooperativa', () => {
   /** Libera la stanza in corso e porta tutti sulla prima porta, prendendo i premi e scegliendo le tempre. */
-  function clearAndExit(r: PartyRoom): void {
+  function clearAndExit(r: DungeonRoom): void {
     const run = r.run!;
     const match = run.match;
     for (let i = 0; i < 60 * 240 && !run.encounter.cleared && match.status === 'playing'; i++) {
@@ -94,22 +89,20 @@ describe('discesa in cooperativa', () => {
     }
   }
 
-  it('il leader sceglie modalita\' e grado; il duello chiede il boss gia\' battuto da tutti', () => {
-    const r = new PartyRoom('d'); r.enter('a', character()); r.enter('b', character('Bruno', false));
+  it('la modalità è validata e il duello chiede il boss già battuto da tutti', () => {
+    const r = new DungeonRoom('d'); r.enter('a', character()); r.enter('b', character('Bruno', false));
     expect(r.mode).toBe('descent');
-    expect(() => r.chooseMode('b', 'duel', 0)).toThrow('Solo il leader');
-    expect(() => r.chooseMode('a', 'arena', 0)).toThrow('Modalità');
-    expect(() => r.chooseMode('a', 'descent', 9)).toThrow('tempra');
-    r.chooseMode('a', 'duel', 0); r.ready.add('a'); r.ready.add('b');
-    expect(() => r.start('a', 'x', 1)).toThrow('Bruno: il duello');
-    expect(() => r.chooseMode('a', 'descent', 1)).toThrow('tempra');
-    r.chooseMode('a', 'pilgrimage', 0); r.ready.add('a'); r.ready.add('b');
-    expect(() => r.start('a', 'x', 1)).toThrow('GS');
+    r.chooseMode('duel', 0);expect(r.mode).toBe('duel');
+    expect(() => r.chooseMode('arena', 0)).toThrow('Modalità');
+    expect(() => r.chooseMode('descent', 9)).toThrow('tempra');
+    r.chooseMode('duel', 0); expect(() => r.start('x', 1)).toThrow('Bruno: il duello');
+    expect(() => r.chooseMode('descent', 1)).toThrow('tempra');
+    r.chooseMode('pilgrimage', 0); expect(() => r.start('x', 1)).toThrow('GS');
     expect(r.state()).toMatchObject({ mode: 'pilgrimage', grade: 0 });
   });
 
   it('una discesa intera sul server: stanze nuove per la rete, nessuna ricompensa intermedia, bottino per giocatore', () => {
-    const r = room(); r.ready.add('a'); r.ready.add('b'); r.start('a', 'run', 11);
+    const r = room(); r.start('run', 11);
     const first = r.snapshot()!;
     expect(first.id).toBe('run:1'); expect(first.boss).toBeNull(); expect(first.room?.kind).toBe('threshold');
     expect(first.run?.stage).toBe(0); expect(first.setup.arena).not.toBeNull();
@@ -132,10 +125,10 @@ describe('discesa in cooperativa', () => {
     expect(() => r.chooseTemper('a', 0)).toThrow();
   });
 
-  it('chi si disconnette a meta\' discesa resta a terra e non entra nelle stanze dopo', () => {
-    const r = room(); r.ready.add('a'); r.ready.add('b'); r.start('a', 'run', 4);
+  it('chi si disconnette a meta\' discesa scompare e non entra nelle stanze dopo', () => {
+    const r = room(); r.start('run', 4);
     r.leave('b');
-    expect(r.run!.match.players.get('b')!.health.isDead).toBe(true);
+    expect(r.run!.match.players.has('b')).toBe(false);
     clearAndExit(r);
     expect(r.run!.match.players.has('b')).toBe(false);
     expect(r.playing).toBe(true);

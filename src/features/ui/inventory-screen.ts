@@ -1,3 +1,4 @@
+import { characterAction } from './character-actions';
 import { InputBindings } from '../../core/input-bindings';
 import { renderAppearancePicker } from './appearance-picker';
 import { renderCharacterPortrait } from './character-portrait';
@@ -74,7 +75,7 @@ export class InventoryScreen {
         event.preventDefault();
         const uid = this.draggedUid;
         this.clearDrag();
-        if (uid && equipInSlot(character, uid, slot)) this.changed();
+        if (uid && characterAction({kind:'equip',uid},()=>equipInSlot(character, uid, slot))) this.changed();
       });
       panel.append(el('div', 'slot-title', `${SLOT_LABELS[slot]} · ${this.bindings.labelForSlot(slotIndex(slot))}`));
       const equipped = character.equippedItem(slot);
@@ -90,8 +91,7 @@ export class InventoryScreen {
         const remove = el('button', 'small-button', 'Rimuovi');
         remove.type = 'button';
         remove.addEventListener('click', () => {
-          character.unequip(slot);
-          this.changed();
+          if(characterAction({kind:'unequip',slot},()=>character.unequip(slot)))this.changed();
         });
         panel.append(remove);
       }
@@ -133,7 +133,7 @@ export class InventoryScreen {
     slot.addEventListener('contextmenu', (event) => {
       event.preventDefault();
       this.selectedUid = item.uid;
-      if (character.equip(item.uid)) this.changed();else this.render(character);
+      if (characterAction({kind:'equip',uid:item.uid},()=>character.equip(item.uid))) this.changed();else this.render(character);
     });
     slot.addEventListener('dragstart', (event) => {
       if(!character.canEquip(item.uid)){event.preventDefault();return;}
@@ -179,7 +179,7 @@ export class InventoryScreen {
     equip.type = 'button';
     equip.disabled = equippedHere || !character.canEquip(item.uid);
     equip.addEventListener('click', () => {
-      if (character.equip(item.uid)) this.changed();
+      if (characterAction({kind:'equip',uid:item.uid},()=>character.equip(item.uid))) this.changed();
     });
     actions.append(equip);
     if (!equippedHere) {
@@ -192,7 +192,7 @@ export class InventoryScreen {
           this.renderSelection(character);
           return;
         }
-        if (character.discard(item.uid)) this.changed();
+        if (characterAction({kind:'discard',uid:item.uid},()=>character.discard(item.uid))) this.changed();
       });
       actions.append(discard);
     }

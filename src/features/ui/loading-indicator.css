@@ -1,0 +1,6 @@
+.loading-indicator{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px;color:var(--forge-text);font:16px/1.6 var(--relic-title)}
+.loading-indicator.hidden{display:none}
+.loading-spinner{display:block;width:24px;height:24px;box-sizing:border-box;border:4px solid var(--forge-iron-light);border-top-color:var(--forge-amber);animation:loading-turn 1s steps(8,end) infinite;flex:none}
+.loading-overlay{position:fixed;inset:0;z-index:1000;background:#08070ae8;pointer-events:auto;text-align:center;flex-direction:column}
+@keyframes loading-turn{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.loading-spinner{animation:none;border-right-color:var(--forge-amber)}}

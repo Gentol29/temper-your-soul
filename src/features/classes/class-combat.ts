@@ -51,6 +51,11 @@ export class ClassCombat {
 
   constructor(private readonly ctx: CombatContext) {}
 
+  removePlayer(id: string): void {
+    this.pets.delete(id); this.marks.delete(id);
+    this.taunts = this.taunts.filter(entry => entry.owner !== id);
+  }
+
   taunt(owner: string, radius: number, duration: number): void {
     this.taunts = this.taunts.filter(entry => entry.owner !== owner);
     this.taunts.push({ owner, radius, remaining: duration });

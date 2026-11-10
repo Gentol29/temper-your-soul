@@ -139,7 +139,9 @@ export class RoomEncounter implements Encounter {
   private readonly healthScale: number;
 
 
+  private readonly members: Map<string,RoomMember>;
   constructor(readonly setup: RoomSetup) {
+    this.members = new Map(setup.members);
     this.doors = roomDoors(setup.template, setup.exits);
     this.doorProgress = this.doors.map(() => 0);
     this.healthScale = (DESCENT.healthScale[setup.dungeonId] ?? 1);
@@ -158,7 +160,7 @@ export class RoomEncounter implements Encounter {
     const bestiary = this.setup.bestiary ?? ROOM_BESTIARY[dungeonId] ?? [];
     const combat = ROOM_COMBAT[option.kind];
     if (combat.waves > 0 && combat.budget > 0) {
-      const players = this.setup.members.size;
+      const players = this.members.size;
       const budget =
         DESCENT.baseBudget * (1 + DESCENT.budgetPerStage * this.setup.stage) * combat.budget * DESCENT.partyBudget(players);
       this.waves = planWaves(
@@ -327,7 +329,11 @@ export class RoomEncounter implements Encounter {
 
   // Compatibilità delle viste della PR: le vecchie scelte non attribuiscono più bonus.
   currentTempers(_playerId: string): TemperPick[] { return []; }
-  temperedLoadout(playerId: string): Loadout { return this.setup.members.get(playerId)?.loadout ?? []; }
+  addMember(id: string, member: RoomMember): void {
+    // La mappa è posseduta da questa stanza; gli altri dati della definizione restano immutabili.
+    this.members.set(id, member);
+  }
+  temperedLoadout(playerId: string): Loadout { return this.members.get(playerId)?.loadout ?? []; }
   chooseOffer(_match: Match, _playerId: string, _index: number): boolean { return false; }
   answerPact(_match: Match, _playerId: string, _accept: boolean): boolean { return false; }
 

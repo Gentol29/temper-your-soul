@@ -1,5 +1,17 @@
 # Roadmap
 
+## Migrazione MMO · 10 novembre 2026
+
+- Release v0.17.00: codice di lobby e storage singolo superato rimosso; archivi locali, migrazioni e copie di sicurezza conservati. Verifica finale: 1.064 test, tipi e build.
+
+- Implementati HUB globale, ingresso con account, repository PostgreSQL, comandi autorevoli per beni e premi, scambi transazionali, ingressi tardivi e uscita senza KO.
+- Conservati passo fisso 60 Hz, codec ordinato compatto v2 a 30 Hz e artwork del rifugio. Protocollo applicativo 21.
+- Ripristinati icona Party e inviti con consenso per gruppi sociali di quattro persone; menu con Logout, Esc e presenza nell’HUB conservata. Componente LoadingIndicator riutilizzabile per API, ingresso nel mondo, transizioni e salvataggi.
+- Verifica della revisione: 1.064 test, tipi e build; browser con due account fittizi, invito/consenso, permanenza dell’avatar dal menu e rimozione al logout. Prova giocata con account reali ancora da eseguire.
+- Configurati provider Supabase e colonne di `profiles`; connessione `pg`, UPSERT e rollback verificati su tabella temporanea. Implementati Accedi e Crea account nel gioco con conferma email e rinnovo sessione; verifica completa: 1.052 test, tipi e build.
+- Da provare: registrazione reale, consegna e conferma email, accesso all’HUB, 32 persone, portali pubblici, economia e persistenza dopo riavvio. Da risolvere prima dell’uso pubblico: RLS remota sui profili. [Specifiche e limiti](mmo-persistente.md).
+
+
 ## Priorità corrente e TODO
 
 - [x] Rimosso il tooltip persistente delle azioni del menu principale, mantenendo navigazione e descrizioni accessibili.

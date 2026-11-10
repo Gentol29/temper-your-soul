@@ -213,6 +213,21 @@ export class Match {
     this.encounter?.attach(this);
   }
 
+  /** Ingresso deterministico: nessun passo extra e nessuna modifica agli altri giocatori. */
+  addPlayer(member: MatchMember): void {
+    if (this.players.has(member.id)) throw new Error('Giocatore già presente.');
+    const player = new Player(this.arena, member.loadout, member.maxHealth, member.characterClass, member.totalXp);
+    this.players.set(member.id, player);
+    this.report.set(member.id, { damageDealt: 0, damageReceived: 0, healing: 0 });
+  }
+
+  /** Uscita: l'avatar e le evocazioni spariscono, senza danno o evento di morte. */
+  removePlayer(id: string): void {
+    this.players.delete(id);
+    this.classCombat.removePlayer(id);
+    if (this.viewPlayerId === id) this.viewPlayerId = this.players.keys().next().value ?? '';
+  }
+
   /** Adattatori leggeri per le regole di classe: il controller non dipende da Match. */
   private classTargets(): EnemyTarget[] {
     const targets: EnemyTarget[] = this.minions.filter(minion => !minion.isDead && !minion.isHidden && minion.hostile).map(minion => ({

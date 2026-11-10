@@ -6,6 +6,7 @@ import { acquireBasic, upgradeItem, HUB_PRICES } from '../character/hub-services
 import { el } from './dom';
 import { hubOffer } from './hub-offer';
 import { hideItemTooltip } from './item-slot';
+import { characterAction } from './character-actions';
 
 const TABS = [{ id: 'forge', label: 'Forgia' }, { id: 'smith', label: 'Fabbro' }] as const;
 
@@ -33,7 +34,7 @@ export function forgeWindow(character: Character, roster: CharacterRoster, onCha
           note: max ? 'Miglioria massima raggiunta.' : `Miglioria +${item.upgrade ?? 0} → +${next}`,
           label: max ? 'Massimo +5' : `Migliora · ${cost} oro`,
           disabled: max || roster.gold < cost,
-          action: () => changed(() => upgradeItem(roster, character, item.uid)),
+          action: () => changed(() => characterAction({kind:'upgrade',uid:item.uid},()=>upgradeItem(roster, character, item.uid))),
         }));
       }
       if (character.inventory.length === 0) list.append(el('p', '', 'Nessun oggetto da migliorare nello zaino.'));
@@ -43,7 +44,7 @@ export function forgeWindow(character: Character, roster: CharacterRoster, onCha
         { uid: `preview-${slot}`, familyId, rarity: 'uncommon' }, {
           characterClass: character.characterClass, note: 'Non comune · Livello oggetto 1',
           label: `Crea · ${HUB_PRICES.craft} oro`, disabled: roster.gold < HUB_PRICES.craft,
-          action: () => changed(() => acquireBasic(roster, character, slot, true)),
+          action: () => changed(() => characterAction({kind:'craft',slot},()=>acquireBasic(roster, character, slot, true))),
         },
       )));
     }

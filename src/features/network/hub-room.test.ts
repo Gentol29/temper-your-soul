@@ -1,27 +1,25 @@
 import {describe,it,expect} from 'vitest';
 import {Character} from '../character/character';
 import {serializeCharacter,deserializeCharacter} from '../character/save-format';
-import {PartyRoom} from './party-room';
+import {PublicWorld} from './public-world';
 import {HUB_NETWORK} from './hub-protocol';
 import {HubState, hubApproachPoint, hubBlocked} from '../character/hub-state';
 import {Vec2} from '../../core/vec2';
 import {applyTradeDelta} from '../character/trade-transfer';
 function hero(name:string){const c=Character.createStarter();c.completeCreation(name,'male','mage');c.addRolls([{familyId:'arcane_staff',rarity:'rare'}]);return c;}
-function setup(){const room=new PartyRoom('hub-test');room.enter('a',serializeCharacter(hero('Alfa')));room.enter('b',serializeCharacter(hero('Beta')),true);return room;}
-function openTrade(r:PartyRoom,a:string,b:string){r.hub.request(a,b);r.hub.acceptTrade(b,r.hub.tradeFor(a)!.id,true);}
+function setup(){const room=new PublicWorld();room.enter('a',hero('Alfa'));room.enter('b',hero('Beta'));return room;}
+function openTrade(r:PublicWorld,a:string,b:string){r.hub.request(a,b);r.hub.acceptTrade(b,r.hub.tradeFor(a)!.id,true);}
 describe('hub cooperativo',()=>{
- it('visitatori distinti dal party, invito accettato e capienza del gruppo',()=>{
-  const r=setup();expect(r.state().members.map(m=>m.id)).toEqual(['a']);expect(r.state().visitors!.map(m=>m.id)).toEqual(['b']);
-  r.hub.invite('a','b');r.hub.accept('b',true);expect(r.state().members.map(m=>m.id)).toEqual(['a','b']);
-  r.enter('c',serializeCharacter(hero('Gamma')));r.enter('d',serializeCharacter(hero('Delta')));r.enter('e',serializeCharacter(hero('Epsilon')),true);
-  r.hub.positions.get('e')!.position=r.hub.positions.get('a')!.position;r.hub.invite('a','e');expect(()=>r.hub.accept('e',true)).toThrow('completo');
+ it('tutte le presenze entrano direttamente nel rifugio globale fino alla capacità configurata',()=>{
+  const r=setup();for(let i=2;i<HUB_NETWORK.capacity;i++)r.enter('visitor-'+i,hero('Visita'+i));
+  expect(r.hub.view('').players).toHaveLength(HUB_NETWORK.capacity);expect(()=>r.enter('full',hero('Pieno'))).toThrow('pieno');
  });
  it('movimento autorevole, collisioni e scadenza dell’input',()=>{
   const r=setup(),p=r.hub.positions.get('a')!;p.position=hubApproachPoint('merchant').add(new Vec2(0,5));r.hub.inputs.set('a',{move:new Vec2(-1,0),at:0});
   for(let i=0;i<120;i++)r.tick(0);expect(hubBlocked(p.position)).toBe(false);expect(p.position.x).toBeGreaterThan(370);expect(p.nearest()?.id).toBe('merchant');const before=p.position;r.tick(1000);expect(p.position).toEqual(before);
  });
  it('tutti i visitatori nascono sul selciato e client e server si fermano sugli stessi bordi',()=>{
-  const r=setup();for(let i=2;i<HUB_NETWORK.capacity;i++)r.enter('visitor-'+i,serializeCharacter(hero('Visita'+i)),true);
+  const r=setup();for(let i=2;i<HUB_NETWORK.capacity;i++)r.enter('visitor-'+i,hero('Visita'+i));
   for(const p of r.hub.positions.values())expect(hubBlocked(p.position)).toBe(false);
   const local=new HubState(),remote=r.hub.positions.get('a')!;
   for(const move of [new Vec2(0,-1),new Vec2(-1,0),new Vec2(-1,1),new Vec2(1,1),new Vec2(1,-1)]){
@@ -31,17 +29,18 @@ describe('hub cooperativo',()=>{
  });
  it('il deposito non compare nelle viste pubbliche o nei profili degli altri utenti',()=>{
   const r=setup(),c=r.characters.get('a')!,item=c.inventory.at(-1)!;c.discard(item.uid);c.storage.push(item);c.storagePositions[item.uid]=12;
-  const state=r.state(),view=r.hub.view(r.leaderId);expect(deserializeCharacter(state.members[0]!.character)!.storage).toEqual([]);expect(JSON.parse(view.players[0]!.character).storedUids).toEqual([]);
+  const view=r.hub.view('');expect(deserializeCharacter(view.players[0]!.character)!.storage).toEqual([]);expect(JSON.parse(view.players[0]!.character).storedUids).toEqual([]);
   expect(c.storage).toHaveLength(1);expect(r.characters.get('b')!.storage).toHaveLength(0);
  });
- it('i visitatori continuano a usare l’hub e a scambiare mentre il party è in dungeon',()=>{
-  const r=setup();r.enter('c',serializeCharacter(hero('Gamma')),true);r.hub.positions.get('c')!.position=r.hub.positions.get('b')!.position;
-  openTrade(r,'b','c');r.ready.add('a');r.start('a','battle',1);expect(r.playing).toBe(true);r.hub.offer('b',[r.characters.get('b')!.inventory.at(-1)!.uid]);expect(r.hub.views()).toHaveLength(1);expect(()=>r.hub.request('a','b')).toThrow('rifugio');
+ it('l’HUB e gli scambi continuano mentre altri sono in dungeon',()=>{
+  const r=setup();r.enter('c',hero('Gamma'));r.hub.positions.get('c')!.position=r.hub.positions.get('b')!.position;
+  openTrade(r,'b','c');const room=r.start('a','crypt','descent','battle',1);expect(room.playing).toBe(true);r.hub.offer('b',[r.characters.get('b')!.inventory.at(-1)!.uid]);expect(r.hub.views()).toHaveLength(1);expect(()=>r.hub.request('a','b')).toThrow();
  });
- it('solo gli invitati nel gruppo partono, mentre i visitatori restano nell’hub',()=>{
-  const r=setup();r.ready.add('a');r.start('a','battle',10);expect([...r.match!.players.keys()]).toEqual(['a']);expect(r.hub.view('a').players.map(p=>p.id)).toEqual(['b']);expect(()=>r.start('b','other',1)).toThrow('leader');
+ it('il portale muove soltanto chi lo attraversa e gli altri restano nel rifugio',()=>{
+  const r=setup(),room=r.start('a','crypt','descent','battle',10);expect([...room.match!.players.keys()]).toEqual(['a']);expect(r.hub.view('').players.filter(p=>p.present).map(p=>p.id)).toEqual(['b']);
  });
 });
+
 describe('scambi a doppia conferma',()=>{
  it('conferma di entrambi richiesta e trasferimento con nuovi uid senza perdere rarità/livello/migliorie',()=>{
   const r=setup(),a=r.characters.get('a')!,b=r.characters.get('b')!,ai=a.inventory.at(-1)!,bi=b.inventory.at(-1)!;a.inventory[a.inventory.indexOf(ai)]={...ai,upgrade:3,level:7};
@@ -57,7 +56,7 @@ describe('scambi a doppia conferma',()=>{
  });
  it('rifiuta oggetti inesistenti, duplicati, equipaggiati e modifiche concorrenti del personaggio',()=>{
   const r=setup();openTrade(r,'a','b');const c=r.characters.get('a')!,uid=c.inventory.at(-1)!.uid;
-  for(const items of [['missing'],[uid,uid],[c.equipped.primary_hand!]])expect(()=>r.hub.offer('a',items)).toThrow();expect(()=>r.hub.requireFree('a')).toThrow();r.ready.add('a');expect(()=>r.start('a','battle',1)).toThrow('scambi');
+  for(const items of [['missing'],[uid,uid],[c.equipped.primary_hand!]])expect(()=>r.hub.offer('a',items)).toThrow();expect(()=>r.hub.requireFree('a')).toThrow();expect(()=>r.start('a','crypt','descent','battle',1)).toThrow('scambi');
  });
  it('annullamento o disconnessione prima del completamento non trasferiscono nulla',()=>{
   const r=setup(),before=serializeCharacter(r.characters.get('a')!);openTrade(r,'a','b');r.hub.offer('a',[r.characters.get('a')!.inventory.at(-1)!.uid]);r.hub.cancel('b');expect(r.hub.views()).toEqual([]);expect(serializeCharacter(r.characters.get('a')!)).toBe(before);
@@ -81,24 +80,22 @@ it('lo scambio richiede il consenso del destinatario prima di aprire offerte o c
 });
 
 
-describe('sessione HUB indipendente dal party',()=>{
- it('lasciare il party conserva stanza, proprietario, posizione e personaggio',()=>{
-  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);const character=r.characters.get('a'),position=r.hub.positions.get('a');
-  r.leaveParty('a');expect(r.ownerId).toBe('a');expect(r.leaderId).toBe('b');expect(r.characters.get('a')).toBe(character);expect(r.hub.positions.get('a')).toBe(position);expect(r.state().visitors!.map(p=>p.id)).toContain('a');
-  r.leaveParty('b');expect(r.state().members).toEqual([]);expect(r.leaderId).toBe('');r.createParty('b');expect(r.leaderId).toBe('b');expect(r.ownerId).toBe('a');
+describe('sessione HUB indipendente dai dungeon',()=>{
+ it('il ritorno conserva personaggio e posizione senza chiudere la sessione',()=>{
+  const r=setup(),character=r.characters.get('a'),position=r.hub.positions.get('a');r.start('a','crypt','descent','raid',1);r.returnToHub('a');
+  expect(r.characters.get('a')).toBe(character);expect(r.hub.positions.get('a')).toBe(position);expect(r.hub.present.get('a')).toBe(true);
  });
- it('menu e run in singolo rendono assenti dal mondo ma conservano istanza e gruppo',()=>{
-  const r=setup();r.ready.add('a');r.setPresence('a',false);expect(r.characters.size).toBe(2);expect(r.ownerId).toBe('a');expect(r.hub.members.has('a')).toBe(true);expect(r.ready.has('a')).toBe(false);expect(r.hub.view(r.ownerId).players.find(p=>p.id==='a')!.present).toBe(false);
-  expect(()=>r.hub.request('b','a')).toThrow('Avvicinati');r.setPresence('a',true);expect(r.hub.view(r.ownerId).players.find(p=>p.id==='a')!.present).toBe(true);r.enter('c',serializeCharacter(hero('Gamma')),true);expect(r.code).toBe('hub-test');
+ it('il menu nasconde la presenza e vieta le interazioni fino al ritorno',()=>{
+  const r=setup();r.hub.setPresence('a',false);expect(r.characters.size).toBe(2);expect(r.hub.view('').players.find(p=>p.id==='a')!.present).toBe(false);
+  expect(()=>r.hub.request('b','a')).toThrow('Avvicinati');r.hub.setPresence('a',true);expect(r.hub.view('').players.find(p=>p.id==='a')!.present).toBe(true);
  });
- it('il portale attende gli altri pronti e porta solo il party nella destinazione scelta',()=>{
-  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);expect(()=>r.startFromPortal('a','crypt','descent','raid',1)).toThrow('pronti');
-  r.ready.add('b');r.setPresence('b',false);expect(()=>r.startFromPortal('a','crypt','descent','raid',1)).toThrow('presenti');r.setPresence('b',true);r.ready.add('b');r.startFromPortal('a','crypt','descent','raid',1);expect([...r.match!.players.keys()]).toEqual(['a','b']);expect(r.playing).toBe(true);
+ it('ogni accesso al portale è immediato e unisce i giocatori nell’istanza pubblica',()=>{
+  const r=setup(),room=r.start('a','crypt','descent','raid',1);r.start('b','crypt','descent','other',2);expect([...room.match!.players.keys()]).toEqual(['a','b']);expect(room.playing).toBe(true);
  });
- it('uscire dal gruppo durante il raid non espelle dall’HUB e non chiude il raid degli altri',()=>{
-  const r=setup();r.hub.invite('a','b');r.hub.accept('b',true);r.ready.add('b');r.startFromPortal('a','crypt','descent','raid',1);r.leaveParty('b');expect(r.characters.has('b')).toBe(true);expect(r.hub.positions.has('b')).toBe(true);expect(r.hub.members.has('b')).toBe(false);expect(r.playing).toBe(true);expect(r.run!.view().status).toBe('playing');
+ it('uscire dal raid non espelle dal mondo e non interrompe gli altri',()=>{
+  const r=setup(),room=r.start('a','crypt','descent','raid',1);r.start('b','crypt','descent','other',2);r.returnToHub('b');expect(r.characters.has('b')).toBe(true);expect(r.hub.positions.has('b')).toBe(true);expect(room.match!.players.has('b')).toBe(false);expect(room.playing).toBe(true);
  });
- it('un visitatore che disconnette il proprietario non viene aggiunto al party automaticamente',()=>{
-  const r=setup();r.leave('a');expect(r.ownerId).toBe('b');expect(r.leaderId).toBe('');expect(r.hub.members.size).toBe(0);expect(r.characters.has('b')).toBe(true);
+ it('la disconnessione del primo arrivato non cambia la presenza degli altri',()=>{
+  const r=setup();r.leave('a');expect(r.characters.has('b')).toBe(true);expect(r.hub.present.get('b')).toBe(true);expect(r.id).toBe('HUB');
  });
 });

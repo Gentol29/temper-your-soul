@@ -2,8 +2,8 @@ import {it,expect,vi,afterEach} from 'vitest';
 import {PartyClient} from './party-client';
 import {Character} from '../character/character';
 import {serializeCharacter} from '../character/save-format';
-import {PartyRoom} from './party-room';
-import {MemoryStore} from '../character/save-store';
+import {HubEncoder} from './hub-codec';
+import {PublicWorld} from './public-world';
 class FakeSocket {
  static OPEN=1;static instances:FakeSocket[]=[];readyState=1;
  listeners=new Map<string,((event:{data?:unknown})=>void)[]>();
@@ -13,29 +13,35 @@ class FakeSocket {
  emit(type:string,data?:unknown){for(const listener of this.listeners.get(type)??[])listener({data});}
 }
 afterEach(()=>vi.unstubAllGlobals());
-it('messaggi da un vecchio socket non applicano scambi al profilo selezionato dopo l’uscita',()=>{
- vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{localStorage:new MemoryStore(),setInterval:()=>1,clearInterval:()=>{}});
- const client=new PartyClient(()=>{},()=>{},()=>{},()=>{}),commit=vi.fn(()=>null);client.tradeCommit=commit;
- client.connect(Character.createStarter(),undefined,'c1');const socket=FakeSocket.instances.at(-1)!;socket.emit('open');client.leave();
- socket.emit('message',JSON.stringify({type:'trade_committed',delta:{id:'old',remove:[],receive:[]}}));expect(commit).not.toHaveBeenCalled();expect(client.tradeSaving).toBe(false);
+function setup(){vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{setInterval:()=>1,clearInterval:()=>{}});const c=Character.createStarter();c.completeCreation('Eroe','male','mage');const client=new PartyClient(()=>{},()=>{},()=>{},()=>{});client.connect(c);return{client,c,socket:FakeSocket.instances.at(-1)!};}
+it('un socket precedente non può applicare profili dopo la disconnessione',()=>{
+ const {client,c,socket}=setup(),changed=vi.fn();client.profileChanged=changed;socket.emit('open');client.leave();socket.emit('message',JSON.stringify({type:'profile',character:serializeCharacter(c),gold:0,revision:1}));expect(changed).not.toHaveBeenCalled();expect(client.profile).toBeNull();
 });
-
-it('il widget riceve entrambi i membri dopo l’accettazione e si riallinea anche dalla presenza periodica',()=>{
- vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{localStorage:new MemoryStore(),setInterval:()=>1,clearInterval:()=>{}});
- const c=Character.createStarter();c.completeCreation('Alfa','male','mage');const room=new PartyRoom('test');room.enter('a',serializeCharacter(c));room.enter('b',serializeCharacter(c),true);
- const changed=vi.fn(),client=new PartyClient(changed,()=>{},()=>{},()=>{});client.connect(c);const socket=FakeSocket.instances.at(-1)!;
- const initial=room.state();socket.emit('message',JSON.stringify({type:'party',playerId:'a',state:initial}));
- room.hub.invite('a','b');room.hub.accept('b',true);socket.emit('message',JSON.stringify({type:'party',playerId:'a',state:room.state()}));expect(client.state!.members.map(m=>m.id)).toEqual(['a','b']);
- client.state=initial;changed.mockClear();socket.emit('message',JSON.stringify({type:'hub',state:room.hub.view('a')}));expect(client.state.members.map(m=>m.id)).toEqual(['a','b']);expect(changed).toHaveBeenCalled();client.leave();
+it('il login non trasmette inventario, oro o un accountId dichiarato dal browser',()=>{
+ const {client,socket}=setup();socket.emit('open');const login=JSON.parse(socket.sent[0]!);expect(login.type).toBe('login');expect(login.character).toBeUndefined();expect(login.identity).toBeUndefined();expect(login.gold).toBeUndefined();client.leave();
 });
-
-it('Lascia il party invia un comando senza chiudere la sessione, Torna in singolo la chiude',()=>{
- vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{localStorage:new MemoryStore(),setInterval:()=>1,clearInterval:()=>{}});
- const client=new PartyClient(()=>{},()=>{},()=>{},()=>{}),c=Character.createStarter();client.connect(c);const socket=FakeSocket.instances.at(-1)!;client.leaveParty();expect(JSON.parse(socket.sent.at(-1)!)).toEqual({type:'party_leave'});socket.emit('open');expect(socket.sent.some(s=>JSON.parse(s).type==='enter')).toBe(true);client.leave();const count=socket.sent.length;client.send({type:'party_create'});expect(socket.sent).toHaveLength(count);
+it('Torna al rifugio invia solo il comando, senza inventario e senza chiudere il socket',()=>{
+ const {client,socket}=setup();socket.emit('open');const count=socket.sent.length;client.returnToHub();expect(JSON.parse(socket.sent.at(-1)!)).toEqual({type:'return_hub'});client.leave();client.send({type:'return_hub'});expect(socket.sent).toHaveLength(count+1);
 });
-
-it('un ospite resta collegato nell’HUB mentre il party è in dungeon anche senza frame di combattimento',()=>{
- let timer=()=>{};vi.stubGlobal('WebSocket',FakeSocket);vi.stubGlobal('location',{href:'http://localhost/',protocol:'http:'});vi.stubGlobal('window',{localStorage:new MemoryStore(),setInterval:(callback:()=>void)=>{timer=callback;return 1;},clearInterval:()=>{}});
- let now=0;const clock=vi.spyOn(performance,'now').mockImplementation(()=>now);
- try{const client=new PartyClient(()=>{},()=>{},()=>{},()=>{}),c=Character.createStarter();c.completeCreation('Ospite','male','mage');const room=new PartyRoom('test');room.enter('a',serializeCharacter(c));room.enter('b',serializeCharacter(c),true);client.connect(c,'test');const socket=FakeSocket.instances.at(-1)!;socket.emit('open');const state=room.state();state.playing=true;socket.emit('message',JSON.stringify({type:'party',playerId:'b',state}));now=6000;socket.emit('message',JSON.stringify({type:'pong',sent:6000}));timer();expect(client.state).not.toBeNull();client.leave();}finally{clock.mockRestore();}
+it('il client decodifica tutte le tuple HUB e applica i profili salvati anche senza RAF',()=>{
+ const {client,c,socket}=setup(),world=new PublicWorld(),encoder=new HubEncoder();world.enter('a',c);socket.emit('open');const changed=vi.fn();client.profileChanged=changed;
+ socket.emit('message',JSON.stringify(encoder.encode(world.hub.view())));expect(client.hub!.players.map(p=>p.id)).toEqual(['a']);
+ socket.emit('message',JSON.stringify({type:'profile',character:serializeCharacter(c),gold:120,revision:2}));expect(changed).toHaveBeenCalledOnce();expect(client.profile!.gold).toBe(120);
+ world.leave('a');socket.emit('message',JSON.stringify(encoder.encode(world.hub.view())));expect(client.hub!.players).toEqual([]);client.leave();
+});
+it('lo stato sociale resta separato dall’istanza e Lascia party non chiude il socket',()=>{
+ const {client,socket}=setup();socket.emit('open');
+ const state={members:[{id:'a',name:'Eroe',character:''}],invitations:[],outgoing:[]};
+ socket.emit('message',JSON.stringify({type:'social_party',state}));expect(client.social).toEqual(state);
+ client.send({type:'social_leave'});expect(JSON.parse(socket.sent.at(-1)!)).toEqual({type:'social_leave'});
+ expect(client.connecting).toBe(true);expect(client.social.members).toHaveLength(1);client.leave();expect(client.social.members).toHaveLength(0);
+});
+it('i caricamenti attendono la risposta e terminano anche su errore senza disconnettere il mondo',()=>{
+ const {client,c,socket}=setup();socket.emit('open');expect(client.pendingOperation).toBe('Ingresso nel rifugio…');
+ socket.emit('message',JSON.stringify({type:'party',playerId:'a',state:{code:'HUB',dungeonId:'crypt',mode:'descent',grade:0,members:[],playing:false}}));
+ expect(client.pendingOperation).toBeNull();
+ client.send({type:'character_command',command:{kind:'unequip',slot:'primary_hand'}});expect(client.pendingOperation).toBe('Salvataggio…');
+ socket.emit('message',JSON.stringify({type:'profile',character:serializeCharacter(c),gold:0,revision:1}));expect(client.pendingOperation).toBeNull();
+ client.send({type:'portal_start',dungeonId:'crypt',mode:'descent'});expect(client.pendingOperation).toBe('Ingresso nel dungeon…');
+ socket.emit('message',JSON.stringify({type:'error',message:'Portale non disponibile'}));expect(client.pendingOperation).toBeNull();expect(client.state?.code).toBe('HUB');client.leave();
 });

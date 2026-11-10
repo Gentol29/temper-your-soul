@@ -159,6 +159,20 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version:'0.17.0',date:'2026-11-10',
+    changes:[
+      'Mondo pubblico persistente: accesso diretto all’HUB condiviso fino a 64 presenze e dungeon pubblici fino a 32 giocatori, con ingressi durante gli incontri e disconnessione senza KO per chi resta.',
+      'Profili autorevoli su PostgreSQL tramite pg e DATABASE_URL: creazione al livello 1 con set bianco di classe, caricamento dei salvataggi v9/v10, inventario, oro, XP e progressi salvati dal server. Equipaggiamento, forgia, mercante, deposito e scambi aggiornano il database prima della conferma al client; revisioni e transazioni proteggono da scritture concorrenti e scambi parziali.',
+      'Supabase Auth nel gioco: Accedi e Crea account con email/password, conferma email secondo il provider, rinnovo della sessione in memoria e Logout nel menu principale. Credenziali di database escluse dal browser e da Git.',
+      'Ripristinati icona Party, quattro posti, inviti con accettazione/rifiuto e uscita dal gruppo mantenendo la connessione. L’HUB e i dungeon restano pubblici; niente vecchia lobby chiusa, link ?party= o stato Pronto.',
+      'Esc torna al menu mantenendo account, gruppo e avatar nell’HUB; solo Logout esce volontariamente dal mondo. Componente di caricamento riutilizzabile per API, accesso al mondo, passaggi dal portale e salvataggi, fino alla conclusione effettiva delle operazioni.',
+      'Pulizia della precedente cooperativa: rimossi schermata e stili della lobby, metodi senza effetto, parametri di leader superati, trasferimenti locali dei premi e scrittura del salvataggio singolo. Conservati archivio locale, migrazioni e copie di sicurezza dei vecchi profili; nessuna importazione automatica nel database autorevole.',
+      'Protocollo applicativo 19 → 21 con codec ordinato v2 a 30 Hz e simulazione deterministica a 60 Hz. Riavviare il server e ricaricare i client. I profili persistono; posizioni e dungeon non vengono ripristinati dopo l’arresto del processo. Nessun nuovo bilanciamento del combattimento.',
+      'Verificati collegamento PostgreSQL reale, UPSERT e rollback su tabella temporanea; test di 32 WebSocket e prova tecnica con due account fittizi. Prova giocata con account reali ancora da eseguire. RLS remota sui profili segnalata in docs/bugs.md: permessi da correggere prima dell’uso pubblico.',
+    ],
+    balanceChanges:[],
+  },
+  {
     version: '0.16.5', date: '2026-11-06',
     changes: [
       'Solo documentazione: la correzione dello zaino del rifugio della v0.16.04 è stata provata a mano dall’utente (doppio clic, clic destro e «Rimuovi» aggiornano subito slot, ritratto e statistiche) e il difetto è segnato come risolto in docs/bugs.md. Nessuna modifica al gioco.',

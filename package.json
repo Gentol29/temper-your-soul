@@ -1,6 +1,6 @@
 {
   "name": "temper-your-soul",
-  "version": "0.16.5",
+  "version": "0.17.0",
   "private": true,
   "description": "Temper your soul: gioco d'azione 2D per browser, in TypeScript",
   "type": "module",
@@ -11,12 +11,14 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json",
     "test": "vitest run",
     "verify": "npm run typecheck && vitest run && vite build",
-    "server": "tsx server/index.ts",
+    "server": "node --env-file-if-exists=.env --import tsx server/index.ts",
     "tunnel": "node tools/tunnel.mjs",
-    "benchmark:network": "node --import tsx tools/network-benchmark.ts"
+    "benchmark:network": "node --import tsx tools/network-benchmark.ts",
+    "verify:postgres": "node --env-file-if-exists=.env --import tsx tools/verify-postgres.ts"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
+    "@types/pg": "8.23.1",
     "@types/ws": "8.18.2",
     "tsx": "4.23.15",
     "typescript": "5.6.3",
@@ -24,6 +26,7 @@
     "vitest": "2.1.8"
   },
   "dependencies": {
+    "pg": "8.23.1",
     "pixi.js": "8.22.0",
     "ws": "8.22.1"
   }

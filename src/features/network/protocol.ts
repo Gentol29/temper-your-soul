@@ -1,4 +1,5 @@
-import type {HubView,HubCommand,TradeDelta} from './hub-protocol';
+import type {HubCommand} from './hub-protocol';
+import type {SocialCommand,SocialPartyView} from './social-party';
 import type { ClassCombatSnapshot } from '../classes/class-combat';
 import type { CharacterClass } from '../character/character-class';
 import { SeededRng } from '../../core/rng';
@@ -23,23 +24,26 @@ import { VEIN_LIEUTENANTS } from '../run/vein-lieutenants';
 import { roomArena, roomTemplateById } from '../run/room-templates';
 import type { Loadout } from '../skills/skill-definition';
 import type { SnapshotFrame } from './snapshot-codec';
+import type { HubFrame } from './hub-codec';
+import type { CharacterCommand, LoginMessage, ProfileMessage } from './account-protocol';
 
 /**
- * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 17: appoggio dei piedi e collisioni prospettiche sul selciato del rifugio. Età dell'oro emesso,
+ * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 21: gruppi sociali nel mondo pubblico. Età dell'oro emesso,
  * volo e assorbimento automatico; conserva classi, discesa e servitori compatti.
  */
-export const NETWORK = { protocolVersion: 19, capacity: 4, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 21, dungeonCapacity: 32, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';
 export const PARTY_MODES: readonly PartyMode[] = ['descent', 'duel', 'pilgrimage'];
 
-export interface PartyMember { id: string; name: string; character: string; appearance: CharacterAppearance; gearScore: number; ready: boolean }
-export interface PartyState { ownerId?:string; code: string; leaderId: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; visitors?: PartyMember[]; playing: boolean }
+export interface PartyMember { id: string; name: string; character: string; appearance: CharacterAppearance; gearScore: number }
+export interface PartyState { code: string; dungeonId: string; mode: PartyMode; grade: number; members: PartyMember[]; playing: boolean }
 export interface CombatStats { damageDealt: number; damageReceived: number; healing: number }
 
 /** Come il client ricostruisce la partita di una stanza: mappa (stanza modello o arena del dungeon), boss, vita massima. */
 export interface BattleSetup {
+  readonly loadouts?: Readonly<Record<string, Loadout>>;
   /** Id della stanza modello; null = l'arena del dungeon (duello, stanza del boss). */
   readonly arena: string | null;
   /** Id del boss o del luogotenente; null = nessun boss. */
@@ -82,23 +86,17 @@ export interface BattleSnapshot {
   /** Vita dei ripari della stanza per indice (protocollo 8); assente nelle stanze senza ripari. */
   covers?: number[];
 }
-export type ClientMessage = HubCommand
-  | { type: 'enter'; code?: string; character: string; protocol: number; visitor?:boolean; identity?:string }
-  | { type: 'character'; character: string }
-  | { type: 'choose'; dungeonId: string }
-  | { type: 'mode'; mode: PartyMode; grade: number }
-  | { type: 'ready'; ready: boolean }
-  | { type: 'start' }
+export type ClientMessage = HubCommand | SocialCommand
+  | LoginMessage | { type: 'character_command'; command: CharacterCommand } | { type: 'return_hub' }
   | { type: 'input'; intent: PlayerIntent }
   | { type: 'temper'; index: number }
   | { type: 'pact'; accept: boolean }
   | { type: 'ping'; sent: number };
 export type ServerMessage =
-  | {type:'hub';state:HubView}
-  | {type:'trade_committed';delta:TradeDelta}
-  | {type:'trade_saved';id:string}
+  | {type:'social_party';state:SocialPartyView}
+  | ProfileMessage | HubFrame
 
-  | { type: 'party'; playerId: string; state: PartyState; inviteBase?: string }
+  | { type: 'party'; playerId: string; state: PartyState }
   | { type: 'snapshot'; snapshot: BattleSnapshot }
   | SnapshotFrame
   | { type: 'error'; message: string }
@@ -118,6 +116,7 @@ export function bossById(id: string): BossDefinition | undefined {
 /** La preparazione di una partita (per la rete): stanza modello o arena, boss, vita massima di ciascuno. */
 export function setupOf(match: Match): BattleSetup {
   return {
+    loadouts: Object.fromEntries([...match.players].map(([id, player]) => [id, player.baseLoadout])),
     arena: match.arena === match.dungeon.arena ? null : match.arena.id,
     boss: match.boss?.definition.id ?? null,
     bossHealth: match.boss?.health.max ?? null,
@@ -195,7 +194,11 @@ export function applySnapshot(match: Match, snapshot: BattleSnapshot): void {
   if (!objects) { objects = { projectiles: new Map(), zones: new Map(), minions: new Map(), live: new Set() }; replicas.set(match, objects); }
   match.time = snapshot.time; match.status = snapshot.status;
   match.classCombat.remote = snapshot.classState ?? null;
+  const livePlayers = new Set(snapshot.players.map(player => player.id));
+  for (const id of match.players.keys()) if (!livePlayers.has(id)) match.removePlayer(id);
   for (const state of snapshot.players) {
+    if (!match.players.has(state.id)) match.addPlayer({ id: state.id, loadout: snapshot.setup.loadouts?.[state.id] ?? [],
+      characterClass: snapshot.setup.classes?.[state.id], totalXp: snapshot.setup.experience?.[state.id], maxHealth: snapshot.setup.maxHealth[state.id] });
     const p = match.players.get(state.id); if (!p) continue;
     if (snapshot.setup.experience?.[state.id] !== undefined) p.setExperience(snapshot.setup.experience[state.id]!);
     p.position = state.position; p.aim = state.aim; p.health.current = state.health; p.mana = state.mana;

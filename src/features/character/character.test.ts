@@ -7,6 +7,7 @@ const MAGE_SKILLS = ['arcane_staff', 'frost_grimoire', 'meteor_mantle', 'astral_
 import { Character } from './character';
 import { deserializeCharacter, MAX_ITEM_NUMBER, serializeCharacter } from './save-format';
 import { browserStorage, CORRUPT_BACKUP_KEY, MemoryStore, SAVE_KEY, SAVE_VERSION, SaveStore, type KeyValueStore } from './save-store';
+import {CharacterRoster,deserializeRoster,serializeRoster} from './character-roster';
 
 /** Un archivio che fallisce come un browser con dati del sito bloccati o quota piena. */
 class BrokenStore implements KeyValueStore {
@@ -387,31 +388,33 @@ describe('formato di salvataggio', () => {
 });
 
 describe('SaveStore', () => {
-  it('senza dati salvati: fresh con il personaggio iniziale', () => {
-    const { character, status } = new SaveStore(new MemoryStore()).load();
+  function rosterOf(character:Character):CharacterRoster{const roster=new CharacterRoster();roster.add(character);return roster;}
+  it('senza dati salvati: fresh con archivio locale vuoto', () => {
+    const { roster, status } = new SaveStore(new MemoryStore()).loadRoster();
     expect(status).toBe('fresh');
-    expect(character).toEqual(Character.createStarter());
+    expect(roster.profiles).toEqual([]);
   });
 
   it('salva e ricarica: loaded con lo stesso personaggio, sotto la chiave prevista', () => {
     const memory = new MemoryStore();
     const store = new SaveStore(memory);
     const character = sampleCharacter();
-    expect(store.save(character)).toBe(true);
-    expect(memory.getItem(SAVE_KEY)).toBe(serializeCharacter(character));
+    const roster=rosterOf(character);
+    expect(store.saveRoster(roster)).toBe(true);
+    expect(memory.getItem(SAVE_KEY)).toBe(serializeRoster(roster));
     expect(SAVE_KEY).toBe('temper-your-soul:save');
-    const loaded = new SaveStore(memory).load();
+    const loaded = new SaveStore(memory).loadRoster();
     expect(loaded.status).toBe('loaded');
-    expect(loaded.character).toEqual(character);
+    expect(loaded.roster.active?.character).toEqual(character);
     expect(memory.getItem(CORRUPT_BACKUP_KEY)).toBeNull();
   });
 
   it('JSON corrotto => recovered: personaggio iniziale e copia di sicurezza del testo originale (mai cancellato)', () => {
     const memory = new MemoryStore();
     memory.setItem(SAVE_KEY, '{"version":1,"items":[');
-    const loaded = new SaveStore(memory).load();
+    const loaded = new SaveStore(memory).loadRoster();
     expect(loaded.status).toBe('recovered');
-    expect(loaded.character).toEqual(Character.createStarter());
+    expect(loaded.roster.profiles).toEqual([]);
     expect(memory.getItem(CORRUPT_BACKUP_KEY)).toBe('{"version":1,"items":[');
     expect(memory.getItem(SAVE_KEY)).toBe('{"version":1,"items":['); // load non cancella ne' sovrascrive
   });
@@ -420,7 +423,7 @@ describe('SaveStore', () => {
     const memory = new MemoryStore();
     const future = saveText({ version: SAVE_VERSION + 1 });
     memory.setItem(SAVE_KEY, future);
-    const loaded = new SaveStore(memory).load();
+    const loaded = new SaveStore(memory).loadRoster();
     expect(loaded.status).toBe('recovered');
     expect(memory.getItem(CORRUPT_BACKUP_KEY)).toBe(future);
   });
@@ -429,33 +432,33 @@ describe('SaveStore', () => {
     const store = new SeededStore();
     store.setItem(SAVE_KEY, 'rotto');
     store.failWrites = true;
-    expect(new SaveStore(store).load().status).toBe('recovered');
+    expect(new SaveStore(store).loadRoster().status).toBe('recovered');
     expect(store.getItem(SAVE_KEY)).toBe('rotto');
   });
 
   it('uno storage che lancia in setItem: save() restituisce false senza eccezioni', () => {
     const store = new SaveStore(new BrokenStore(['set']));
-    expect(() => store.save(Character.createStarter())).not.toThrow();
-    expect(store.save(Character.createStarter())).toBe(false);
+    expect(() => store.saveRoster(rosterOf(Character.createStarter()))).not.toThrow();
+    expect(store.saveRoster(rosterOf(Character.createStarter()))).toBe(false);
     const seeded = new SeededStore();
     const wrapped = new SaveStore(seeded);
-    expect(wrapped.save(Character.createStarter())).toBe(true);
+    expect(wrapped.saveRoster(rosterOf(Character.createStarter()))).toBe(true);
     seeded.failWrites = true;
-    expect(wrapped.save(sampleCharacter())).toBe(false);
-    expect(deserializeCharacter(seeded.getItem(SAVE_KEY)!)).toEqual(Character.createStarter()); // il vecchio resta
+    expect(wrapped.saveRoster(rosterOf(sampleCharacter()))).toBe(false);
+    expect(deserializeRoster(seeded.getItem(SAVE_KEY)!)?.active?.character).toEqual(Character.createStarter()); // il vecchio resta
   });
 
   it('uno storage che lancia in getItem: si parte da zero senza eccezioni', () => {
-    const loaded = new SaveStore(new BrokenStore(['get'])).load();
+    const loaded = new SaveStore(new BrokenStore(['get'])).loadRoster();
     expect(loaded.status).toBe('fresh');
-    expect(loaded.character).toEqual(Character.createStarter());
+    expect(loaded.roster.profiles).toEqual([]);
   });
 
   it('con store null il gioco funziona in memoria: load da\' fresh, save restituisce false', () => {
     const store = new SaveStore(null);
-    expect(store.load().status).toBe('fresh');
-    expect(store.load().character).toEqual(Character.createStarter());
-    expect(store.save(sampleCharacter())).toBe(false);
+    expect(store.loadRoster().status).toBe('fresh');
+    expect(store.loadRoster().roster.profiles).toEqual([]);
+    expect(store.saveRoster(rosterOf(sampleCharacter()))).toBe(false);
   });
 });
 

@@ -1,7 +1,6 @@
 import { bossForParty } from '../combat/party-health';
-import { PartyRoom } from '../network/party-room';
+import { DungeonRoom } from '../network/dungeon-room';
 import { Character } from '../character/character';
-import { serializeCharacter } from '../character/save-format';
 import { MINIONS } from '../minions/minion-catalog';
 import { Vec2 } from '../../core/vec2';
 import { setupOf, snapshotOf, replicaMatch, applySnapshot } from '../network/protocol';
@@ -22,13 +21,12 @@ it('triplica gli HP di tutti i boss finali e conserva +50% per membro aggiuntivo
 });
 
 it('il Duello cooperativo usa realmente gli HP scalati; i servitori e la replica non duplicano il moltiplicatore',()=>{
-  const room=new PartyRoom('health-check');room.mode='duel';
+  const room=new DungeonRoom('health-check');room.mode='duel';
   for(const id of ['one','two']){
     const character=Character.createStarter('mage');character.completeCreation(`Prova ${id}`,'male','mage');
     character.records.crypt={clears:1,bestTimeSeconds:60};
-    room.enter(id,serializeCharacter(character));room.ready.add(id);
-  }
-  room.start('one','health-check',1);const match=room.match!;
+    room.enter(id,character);}
+  room.start('health-check',1);const match=room.match!;
   expect(match.boss!.health.max).toBe(8100);
   const definition=Object.values(MINIONS).find(m=>!m.dormant && !m.burrow)!;
   const minion=match.spawnMinion(definition,new Vec2(500,500),{maxHealth:100});expect(minion.health.max).toBe(150);

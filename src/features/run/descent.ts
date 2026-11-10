@@ -335,11 +335,17 @@ export class DescentRun {
 
   removePlayer(id: string): void {
     this.players.delete(id);
-    const player = this.match.players.get(id);
-    if (player !== undefined && this.match.status === 'playing') {
-      player.health.current = 0;
-      if (this.match.livingPlayers().length === 0) this.match.end(false);
-    }
+    this.match.removePlayer(id);
+    this.roomGranted.delete(id);
+  }
+
+  addPlayer(member: RunMemberSetup): void {
+    const stats = resolveCombatStats(member.characterClass ?? null, member.loadout, member.totalXp);
+    this.players.set(member.id, { characterClass: member.characterClass ?? null, totalXp: member.totalXp ?? 0,
+      gold: 0, health: stats.maxHealth, maxHealth: stats.maxHealth, mana: stats.maxMana, tempers: [], secondLife: false,
+      pacts: 0, embers: 0, xp: 0, kills: {}, startingTemper: false, offers: 0, baseLoadout: member.loadout });
+    this.match.addPlayer(member);
+    this.encounter.addMember(member.id, { loadout: member.loadout, tempers: [], offers: 0, secondLife: false });
   }
 
   /** Tabella originale del boss: nessun modificatore ottenuto nelle stanze. */

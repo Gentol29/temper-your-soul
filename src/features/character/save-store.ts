@@ -1,5 +1,3 @@
-import { Character } from './character';
-import { deserializeCharacter, serializeCharacter } from './save-format';
 import { CharacterRoster,deserializeRoster,serializeRoster } from './character-roster';
 
 export { SAVE_VERSION } from './save-format';
@@ -73,8 +71,8 @@ export function rosterFromExternalSave(key: string | null, newValue: string | nu
 }
 
 /**
- * Legge e scrive il personaggio. Non lancia mai eccezioni. Con `store` null il gioco funziona in memoria:
- * `load()` da' sempre un personaggio iniziale e `save()` restituisce false.
+ * Archivio locale dei profili precedenti e delle bozze. I progressi online passano soltanto dal server PostgreSQL.
+ * Con `store` null resta utilizzabile in memoria; non sovrascrive l'archivio con il personaggio online.
  */
 export class SaveStore {
   constructor(private readonly store: KeyValueStore | null) {}
@@ -98,37 +96,12 @@ export class SaveStore {
     }catch{return false;}
   }
 
-  load(): { character: Character; status: LoadStatus } {
-    let text: string | null = null;
-    try {
-      text = this.store?.getItem(SAVE_KEY) ?? null;
-    } catch {
-      return { character: Character.createStarter(), status: 'fresh' };
-    }
-    if (text === null) return { character: Character.createStarter(), status: 'fresh' };
-    const character = deserializeCharacter(text);
-    if (character !== null) return { character, status: 'loaded' };
-    this.backUpCorrupt(text);
-    return { character: Character.createStarter(), status: 'recovered' };
-  }
-
-  /** Salva il personaggio; false se non e' stato possibile (nessun archivio, quota piena, accesso negato). */
-  save(character: Character): boolean {
-    if (this.store === null) return false;
-    try {
-      this.store.setItem(SAVE_KEY, serializeCharacter(character));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   /** Il testo illeggibile non si cancella in silenzio: se la copia fallisce, il salvataggio originale resta dov'e'. */
   private backUpCorrupt(text: string): void {
     try {
       this.store?.setItem(CORRUPT_BACKUP_KEY, text);
     } catch {
-      // Nessuna copia possibile: load() non scrive su SAVE_KEY, quindi il testo originale resta finche' non si salva.
+      // Nessuna copia possibile: loadRoster non scrive su SAVE_KEY, quindi il testo originale resta intatto.
     }
   }
 }

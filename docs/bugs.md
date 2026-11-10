@@ -1,5 +1,15 @@
 # Bug e problemi rilevati
 
+## Supabase: accesso diretto ai profili senza RLS (rilevato il 10 novembre 2026, aperto)
+
+Verificato tramite MCP: `public.profiles` ha RLS disabilitata e i ruoli `anon` / `authenticated` hanno privilegi di lettura e modifica sulla tabella. La Data API può quindi aggirare i comandi autorevoli del server. Non sono state modificate politiche o concessioni durante la configurazione locale. Prima dell’uso pubblico occorre concordare e applicare un accesso coerente con il server autorevole; l’Auth di Supabase resta separata dall’accesso ai dati di gioco. [Riferimento RLS](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Migrazione MMO: pannello di accesso nascosto e raffica iniziale delle presenze (risolti localmente, 10 novembre 2026)
+
+Il controllo tecnico nel browser ha rilevato che il CSS del vecchio menu nascondeva il nuovo dialogo account. Il pannello online ha ora uno stile dedicato e risulta visibile sopra il menu, con i comandi Accedi/Chiudi; il server non raggiungibile viene segnalato. Nessuna conferma giocata ricevuta.
+
+Il test con 32 WebSocket reali ha rilevato disconnessioni durante gli accessi simultanei: il messaggio di stato ritrasmetteva a tutti i profili completi delle presenze. Lo stato iniziale dell’HUB contiene ora solo il profilo pubblico del destinatario; le altre presenze arrivano dal codec ordinato a tuple. La stessa prova passa dopo la correzione.
+
 ## Zaino del rifugio: l'equipaggiamento non si vede finché non si riapre (risolto in v0.16.04, 6 novembre 2026)
 
 Segnalato dall'utente: equipaggiando un oggetto dalla finestra «Personaggio e zaino» del rifugio (doppio clic o clic

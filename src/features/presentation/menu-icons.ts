@@ -104,6 +104,7 @@ export const MENU_ICONS = {
   forge: ANVIL_SPRITE,
   merchant: FLASK_SPRITE,
   coop: PARTY_ICON,
+  logout: PORTAL_SPRITE,
 } as const;
 
 /** Emblema del titolo: incudine e brace. */

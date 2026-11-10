@@ -6,6 +6,7 @@ import {el} from './dom';
 import {storageDrag} from './storage-drag';
 import {playerProfile} from './player-profile';
 import {hideItemTooltip,renderItemSlot} from './item-slot';
+import {characterAction} from './character-actions';
 type Selection={uid:string;source:'storage'|'bag'};
 /** Due pannelli simultanei. Ogni trasferimento viene validato dal dominio prima del salvataggio. */
 export function storageWindow(character:Character,gold:number,onChange:()=>void):HTMLElement {
@@ -13,8 +14,8 @@ export function storageWindow(character:Character,gold:number,onChange:()=>void)
  const changed=()=>{hideItemTooltip();selected=null;onChange();render();};
  const transfer=(selection:Selection,target:'storage'|'bag',index?:number)=>{
   let moved=false;
-  if(target==='bag'&&selection.source==='storage')moved=withdrawItem(character,selection.uid);
-  else if(target==='storage')moved=selection.source==='bag'?depositItem(character,selection.uid,index):index!==undefined&&moveStorageItem(character,selection.uid,index);
+  if(target==='bag'&&selection.source==='storage')moved=characterAction({kind:'withdraw',uid:selection.uid},()=>withdrawItem(character,selection.uid));
+  else if(target==='storage')moved=selection.source==='bag'?characterAction({kind:'deposit',uid:selection.uid,target:index},()=>depositItem(character,selection.uid,index)):index!==undefined&&characterAction({kind:'move_storage',uid:selection.uid,target:index},()=>moveStorageItem(character,selection.uid,index));
   if(moved)changed();return moved;
  };
  const render=()=>{

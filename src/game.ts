@@ -1,8 +1,9 @@
+import { setCharacterCommandSink } from './features/ui/character-actions';
+import {accountToken,logoutAccount} from './features/network/account-session';
+import {applicationLoading} from './features/ui/loading-indicator';
 import { BACKPACK_SPRITE } from './features/presentation/item-sprites';
 import { GOLD_COIN_SPRITE } from './features/presentation/currency-sprites';
 import { renderPixelIcon } from './features/ui/pixel-icon';
-import {applyTradeDelta} from './features/character/trade-transfer';
-import {serializeCharacter} from './features/character/save-format';
 import { HubScreen } from './features/ui/hub-screen';
 import { playerProfile } from './features/ui/player-profile';
 import { hideItemTooltip } from './features/ui/item-slot';
@@ -16,7 +17,7 @@ import { SeededRng } from './core/rng';
 import { Vec2 } from './core/vec2';
 import { AudioPlayer } from './features/audio/audio-player';
 import { Character } from './features/character/character';
-import type { CharacterRoster } from './features/character/character-roster';
+import { CharacterRoster } from './features/character/character-roster';
 import { renderCharacterProfiles } from './features/ui/character-profiles';
 import { browserStorage, rosterFromExternalSave, SaveStore, type LoadStatus } from './features/character/save-store';
 import { CRYPT } from './features/dungeons/crypt';
@@ -48,7 +49,6 @@ import { PhaseBanner } from './features/ui/phase-banner';
 import { CombatTally } from './features/match/combat-tally';
 import { MainMenu, type MenuCharacter } from './features/ui/main-menu';
 import { connectionLabel, type MenuActionId } from './features/ui/menu-model';
-import { CoopScreen } from './features/ui/coop-screen';
 import { MenuScene } from './features/presentation/menu-scene';
 import { CLASS_LABELS } from './features/character/character-class';
 import { pixelSvg } from './features/ui/character-portrait';
@@ -91,11 +91,11 @@ const GEAR_SCORE_NOTICE_MS = 2000;
  * Schermata corrente dell'applicazione. Le prime sono fuori dalla partita (mostrano lo sfondo di un dungeon);
  * la partita avanza solo in `playing`.
  */
-type Screen = 'hub' | 'menu' | 'characters' | 'coop' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
+type Screen = 'hub' | 'menu' | 'characters' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
 
-const IDLE_SCREENS: readonly Screen[] = ['hub', 'menu', 'characters', 'coop', 'dungeons', 'inventory', 'bestiary'];
+const IDLE_SCREENS: readonly Screen[] = ['hub', 'menu', 'characters', 'dungeons', 'inventory', 'bestiary'];
 /** Le schermate che hanno il rifugio dipinto come sfondo. */
-const REFUGE_SCREENS: readonly Screen[] = ['menu', 'characters', 'coop'];
+const REFUGE_SCREENS: readonly Screen[] = ['menu', 'characters'];
 
 /** Come si entra in un dungeon: il Duello di sempre, la Discesa, il Pellegrinaggio. */
 type Mode = 'duel' | RunMode;
@@ -139,7 +139,11 @@ export class Game {
   private pendingRoom: { remaining: number; enter: () => void } | null = null;
   private readonly screens = new Screens();
   private readonly party = new PartyPanel(() => { this.settingsPanel?.close(); this.input.releaseAll(); }, snapshot => this.receiveSnapshot(snapshot), () => {
+    const hadAccount=Boolean(this.offlineRoster);
+    setCharacterCommandSink(null);if(this.offlineRoster){this.roster=this.offlineRoster;this.offlineRoster=null;}
+    if(hadAccount)this.menu?.setSave({text:'Salvataggio locale',detail:'Profili locali conservati in questo browser.',tone:'ok'});
     if (this.networkBattleId) { this.networkBattleId = ''; this.showToast('Hai lasciato il combattimento cooperativo.'); this.showMenu(); }
+    else if(hadAccount)this.showMenu();
   });
   private networkBattleId = '';
   private hubSession='';
@@ -157,7 +161,6 @@ export class Game {
   private readonly fullscreen: FullscreenToggle;
   private readonly menu: MainMenu;
   private readonly menuScene = new MenuScene(requireElement<HTMLCanvasElement>('menu-scene'));
-  private readonly coop: CoopScreen;
   /** Da dove si e' arrivati a dungeon e inventario: chiudendoli si torna li'. */
   private returnTo: 'menu' | 'hub' = 'hub';
   private connectionLost = false;
@@ -170,12 +173,12 @@ export class Game {
   private readonly saveStore: SaveStore;
 
   private roster:CharacterRoster;
+  private offlineRoster:CharacterRoster|null=null;
   private draft:Character|null=null;
   private get character():Character {return this.draft??this.roster.active?.character??this.newDraft();}
   private newDraft():Character {this.draft=Character.createStarter();return this.draft;}
   private updateParty():void {
-    const phase=this.screen==='playing'?'playing':this.screen==='paused'?'paused':this.screen==='ended'?'ended':'idle';
-    this.party.update(this.character,this.draft?null:this.roster.activeId,this.dungeon,phase);
+    this.party.update(this.character);
   }
   private readonly loadStatus: LoadStatus;
   private dungeon: DungeonDefinition = CRYPT;
@@ -226,7 +229,16 @@ export class Game {
     const loaded = this.saveStore.loadRoster();
     this.roster=loaded.roster;
     this.loadStatus = loaded.status;
-    this.party.client.tradeCommit=delta=>{const before=deserializeCharacter(serializeCharacter(this.character))!;applyTradeDelta(this.character,delta);if(this.persist())return serializeCharacter(this.character);Object.assign(this.character,before);return null;};
+    this.party.client.profileChanged=profile=>{
+      const character=deserializeCharacter(profile.character);if(!character)return;
+      if(!this.offlineRoster){this.offlineRoster=this.roster;this.roster=new CharacterRoster();this.roster.add(character);}
+      else Object.assign(this.character,character);
+      this.draft=null;this.roster.gold=profile.gold;this.renderAppearance=undefined;
+      setCharacterCommandSink(command=>{if(!this.party.client.tradeSaving)this.party.client.send({type:'character_command',command});});
+      this.hub?.refreshProfile();
+      if(this.screen==='inventory')this.inventoryScreen.render(this.character);
+      this.menu.setSave({text:'Salvato sul server',detail:'Profilo persistente del tuo account.',tone:'ok'});
+    };
 
     this.hub = new HubScreen({portal:()=>this.openDungeons('hub'),save:()=>{this.persist();},inventory:()=>this.openInventory('hub'),menu:()=>this.showMenu()});
     this.menu = new MainMenu({
@@ -234,15 +246,14 @@ export class Game {
       onBlocked: (reason) => this.showToast(reason, 2600),
       onSceneFocus: (scene) => { this.menuScene.focus = scene; },
     });
-    this.coop = new CoopScreen({ onJoin: (code) => this.party.joinInvite(code), onBack: () => this.showMenu() });
     requireElement('characters-back').addEventListener('click', () => this.showMenu());
-    this.party.onEnterRefuge = () => this.openHub();
     // Nel menu il riquadro del party non si vede: il motivo di un errore arriva con un avviso.
     this.party.onProblem = (message) => { if (this.screen === 'menu' || this.screen === 'characters') this.showToast(message); };
     // Dentro i campi di testo l'Input ignora i tasti: anche li' ESC torna al menu.
-    for (const id of ['screen-characters', 'screen-coop']) requireElement(id).addEventListener('keydown', (event) => {
+    requireElement('screen-characters').addEventListener('keydown', (event) => {
       if (event.code === 'Escape' && event.target instanceof HTMLInputElement) { event.preventDefault(); this.showMenu(); }
     });
+    requireElement('party-panel').addEventListener('keydown',event=>{if(event.code==='Escape'&&(event.target instanceof HTMLInputElement||event.target instanceof HTMLSelectElement)){event.preventDefault();this.party.close();this.showMenu();}});
     this.adminMenu = new AdminMenu(ADMIN_TOOLS_ENABLED, {
       onGrantItems: (rarity) => {
         const added = grantClassItems(this.character, rarity);
@@ -328,9 +339,11 @@ export class Game {
   // --- Navigazione tra le schermate ------------------------------------------------------------------------------
 
   private showMenu(): void {
+    this.party.close();this.settingsPanel.close();
+    if(this.party.client.state)this.party.client.send({type:'hub_input',move:{x:0,y:0}});
     this.hub.hide();
     this.profileDialog?.close();
-    if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
+    if(this.networkBattleId){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.returnToHub();}
     this.networkBattleId = '';
     this.networkRun = null;
     this.networkRoom = null;
@@ -349,19 +362,21 @@ export class Game {
     const summary: MenuCharacter | null = character.created
       ? { name: character.name!, className: CLASS_LABELS[character.characterClass!], level: progress.level, gold: this.roster.gold, gearScore: character.gearScore, levelProgress: progress.current / progress.required, figure: pixelSvg(characterPixels(character.appearance(), 'game')) }
       : null;
-    this.menu.render(summary, { characterName: summary?.name ?? null, inviteWaiting: this.party.inviteWaiting, incomplete: this.draft === null && !character.created });
+    this.menu.render(summary, { characterName: summary?.name ?? null, incomplete: this.draft === null && !character.created,authenticated:Boolean(accountToken()) });
   }
 
   private onMenuAction(id: MenuActionId): void {
     switch (id) {
       case 'continue': if (this.character.created) this.openHub(true); else this.openCharacters(); break;
-      case 'new_character': this.newDraft(); this.inventoryScreen.reset(); this.openCharacters(); break;
+      case 'new_character': if(this.party.client.profile){this.showToast('Il personaggio online appartiene al tuo account.');break;}this.newDraft(); this.inventoryScreen.reset(); this.openCharacters(); break;
       case 'settings': this.settingsPanel.open(); break;
       case 'characters': this.openCharacters(); break;
+      case 'logout':void applicationLoading().run('Uscita dall’account…',async()=>{await logoutAccount();this.showMenu();});break;
     }
   }
 
   private openCharacters(): void {
+    if(this.party.client.profile){this.showToast('Il personaggio online appartiene al tuo account.');return;}
     this.screen = 'characters';
     this.screens.show('characters');
     this.renderCharacters();
@@ -386,7 +401,7 @@ export class Game {
       },
       onContinue:()=>this.openHub(true),
     }));
-    this.adminMenu.setAvailable(this.character.created);
+    this.adminMenu.setAvailable(this.character.created&&!this.party.client.profile);
   }
 
   /** Chiude dungeon o inventario tornando da dove si era partiti. */
@@ -396,8 +411,9 @@ export class Game {
   }
 
   private openHub(arrive = false): void {
+    if(!this.party.client.profile){this.updateParty();this.party.login();return;}
     if(!this.character.created){this.showMenu();return;}
-    if(this.networkBattleId&&this.party.client.state?.playing){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.leaveParty();}
+    if(this.networkBattleId){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.returnToHub();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
     this.screen='hub';this.input.releaseAll();this.clearBattleFeedback();this.overlay.hide();this.screens.show(null);
     document.body.classList.add('in-menu');this.hub.show(this.character,this.roster,arrive,this.clock);this.updateParty();
@@ -459,8 +475,7 @@ export class Game {
   }
 
   private startDungeon(dungeon: DungeonDefinition, mode: Mode, _grade: number): void {
-    if (this.party.client.state&&this.party.client.isMember&&this.party.client.state.members.length>1) {
-      if(this.party.client.state.leaderId!==this.party.client.playerId){this.showToast('Solo il leader può avviare il portale.');return;}
+    if (this.party.client.state&&this.party.client.profile) {
       this.party.client.send({type:'portal_start',dungeonId:dungeon.id,mode});this.party.close();return;
     }
     this.dungeon = dungeon;
@@ -472,7 +487,7 @@ export class Game {
   /** Nuova partita nel dungeon corrente: il Duello con il boss, oppure una Discesa (o un Pellegrinaggio) da capo. */
   private startMatch(): void {
     this.hub.hide();
-    if(this.party.client.state&&this.party.client.isMember&&this.party.client.state.members.length>1){this.startDungeon(this.dungeon,this.mode,0);return;}
+    if(this.party.client.state&&this.party.client.profile){this.startDungeon(this.dungeon,this.mode,0);return;}
     this.networkBattleId = '';this.networkView=null;this.allyPoses.clear();
     this.renderAppearance = undefined; this.allyVisuals = [];
     if(!this.character.created)return;
@@ -543,12 +558,10 @@ export class Game {
 
   private onEscape(): void {
     if(this.profileDialog){this.profileDialog.close();return;}
+    if(this.party.isOpen){this.party.close();return;}
+    if(this.settingsPanel.isOpen){this.settingsPanel.close();return;}
     if(this.screen==='hub'){if(!this.hub.closeDialog())this.showMenu();return;}
-    if (this.settingsPanel.isOpen) this.settingsPanel.close();
-    else if (this.screen === 'bestiary') this.openDungeons();
-    else if (this.screen === 'dungeons' || this.screen === 'inventory') this.leavePlace();
-    else if (IDLE_SCREENS.includes(this.screen) && this.screen !== 'menu') this.showMenu();
-    else this.togglePause();
+    if(this.screen!=='menu')this.showMenu();
   }
 
   /** Una partita del duello (o lo sfondo dei menu), con i suoi ascoltatori. */
@@ -631,7 +644,7 @@ export class Game {
     const won = run.status === 'won';
     this.saveRunProgress();
     let record = { firstClear: false, newBest: false };
-    if (run.mode === 'pilgrimage') {
+    if (!this.party.client.profile && run.mode === 'pilgrimage') {
       if (won) {
         const best = this.character.pilgrimage.bestTimeSeconds;
         record = { firstClear: this.character.pilgrimage.clears === 0, newBest: best === null || run.seconds < best };
@@ -728,12 +741,13 @@ export class Game {
     let sounds: Array<'loot' | 'level_up'> = [];
     if (won) {
       const rolls = networkRolls ?? rollLoot(lootTableFor(match.dungeon.id), new SeededRng(Math.floor(Math.random() * 0x100000000)));
-      const items = this.character.addRolls(rolls);
-      const before = levelProgress(this.character.totalXp);
+      const items = this.party.client.profile ? (rolls.length ? this.character.inventory.slice(-rolls.length) : []) : this.character.addRolls(rolls);
+      const before = levelProgress(this.party.client.profile ? this.runXpStart : this.character.totalXp);
       const gained = PROGRESSION.rewards[match.dungeon.id as keyof typeof PROGRESSION.rewards] ?? 100;
-      this.character.totalXp += gained;
+      if(!this.party.client.profile)this.character.totalXp += gained;
       const afterXp = levelProgress(this.character.totalXp);
-      const record = this.character.recordVictory(match.dungeon.id, match.time);
+      const onlineRecord = this.character.recordFor(match.dungeon.id);
+      const record = this.party.client.profile ? {firstClear:onlineRecord.clears===1,newBest:onlineRecord.bestTimeSeconds===match.time} : this.character.recordVictory(match.dungeon.id, match.time);
       const saved = this.persist();
       if (items.length > 0) sounds.push('loot');
       if (afterXp.level > before.level) sounds.push('level_up');
@@ -834,10 +848,17 @@ export class Game {
       if (snapshot.run !== null && snapshot.room !== null) this.descentHud.announce(snapshot.run, snapshot.room);
       else this.descentHud.hide();
     }
+    const membership=this.party.client.state?.members??[];
+    if(snapshot.players.map(p=>p.id).join(',')!==[...this.match.players.keys()].join(',')){
+      applySnapshot(this.match,snapshot);
+      this.battleMembers=membership.filter(m=>snapshot.players.some(p=>p.id===m.id));
+      for(const m of this.battleMembers)if(!this.allyPoses.has(m.id))this.allyPoses.set(m.id,new ActorPoses());
+    }
     this.networkRun = snapshot.run;
     this.networkRoom = snapshot.room;
     applySnapshot(this.match, snapshot);
     this.networkView!.accept(snapshot, performance.now());
+    this.allyVisuals=this.battleMembers.filter(m=>m.id!==me&&this.networkView!.match.players.has(m.id)).map(m=>({player:this.networkView!.match.players.get(m.id)!,poses:this.allyPoses.get(m.id)!,name:m.name,appearance:m.appearance}));
     for (const event of snapshot.events) {
       this.effects.handle(event, me); this.audio.handle(event, me);
       this.hud.onEvent(event, me); this.tally.handle(event); this.runTally.handle(event);
@@ -858,6 +879,11 @@ export class Game {
 
   /** Cooperativa: porta nel personaggio braci, esperienza, bestiario e bottino della discesa man mano che arrivano. */
   private saveNetworkRunProgress(run: RunView): void {
+    if(this.party.client.profile){
+      const count=run.rewards[this.party.client.playerId]?.length??0;
+      this.runItems=count?this.character.inventory.slice(-count):[];
+      return;
+    }
     const me = this.party.client.playerId;
     const state = run.players[me];
     if (state === undefined) return;
@@ -883,16 +909,20 @@ export class Game {
     this.saveNetworkRunProgress(run);
     const me = this.party.client.playerId;
     const won = run.status === 'won';
-    for (const victory of run.victories) this.character.recordVictory(victory.dungeonId, Number.NaN);
+    if(!this.party.client.profile)for (const victory of run.victories) this.character.recordVictory(victory.dungeonId, Number.NaN);
     let record = { firstClear: false, newBest: false };
-    if (run.mode === 'pilgrimage') {
+    if(this.party.client.profile){
+      const savedRecord=run.mode==='pilgrimage'?this.character.pilgrimage:this.character.descentFor(run.dungeonId);
+      record={firstClear:won&&savedRecord.clears===1,newBest:won&&savedRecord.bestTimeSeconds===run.seconds};
+    }
+    if (!this.party.client.profile && run.mode === 'pilgrimage') {
       if (won) {
         const best = this.character.pilgrimage.bestTimeSeconds;
         record = { firstClear: this.character.pilgrimage.clears === 0, newBest: best === null || run.seconds < best };
         this.character.pilgrimage = { clears: this.character.pilgrimage.clears + 1, bestTimeSeconds: record.newBest ? run.seconds : best };
       }
       for (const victory of run.victories) this.character.recordDescent(victory.dungeonId, { won: true, seconds: victory.seconds, grade: run.grade, stage: run.stages });
-    } else {
+    } else if(!this.party.client.profile) {
       record = this.character.recordDescent(run.dungeonId, { won, seconds: run.seconds, grade: run.grade, stage: run.stage + 1 });
     }
     const saved = this.persist();
@@ -941,6 +971,7 @@ export class Game {
    * aggiornato. Il personaggio in creazione (`draft`) non e' nella raccolta e resta com'e'.
    */
   private adoptExternalSave(key: string | null, newValue: string | null): void {
+    if(this.party.client.profile)return;
     const roster = rosterFromExternalSave(key, newValue, this.roster.activeId);
     if (roster === null) return;
     this.roster = roster;
@@ -962,6 +993,7 @@ export class Game {
 
   /** Salva il personaggio; se non riesce avvisa una volta sola. Restituisce se il salvataggio e' riuscito. */
   private persist(): boolean {
+    if(this.party.client.profile){this.renderAppearance=undefined;return true;}
     this.renderAppearance = undefined;
     const saved = this.saveStore.saveRoster(this.roster);
     this.menu.setSave(saved
@@ -987,7 +1019,7 @@ export class Game {
   // --- Pausa, audio, ridimensionamento ---------------------------------------------------------------------------
 
   private togglePause(): void {
-    if (this.networkBattleId && this.screen === 'playing') { this.party.openDialog(); return; }
+    if (this.networkBattleId && this.screen === 'playing') { this.showMenu(); return; }
     if (this.screen === 'playing') {
       this.screen = 'paused';
       this.overlay.showPaused(this.run !== null ? `${this.dungeon.name} · tappa ${this.run.stage + 1}` : this.dungeon.name);
@@ -1080,10 +1112,10 @@ export class Game {
     const frameStart = performance.now();
     this.party.client.flushSnapshot();
     const partyState=this.party.client.state,hub=this.party.client.hub;
-    if(partyState&&this.hubSession!==partyState.code&&(!partyState.playing||!partyState.members.some(m=>m.id===this.party.client.playerId))){this.hubSession=partyState.code;this.openHub();}
+    if(partyState){const first=!this.hubSession;this.hubSession=partyState.code;if(first&&partyState.code==='HUB')this.openHub();}
     if(!partyState){this.hubSession='';this.lastPresence=null;}
     if(partyState&&this.networkBattleId&&!this.party.client.isMember){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.networkBattleId='';this.networkView=null;this.openHub();}
-    if(partyState){const present=this.screen==='hub'||this.screen==='dungeons';if(present!==this.lastPresence){this.lastPresence=present;this.party.client.send({type:'hub_presence',present});}}
+    if(partyState){const present=!partyState.playing;if(present!==this.lastPresence){this.lastPresence=present;this.party.client.send({type:'hub_presence',present});}}
 
     this.hub.setOnline(hub&&partyState?{id:this.party.client.playerId,view:hub,busy:this.party.client.tradeSaving,send:m=>this.party.client.send(m)}:null);
     const delta = Math.min((time - this.lastTime) / 1000, MAX_FRAME_TIME);
@@ -1133,13 +1165,11 @@ export class Game {
     const inRefuge=REFUGE_SCREENS.includes(this.screen);
     document.body.classList.toggle('initial-menu',inRefuge);
     document.body.classList.toggle('refuge-backdrop',inRefuge);
-    this.party.dock(this.screen==='coop'?this.coop.slot:null);
     const link={connecting:this.party.client.connecting,online:Boolean(this.party.client.state),failed:this.party.failed};
     if(link.failed&&!this.connectionLost&&this.wasOnline&&inRefuge)this.showToast('Connessione persa: ora giochi in singolo.');
     this.connectionLost=link.failed;
     this.wasOnline=link.online;
     this.menu.setConnection(connectionLabel({...link,latency:this.party.client.latency}));
-    if(this.screen==='coop')this.coop.sync(link);
     const balance=requireElement('global-gold'),goldLabel=this.roster.gold.toLocaleString('it-IT');
     if(balance.textContent!==goldLabel)balance.textContent=goldLabel;
     const views = this.descentViews();
@@ -1152,7 +1182,7 @@ export class Game {
     if (this.input.inMatch && views !== null && this.input.isActionPressed('show_map')) this.descentMap.show(views.run);
     else this.descentMap.hide();
     this.audio.setListener(this.match.player.position, this.camera.width / 2);
-    const audioScreen: AudioScreen = this.screen === 'bestiary' || this.screen === 'hub' || this.screen === 'characters' || this.screen === 'coop' ? 'menu' : this.screen;
+    const audioScreen: AudioScreen = this.screen === 'bestiary' || this.screen === 'hub' || this.screen === 'characters' ? 'menu' : this.screen;
     this.audio.setScene({ screen: audioScreen, theme: this.match.arena.theme, enraged: this.match.boss?.isEnraged ?? false });
     this.audio.update(delta);
     const mood = views === null

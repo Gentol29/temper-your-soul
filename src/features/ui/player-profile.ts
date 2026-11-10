@@ -6,6 +6,7 @@ import { renderCharacterPortrait } from './character-portrait';
 import type { Item } from '../items/item';
 import { EQUIPMENT_SLOTS, SLOT_LABELS } from '../items/equipment-slot';
 import { renderItemSlot } from './item-slot';
+import { characterAction } from './character-actions';
 /** Profilo consultabile in partita: nessuna modifica dell'equipaggiamento durante il combattimento. */
 export interface PlayerProfileOptions {
  readonly showInventory?:boolean;
@@ -24,7 +25,7 @@ export function playerProfile(character: Character, gold: number|null, options:P
   const equipment=el('div','profile-equipment');
   for(const slot of EQUIPMENT_SLOTS){const cell=el('div','profile-equipment-slot'),item=character.equippedItem(slot);cell.append(el('span','',SLOT_LABELS[slot]));
     if(item){const button=renderItemSlot(item,{characterClass:character.characterClass,badge:'Equipaggiato'});if(button)cell.append(button);
-      if(options.onEquipmentChange){const remove=el('button','relic-button small-button','Rimuovi');remove.onclick=()=>{character.unequip(slot);options.onEquipmentChange!();};cell.append(remove);}
+      if(options.onEquipmentChange){const remove=el('button','relic-button small-button','Rimuovi');remove.onclick=()=>{if(characterAction({kind:'unequip',slot},()=>character.unequip(slot)))options.onEquipmentChange!();};cell.append(remove);}
     }else cell.append(el('div','profile-cell','—'));equipment.append(cell);
   }
   const figure=el('section','profile-figure');figure.append(center,equipment);
@@ -35,7 +36,7 @@ export function playerProfile(character: Character, gold: number|null, options:P
   let page=0;
   const draw=()=>{grid.replaceChildren();
   for(let i=0;i<9;i++) {const cell=el('div','profile-cell'), item=unequipped[page*9+i];if(item){const slot=renderItemSlot(item,{characterClass:character.characterClass});if(slot){cell.append(slot);options.onItem?.(slot,item);
-    if(options.onEquipmentChange){const equip=()=>{if(character.equip(item.uid))options.onEquipmentChange!();};slot.addEventListener('dblclick',equip);slot.addEventListener('contextmenu',event=>{event.preventDefault();equip();});}
+    if(options.onEquipmentChange){const equip=()=>{if(characterAction({kind:'equip',uid:item.uid},()=>character.equip(item.uid)))options.onEquipmentChange!();};slot.addEventListener('dblclick',equip);slot.addEventListener('contextmenu',event=>{event.preventDefault();equip();});}
   }}else cell.setAttribute('aria-label',`Casella ${i+1} vuota`);options.onCell?.(cell,page*9+i,item);grid.append(cell);}
   };draw();
   right.append(grid);

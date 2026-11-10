@@ -16,7 +16,7 @@ import { NetworkView } from '../presentation/network-view';
 import { BLEEDING } from './archer/pet';
 import { MINIONS } from '../minions/minion-catalog';
 import { deserializeCharacter, serializeCharacter } from '../character/save-format';
-import { PartyRoom } from '../network/party-room';
+import { DungeonRoom } from '../network/dungeon-room';
 
 const STEP = 1 / 60;
 function member(kind: CharacterClass): MatchMember {
@@ -295,16 +295,14 @@ it('codec e replica visuale conservano compagno, stati, guardia, channeling e ca
   expect(view.match.classCombat.snapshot().pets[0].position.distanceTo(match.player.position)).toBeGreaterThanOrEqual(0);
 });
 
-it('la lobby avvia un party misto con skill e risorse di classe autorevoli', () => {
-  const room = new PartyRoom('classi');
+it('l’istanza pubblica avvia classi miste con skill e risorse di classe autorevoli', () => {
+  const room = new DungeonRoom('classi');
   for (const kind of ['warrior', 'archer', 'mage'] as const) {
     const character = Character.createStarter(kind); character.completeCreation(kind, 'male', kind);
     character.recordVictory('crypt', 60);
-    room.enter(kind, serializeCharacter(character)); room.ready.add(kind);
-  }
-  room.chooseMode('warrior', 'duel', 0);
-  for (const kind of ['warrior', 'archer', 'mage']) room.ready.add(kind);
-  room.start('warrior', 'mixed', 42);
+    room.enter(kind,character); }
+  room.chooseMode('duel', 0);
+  room.start('mixed', 42);
   room.inputs.set('warrior', { intent: intent(1), receivedAt: 0 });
   room.inputs.set('archer', { intent: intent(2), receivedAt: 0 });
   room.inputs.set('mage', { intent: intent(2), receivedAt: 0 });

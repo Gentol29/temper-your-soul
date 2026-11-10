@@ -1,5 +1,9 @@
 # Temper your soul
 
+**v0.17.00 · 10 novembre 2026:** MMO con HUB pubblico condiviso, profili PostgreSQL autorevoli e accesso/registrazione Supabase nel gioco. Fino a 64 presenze nel mondo, dungeon pubblici fino a 32 ingressi e party sociali con quattro posti e inviti. Esc torna al menu mantenendo la connessione; Logout esce dall’account. Simulazione a 60 Hz, codec ordinato v2 a 30 Hz, protocollo applicativo 21, salvataggi v10 con migrazioni precedenti conservate. [Configurazione, schema e limiti](docs/mmo-persistente.md).
+
+Il `.env` è locale ed escluso da Git. Verificati connessione PostgreSQL reale, UPSERT/rollback in tabella temporanea e interfaccia con due account fittizi; prova giocata con account reali ancora da eseguire. Rilevata RLS disabilitata sui profili remoti: [difetto aperto](docs/bugs.md), da risolvere prima dell’uso pubblico. Le sezioni datate sotto conservano lo storico del progetto.
+
 Gioco d’azione 2D per browser in **TypeScript strict**, Canvas 2D e DOM, senza motore di gioco né dipendenze runtime nel browser (server cooperativo Node con WebSocket). I principi sono ispirati ad Ashen Realm: le abilità dipendono dall’equipaggiamento. Il prototipo originale si chiamava Emberfall; il nome del gioco attuale è **Temper your soul**.
 
 **Stato al 3 novembre 2026 · v0.11.01:** quattro dungeon con discese a otto tappe, tre classi, profili locali multipli, livelli/XP, mana, 25 famiglie di oggetti, GS e cooperativa autorevole fino a quattro giocatori. Mob e luogotenenti assegnano XP e hanno il 70% di probabilità di emettere oro, assorbito automaticamente dopo 0,5 s di emissione e 0,4 s di volo; il bottino degli oggetti resta sul boss finale. Attacchi base con animazioni Hi-bit proprie, senza particelle casuali al lancio/in volo; sangue, impatti, morti e buff conservati. Testi XP/oro da 16 px Silkscreen sopra il giocatore, HUB carbone/grigio/rosso con portale gotico animato e sprite C · Cacciatore d’ombre con equipaggiamento modulare per entrambi i corpi. Lupo dell’Arciere autonomo nella ricerca dei nemici, cursori Reliquiario personalizzabili e ostacoli Hi-bit della cripta integrati. Salvataggio v10, protocollo cooperativo 14: riavviare server e ricaricare i client. Verifica automatica: **872 test**, tipi e build; prova giocata della versione combinata ancora da confermare. Il permadeath non è implementato.
@@ -146,34 +150,15 @@ Prossimo passo: prova manuale di porte, mappe, servitori e pre-boss in singolo/c
 
 Verifica automatica della revisione: `npm run verify` superato, **555 test in 42 file**, tipi client/server e build. Le prove visive e giocate di questa revisione sono ancora a carico dell’utente.
 
-### Party cooperativo sincronizzato
+### Multiplayer persistente
 
-Server autorevole **Node + WebSocket**: una sola simulazione a 60 Hz per stanza, input e snapshot a 30 Hz. Il browser rappresenta lo stato ricevuto; HP, mana, collisioni, ricariche, danni, esito e bottino sono decisi dal server. Il client non invia posizioni o danni. Nessuna dipendenza di rete nel bundle browser; `ws` gira soltanto sul server e `tsx` esegue il server TypeScript.
+Il mondo richiede PostgreSQL e autenticazione configurati nel `.env`: seguire [mmo-persistente.md](docs/mmo-persistente.md) e `.env.example`. Dopo `npm run build`, avviare `npm run server` sulla porta 4173. In sviluppo avviare anche Vite: il proxy inoltra `/party`, `/online-config` e `/auth`. Il percorso `/party` è mantenuto per il trasporto WebSocket, senza codici di stanza o link di invito.
 
-1. Crea/seleziona un personaggio, apri **Party** in alto a destra e premi **Crea party**.
-2. **Copia invito** condivide un URL `?party=<codice>`. Chi lo apre sceglie/crea il proprio personaggio e si unisce alla stessa stanza (massimo quattro membri).
-3. Solo il creatore/leader sceglie il dungeon. Tutti confermano **Sono pronto**, poi il leader preme **Avvia dungeon**. Cambiare destinazione azzera le conferme. Il server verifica il GS di **tutti**: T3 100, T4 200.
-4. Alleati visibili con sprite/equipaggiamento, nome e barra vita. Proiettili, zone e colpi alleati non infliggono fuoco amico; attacchi, contatto e cariche del boss possono colpire ciascun membro. Il boss prende di mira il vivo più vicino. Un KO rimane fuori combattimento fino al prossimo incontro; sconfitta solo quando tutti sono KO. Nessuna resurrezione né permadeath aggiunti.
-5. A vittoria/sconfitta si apre il **Combat report** condiviso: danni effettivi inflitti, subiti e guarigione per membro, senza overkill. La guarigione include rigenerazione del Guerriero e furto vita dell’Arciere; Chierico non implementato. Anche il singolo ha il report.
+Dopo Accedi si entra nell’HUB comune. Il server verifica l’account e carica il personaggio da `profiles`; un account nuovo riceve livello 1 e set bianco di classe. Inventario, economia, premi e scambi sono validati e salvati sul server. Le istanze di dungeon sono pubbliche e accettano nuovi ingressi fino alla capienza. Il gruppo sociale non riserva posti in dungeon.
 
-Il pannello mostra il **ping RTT** misurato ogni due secondi, con variazione dell’ultima misura nel tooltip. In cooperativa aprire menu/lobby o cambiare scheda **non mette in pausa il mondo**; l’input scade dopo 350 ms senza comandi. Uscita, ricaricamento e disconnessione abbandonano l’incontro (nessun rientro nello stesso combattimento); il corpo diventa KO. Se il leader esce, il comando passa al primo membro rimasto. Tornare al menu durante l’incontro esce dal party. Cambiare profilo esce dal party; cambiare equipaggiamento in lobby aggiorna il personaggio sul server e annulla il proprio pronto.
+Per un tunnel puntare a 4173 e impostare l’origine HTTPS effettiva in `ALLOWED_ORIGINS`; per i link di conferma email configurare anche gli URL di Supabase Auth. `npm run tunnel` avvia cloudflared e stampa l’indirizzo: non vengono più generati metadati o inviti per la vecchia lobby. Server e tunnel devono restare attivi. Il server serve soltanto `dist/`. In produzione sono necessari HTTPS/WSS e permessi appropriati sui dati.
 
-Verificato anche il percorso leader su Vite locale → invito pubblico → ospite sul tunnel, fino alla vittoria e al salvataggio personale dei premi. In quella prova il ping del browser in sviluppo ha avuto picchi fino a 922 ms (8 campioni, mediana 104 ms), mentre la build pubblica ha misurato 14–52 ms nelle prove di combattimento. La misura WebSocket diretta su 40 campioni è riportata sotto; il tempo percepito comprende anche cadenza input/snapshot e lavoro del browser. Profilazione del percorso di sviluppo ancora da fare: per la prova condivisa usare preferibilmente la build servita da 4173/tunnel.
-
-Ogni membro ancora connesso alla vittoria riceve gli XP interi del dungeon, il proprio record e un tiro personale di bottino (25%, massimo un pezzo), salvati nel proprio browser prima di mostrare i premi; anche un membro KO riceve il premio se il party vince. Nessuna divisione degli XP. Premi estratti una sola volta per incontro sul server; snapshot ripetuti non ripetono l’assegnazione client. Stanze e incontri sono in memoria: riavviare il server li elimina. Personaggi/equipaggiamento arrivano dai salvataggi locali validati: questa versione di prova non è un’economia protetta contro modifiche manuali dei salvataggi.
-
-Avvio cooperativo (due terminali per sviluppo, solo il secondo per condividere la build):
-
-```bash
-npm run build
-npm run server                  # http://127.0.0.1:4173, build + /party WebSocket + /health
-# In un altro terminale, se si sviluppa:
-npm run dev                     # Vite 5173, proxy WebSocket verso 4173
-```
-
-Se il leader gioca da localhost mentre gli amici usano il tunnel, avviare il server con **`PUBLIC_URL`** impostato all’URL HTTPS effettivo del tunnel. In PowerShell: `$env:PUBLIC_URL='https://<indirizzo-del-tunnel>'; npm run server`. «Copia invito» userà quell’origine pubblica anche per il leader locale. In alternativa, avviare `npm.cmd run tunnel` in un secondo terminale: il launcher esegue cloudflared e comunica automaticamente l’URL pubblico corrente al server, anche se il leader gioca da localhost. La porta predefinita è 4173; per un’altra porta impostare `PORT` uguale nei due terminali. Un tunnel avviato manualmente viene riconosciuto al primo accesso tramite Cloudflare. Se l’URL pubblico non è ancora noto, Copia invito resta disabilitato: non viene mai generato un invito locale. Dopo cambi al server riavviare `npm.cmd run server` e ricaricare i client.
-
-Per il tunnel pubblico puntare a **4173**, cioè al server cooperativo, per esempio `cloudflared tunnel --url http://127.0.0.1:4173 --protocol http2`. Tenere attivi server e tunnel. Il server espone solo `dist/`, non il workspace. L’URL del tunnel è temporaneo: non va salvato come indirizzo permanente. Le build pubbliche si aggiornano con `npm run build`; dopo cambi al codice server riavviare `npm run server`. Porta alternativa tramite variabile d’ambiente `PORT` (aggiornare proxy/tunnel se cambia). `npm run preview`, hosting statico e `file://` consentono il singolo, ma non ospitano stanze multiplayer.
+Posizioni e istanze vivono nel processo; i profili persistono fra riavvii. Non sono ancora implementati shard, ripresa della run dopo disconnessione o permadeath. Configurazione locale e segreti non fanno parte del push.
 
 ### Ottimizzazione multiplayer (31 ottobre 2026)
 
@@ -200,14 +185,11 @@ Profilo della versione attuale: un browser con accelerazione grafica e un alleat
 
 Verifica storica prima dell’integrazione: **484 test**, tipi client/server e build superati. Controllati il pannello desktop/mobile e la lettura dei dati server. Conferma giocata dell’utente ancora da ricevere. La prossima parte della progressione resta da concordare, senza modifiche implicite a XP, drop o permadeath.
 
-### Salvataggi locali
+### Archivio locale e profili online
 
-- Chiave: `temper-your-soul:save`; formato **v7**, raccolta `character-roster` con profili, id attivo e contatore degli id. La v7 aggiunge braci, benedizioni, bestiario, record delle discese e Pellegrinaggio; i salvataggi v6 si leggono senza perdite.
-- Migrazione dei precedenti salvataggi singoli v1–v5 senza reset di inventario, XP o record. Copia precedente alla raccolta in `temper-your-soul:save:before-roster`.
-- Dati illeggibili conservati in `temper-your-soul:save:corrupt`. Dati esterni sempre validati: vedere [save-format.ts](src/features/character/save-format.ts), [character-roster.ts](src/features/character/character-roster.ts) e [save-store.ts](src/features/character/save-store.ts).
-- Si salva a creazione/selezione/rimozione, cambio equipaggiamento e vittoria, prima di mostrare i premi; nella discesa anche a ogni stanza per aggiornare il bestiario (nessun XP o valuta intermedia). Skill, GS e classe richiesta dell’oggetto si ricalcolano dal catalogo; non si salvano statistiche duplicate.
-- Nessun account, salvataggio cloud, inventario condiviso fra profili o sincronizzazione dei progressi tra dispositivi. Il server conserva solo stanze/incontri temporanei. Con due schede aperte, ognuna riprende i salvataggi dell’altra appena avvengono; due salvataggi quasi simultanei possono ancora sovrascriversi.
-- **Permadeath non implementato:** una sconfitta non elimina attualmente il personaggio. La rimozione dal menu è manuale.
+I progressi online sono salvati soltanto dal server su PostgreSQL, con formato v10 e migrazioni precedenti conservate. I vecchi profili del browser restano archiviati sotto `temper-your-soul:save`; non vengono sovrascritti dalla sessione online e non sono importati automaticamente nel database. Restano le copie `:corrupt` e `:before-roster`, la validazione e le preferenze locali di audio e comandi.
+
+`SaveStore` gestisce soltanto la raccolta locale con `loadRoster`/`saveRoster`; i vecchi metodi di lettura/scrittura del personaggio singolo sono rimossi. `server/storage/` gestisce caricamento, creazione e UPSERT autorevoli. Un salvataggio esterno invalido non viene sostituito silenziosamente con un profilo vuoto.
 
 ## Controlli
 
@@ -219,7 +201,7 @@ Verifica storica prima dell’integrazione: **484 test**, tipi client/server e b
 | Clic destro | Skill della secondaria |
 | Q | Skill dell’armatura |
 | E | Skill degli stivali |
-| ESC | Pausa; indietro nei menu |
+| ESC | Chiude le finestre e torna al menu mantenendo la connessione |
 | R | Ricomincia l’incontro durante una partita |
 | M | Audio attivo/disattivo |
 | F | Schermo intero |

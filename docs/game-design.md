@@ -1,5 +1,12 @@
 # Temper your soul: design del gioco
 
+## Decisione MMO · 10 novembre 2026
+
+Aggiornamento richiesto dal proprietario: ripristinati icona Party, gruppi sociali fino a quattro membri e inviti con consenso, senza lobby o HUB separati. Esc torna al menu mantenendo avatar e gruppo; Logout è disponibile soltanto nel menu principale. Tornando al menu da un dungeon si rientra nell’HUB. Caricamenti con componente riutilizzabile legato alla conclusione effettiva delle operazioni. Le istanze restano pubbliche e i gruppi non prenotano posti: accesso riservato/coordinato da progettare in un incremento futuro.
+
+Su richiesta del proprietario la cooperativa a inviti diventa un mondo pubblico: login verificato, HUB comune permanente per la durata del processo, profili persistenti su PostgreSQL e discese pubbliche con ingressi tardivi. I beni e i premi online sono del server. Nessun ruolo di leader o prontezza; la disconnessione rimuove l’avatar senza KO. Capienze provvisorie: 64 sessioni nel mondo e 32 per dungeon. Taratura del combattimento per più di quattro persone ancora aperta; nessun nuovo bilanciamento applicato. Persistenza di posizioni/istanze dopo crash, shard distribuiti e permadeath restano fuori da questo incremento. [Configurazione e verifiche](mmo-persistente.md).
+
+
 ## Versione e note nel menu (1 novembre 2026)
 
 La versione del gioco è letta da `package.json` e mostrata solo nel menu principale, in piccolo al centro in basso (`v0.02.00`). Il pulsante Changelog in basso a sinistra apre le note dell’ultimo aggiornamento, incluse nella build. Le note precedenti restano in `src/release-notes.ts`; i cambiamenti numerici riportano etichetta, valori prima/dopo e unità. La [procedura di versioning](versioning.md) è obbligatoria per gli agenti a ogni PR o commit diretto a main autorizzato. Nessuna modifica a danni o progressione in questo incremento; versioni di rete e salvataggi indipendenti. Prova visiva a carico dell’utente.

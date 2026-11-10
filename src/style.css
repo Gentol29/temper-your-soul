@@ -1151,25 +1151,16 @@ button:disabled { cursor:var(--cursor-default); opacity:.45; transform:none; }
 .party-dialog h2 { margin:8px 0 0; font:24px var(--relic-title); color:var(--relic-ivory); }
 .party-dialog .eyebrow { font-size: 8px; color:#c3927d; }
 .party-intro { font-size: 16px; line-height:1.6; color:#d0bcc7; }
-.party-lobby-slots { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:18px 0; }
-.party-slot-detailed { padding:12px 6px; min-height:175px; cursor:var(--cursor-default); }
-.party-slot-detailed .party-member-art { width:86px; height:86px; }
-.party-slot-detailed .party-member-name { font:16px var(--relic-title); line-height:20px; }
-.party-slot-detailed small { font-size: 8px; color:#b8a4b5; }
-.party-member-status { font-size: 8px; color:#c8b8b9; margin-top:4px; }
-.party-leader { margin-top:5px; color:#d8b38d; font-size: 8px; }
 .party-objective { display:flex; align-items:center; gap:14px; background:#211923; border:1px solid var(--relic-border); border-radius:6px 16px; overflow:hidden; }
 .party-objective .boss-artwork { width:125px; height:84px; flex:0 0 125px; border:0; border-radius:0; }
 .party-objective > div { display:grid; gap:5px; padding:8px 8px 8px 0; min-width:0; }
 .party-objective strong { font:16px var(--relic-title); color:#e8c5a3; }
 .party-objective span { font-size: 8px; color:#bdabb9; }
 .party-preview-note { padding:10px 12px; border-left:2px solid #976f77; font-size: 8px; line-height:1.6; color:#baa6b6; }
-.party-lobby-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:9px; }
 .party-dialog button { padding:9px 13px; border:1px solid var(--relic-copper); border-radius:6px 14px; color:var(--relic-ivory); background:var(--relic-control); box-shadow:inset 0 0 0 2px #291e28,0 3px 0 #090b12; font-size: 16px; }
 .party-dialog button:hover { background:linear-gradient(#75444a,#482c38); }
 .party-dialog button.secondary { background:linear-gradient(#3a2d3f,#221a2b); border-color:var(--relic-border); color:#dac4d6; }
 .party-dialog button:disabled { cursor:var(--cursor-default); opacity:.45; }
-.party-ready[aria-pressed=true] { border-color:#a1b78f; color:#d5dec6; }
 .actions { top:148px; }
 .screen { padding-top:162px; }
 @media(max-width:600px){
@@ -1191,7 +1182,6 @@ button:disabled { cursor:var(--cursor-default); opacity:.45; transform:none; }
 
 .party-destination { display:block; margin:14px 0; color:var(--text); }
 .party-destination select { width:100%; margin-top:8px; padding:10px 12px; background:#211a26; color:#eadbc5; border:1px solid #72566a; border-radius:8px 18px 8px 18px; }
-.party-link { width:100%; box-sizing:border-box; padding:10px 12px; color:#d7bfa6; background:#19151f; border:1px solid #654e60; border-radius:8px; font-size: 16px; }
 .combat-report-scroll { overflow-x:auto; margin:18px 0; }
 .combat-report-table { width:100%; border-collapse:collapse; text-align:right; color:#eadbc5; }
 .combat-report-table th,.combat-report-table td { padding:12px 10px; border-bottom:1px solid #594452; white-space:nowrap; }
@@ -1535,16 +1525,7 @@ body.room-fading .room-fade { opacity: 1; }
 .party-panel{top:80px;max-height:calc(100vh - 96px);overflow:auto;contain:layout;width:300px}
 .party-heading .relic-button{padding:3px 9px;font-size: 16px;line-height:1.2}
 .party-heading .party-open{flex:1;text-align:left}
-.party-inline-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.party-inline-actions .relic-button{padding:9px 7px;font-size: 8px}
-.party-session-owner{display:block;color:var(--gold);margin:8px 0;font-size: 8px}
-.party-panel .party-link{width:100%;margin-top:12px;padding:8px;font-size: 8px;box-sizing:border-box}
 .party-inline-note{font-size: 8px;line-height:1.5;color:var(--muted);margin:10px 0 0}
-.party-member-status{font-size: 8px;margin-top:2px}.party-member-status.is-ready{color:#add4a3}
-.party-inline-actions .party-ready{color:#e0edcf;border-color:#7f9c6e;background:linear-gradient(#456347,#243b30);box-shadow:inset 0 0 0 2px #253529,0 3px 0 #090b12}
-.party-inline-actions .party-ready:hover,.party-inline-actions .party-ready[aria-pressed=true]{background:linear-gradient(#638554,#344c38);border-color:#b4c48a}
-.party-inline-actions .party-danger{color:#f4d5cc;border-color:#a86667;background:linear-gradient(#7a414c,#452432);box-shadow:inset 0 0 0 2px #49232f,0 3px 0 #090b12}
-.party-inline-actions .party-danger:hover{background:linear-gradient(#99525a,#5c2d3d);border-color:#d28b83}
 @media(max-width:650px){.party-panel,.in-hub .party-panel{width:280px;max-width:calc(100vw - 32px)}.party-toggle{width:44px;height:44px;padding:7px}.party-panel{top:70px}}
 
 /* Barra globale: un solo ancoraggio per tutte le schermate dopo il menu iniziale. */
@@ -1557,7 +1538,7 @@ body.room-fading .room-fade { opacity: 1; }
 .global-wallet{position:fixed;top:var(--global-top);left:16px;height:var(--global-size);max-width:calc(100vw - 264px);display:flex;align-items:center;gap:8px;z-index:60;color:#f5d58b;font:16px var(--relic-pixel);text-shadow:1px 2px #17121c;pointer-events:none}
 .global-wallet .pixel-icon{width:28px;height:28px;flex:none}
 #global-gold{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.initial-menu #global-controls,.initial-menu .global-wallet,.initial-menu #party-panel:not(.is-docked),.initial-menu #settings-panel>.relic-button{display:none}
+.initial-menu #global-controls,.initial-menu .global-wallet,.initial-menu #party-panel,.initial-menu #settings-panel>.relic-button{display:none}
 #party-panel,#settings-panel{position:fixed;top:var(--global-bottom);right:16px;z-index:61;box-sizing:border-box;max-height:calc(100dvh - var(--global-bottom) - 16px)}
 .hud-boss{top:var(--global-bottom)}
 .performance-toggle{top:var(--global-bottom)}
