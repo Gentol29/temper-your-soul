@@ -25,13 +25,13 @@ import { roomArena, roomTemplateById } from '../run/room-templates';
 import type { Loadout } from '../skills/skill-definition';
 import type { SnapshotFrame } from './snapshot-codec';
 import type { HubFrame } from './hub-codec';
-import type { CharacterCommand, LoginMessage, ProfileMessage } from './account-protocol';
+import type { CharacterCommand, CharacterRequiredMessage, LoginMessage, ProfileMessage } from './account-protocol';
 
 /**
  * Valori di rete provvisori: simulazione 60 Hz, snapshot e input 30 Hz. Protocollo 21: gruppi sociali nel mondo pubblico. Età dell'oro emesso,
  * volo e assorbimento automatico; conserva classi, discesa e servitori compatti.
  */
-export const NETWORK = { protocolVersion: 21, dungeonCapacity: 32, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
+export const NETWORK = { protocolVersion: 22, dungeonCapacity: 32, step: 1 / 60, snapshotSteps: 2, inputMs: 1000 / 30, staleInputMs: 350, maxBufferedBytes: 512_000 } as const;
 
 /** Come il party entra nel dungeon: la Discesa, il Duello con il solo boss, il Pellegrinaggio dei quattro dungeon. */
 export type PartyMode = 'descent' | 'duel' | 'pilgrimage';
@@ -94,7 +94,7 @@ export type ClientMessage = HubCommand | SocialCommand
   | { type: 'ping'; sent: number };
 export type ServerMessage =
   | {type:'social_party';state:SocialPartyView}
-  | ProfileMessage | HubFrame
+  | ProfileMessage | CharacterRequiredMessage | HubFrame
 
   | { type: 'party'; playerId: string; state: PartyState }
   | { type: 'snapshot'; snapshot: BattleSnapshot }

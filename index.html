@@ -54,6 +54,20 @@
       <!-- Schermate fuori dalla partita -->
       <canvas id="menu-scene" class="menu-scene" aria-hidden="true"></canvas>
 
+      <!-- La prima schermata: l'account viene prima del personaggio e del rifugio. -->
+      <div class="screen forge-screen forge-page hidden" id="screen-login">
+        <section class="login-card forge-panel" aria-labelledby="login-title">
+          <header class="login-brand">
+            <span id="login-emblem" class="menu-emblem" aria-hidden="true"></span>
+            <h1 class="brand">Temper Your Soul</h1>
+          </header>
+          <span class="eyebrow">IL RIFUGIO</span>
+          <h2 id="login-title" tabindex="-1">Accedi al tuo account</h2>
+          <div id="login-access" class="login-access"></div>
+          <button id="login-settings" type="button" class="relic-button secondary login-settings">Impostazioni</button>
+        </section>
+      </div>
+
       <div class="screen forge-screen" id="screen-menu">
         <div class="menu-lintel" aria-hidden="true"></div>
         <div class="menu-ledge" aria-hidden="true"></div>
@@ -82,9 +96,9 @@
           <div class="screen-head">
             <div>
               <span class="eyebrow">IL RIFUGIO</span>
-              <h2 id="characters-title" tabindex="-1">Chi scende nel portale?</h2>
+              <h2 id="characters-title" tabindex="-1">Crea il tuo personaggio</h2>
             </div>
-            <button id="characters-back" type="button" class="secondary">← Menu</button>
+            <button id="characters-back" type="button" class="secondary">Esci dall’account</button>
           </div>
           <div class="characters-layout">
             <div class="characters-rail">

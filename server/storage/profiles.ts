@@ -7,6 +7,9 @@ import type { BodyType } from '../../src/features/character/appearance';
 export interface PersistentProfile { accountId: string; character: Character; gold: number; revision: number }
 export interface ProfileSeed { name: string; characterClass: CharacterClass; body: BodyType }
 export interface ProfileStore {
+  /** Il profilo dell'account, oppure `null` se non ha ancora un personaggio. Non scrive nulla. */
+  find(accountId: string): Promise<PersistentProfile | null>;
+  /** Crea il profilo dal seme se manca, poi lo carica: un profilo esistente non viene mai sovrascritto. */
   load(accountId: string, seed: ProfileSeed): Promise<PersistentProfile>;
   save(profiles: readonly PersistentProfile[]): Promise<void>;
 }
@@ -32,18 +35,24 @@ export class PostgresProfiles implements ProfileStore {
     this.gold = profileIdentifier(env.PROFILES_GOLD_COLUMN ?? 'gold');
     this.revision = profileIdentifier(env.PROFILES_REVISION_COLUMN ?? 'revision');
   }
+  async find(accountId: string): Promise<PersistentProfile | null> {
+    const result = await this.pool.query<{ character: unknown; gold: string | number; revision: string | number }>(
+      `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision} AS revision FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
+    const row = result.rows[0];
+    if (!row) return null;
+    const loaded = deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
+    const gold = Number(row.gold), revision = Number(row.revision);
+    if (!loaded?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0) throw new Error('Profilo sul database non valido: dati conservati, accesso sospeso.');
+    return { accountId, character: loaded, gold, revision };
+  }
   async load(accountId: string, seed: ProfileSeed): Promise<PersistentProfile> {
     const character = Character.createStarter(seed.characterClass);
     if (!character.completeCreation(seed.name, seed.body, seed.characterClass)) throw new Error('Nome o classe non validi.');
     // ON CONFLICT non sovrascrive mai un profilo esistente, anche con due login simultanei.
     await this.pool.query(`INSERT INTO ${this.table} (${this.id},${this.data},${this.gold},${this.revision}) VALUES ($1,$2::jsonb,0,0) ON CONFLICT (${this.id}) DO NOTHING`, [accountId, serializeCharacter(character)]);
-    const result = await this.pool.query<{ character: unknown; gold: string | number; revision: string | number }>(
-      `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision} AS revision FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
-    const row = result.rows[0];
-    const loaded = row && deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
-    const gold = Number(row?.gold), revision = Number(row?.revision);
-    if (!loaded?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0) throw new Error('Profilo sul database non valido: dati conservati, accesso sospeso.');
-    return { accountId, character: loaded, gold, revision };
+    const profile = await this.find(accountId);
+    if (!profile) throw new Error('Profilo sul database non valido: dati conservati, accesso sospeso.');
+    return profile;
   }
   async save(profiles: readonly PersistentProfile[]): Promise<void> {
     if (!profiles.length) return;

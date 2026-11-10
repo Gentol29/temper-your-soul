@@ -14,6 +14,18 @@ it('query parametrizzate caricano il JSON salvato e non sovrascrivono il profilo
   expect(loaded.gold).toBe(125); expect(loaded.revision).toBe(7);
   expect(query.mock.calls[0]![0]).toContain('DO NOTHING'); expect(query.mock.calls[1]![0]).not.toContain("account' OR true"); expect(query.mock.calls[1]![1]).toEqual(["account' OR true --"]);
 });
+it('cercare un account senza personaggio non scrive nulla e risponde che manca', async () => {
+  const query = vi.fn().mockResolvedValueOnce({ rows: [] });
+  expect(await new PostgresProfiles({ query } as unknown as Pool).find('nuovo')).toBeNull();
+  expect(query).toHaveBeenCalledTimes(1); expect(query.mock.calls[0]![0]).not.toContain('INSERT'); expect(query.mock.calls[0]![1]).toEqual(['nuovo']);
+});
+it('cercare un account con personaggio lo carica senza seme; un profilo corrotto resta bloccato', async () => {
+  const p = profile(), query = vi.fn().mockResolvedValueOnce({ rows: [{ character: JSON.parse(serializeCharacter(p.character)) as unknown, gold: '40', revision: '3' }] })
+    .mockResolvedValueOnce({ rows: [{ character: { version: 999 }, gold: 0, revision: 0 }] });
+  const repo = new PostgresProfiles({ query } as unknown as Pool), found = await repo.find('a');
+  expect(found!.character.name).toBe('Maga'); expect(found!.gold).toBe(40); expect(found!.revision).toBe(3);
+  await expect(repo.find('a')).rejects.toThrow('conservati'); expect(query).toHaveBeenCalledTimes(2);
+});
 it('un profilo corrotto rimane nel database e l’accesso fallisce senza rigenerare il set', async () => {
   const query = vi.fn().mockResolvedValueOnce({}).mockResolvedValueOnce({ rows: [{ character: { version: 999 }, gold: 0, revision: 0 }] });
   await expect(new PostgresProfiles({ query } as unknown as Pool).load('a', seed)).rejects.toThrow('conservati'); expect(query).toHaveBeenCalledTimes(2);

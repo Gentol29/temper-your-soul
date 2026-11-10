@@ -1,11 +1,10 @@
 import type {HubView} from './hub-protocol';
-import type { Character } from '../character/character';
 import type { PlayerIntent } from '../match/match';
 import { NETWORK, type BattleSnapshot, type ClientMessage, type PartyState, type ServerMessage } from './protocol';
 import { SnapshotDecoder } from './snapshot-codec';
 import { HubDecoder } from './hub-codec';
 import { accountToken } from './account-session';
-import type { ProfileMessage } from './account-protocol';
+import type { CharacterSeed, ProfileMessage } from './account-protocol';
 import type {SocialPartyView} from './social-party';
 
 export class PartyClient {
@@ -25,6 +24,8 @@ export class PartyClient {
   connecting = false;
   /** La connessione si e' interrotta senza che il giocatore l'abbia chiesto, o il tentativo e' fallito. */
   lost = false;
+  /** L'account e' verificato ma non ha un personaggio: resta vero finche' non si entra nel mondo o si esce dall'account. */
+  characterRequired = false;
   private socket: WebSocket | null = null;
   private timer: number | undefined;
   private lastInput = 0;
@@ -35,11 +36,12 @@ export class PartyClient {
   constructor(private readonly changed: (pingOnly?: boolean) => void, private readonly snapshot: (state: BattleSnapshot) => void,
     private readonly error: (message: string) => void, private readonly disconnected: () => void) {}
 
-  connect(character: Character): void {
+  /** Senza `creation` si accede soltanto; con `creation` si crea il personaggio di un account gia' verificato. */
+  connect(creation?: CharacterSeed): void {
     if (this.socket) return;
     this.lost = false;
     if (location.protocol === 'file:') { this.error('Per giocare online apri il gioco tramite il server HTTP.'); return; }
-    this.connecting = true;this.pendingOperation='Ingresso nel rifugio…'; this.changed();
+    this.connecting = true;this.pendingOperation=creation?'Creazione del personaggio…':'Ingresso nel rifugio…'; this.changed();
     this.decoder = new SnapshotDecoder();
     this.hubDecoder = new HubDecoder();
     const url = new URL('/party', location.href); url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -47,8 +49,7 @@ export class PartyClient {
     socket.addEventListener('open', () => {
       if(this.socket!==socket)return;
       this.lastReply = performance.now();
-      this.send({ type: 'login', protocol: NETWORK.protocolVersion, token: accountToken(), name: character.name ?? 'Viandante',
-        characterClass: character.characterClass ?? 'mage', body: character.bodyType ?? 'male' });
+      this.send({ type: 'login', protocol: NETWORK.protocolVersion, token: accountToken(), ...(creation ? { creation } : {}) });
       this.timer = window.setInterval(() => {
         if (performance.now() - this.lastReply > 12_000 || (this.state?.playing && this.state.members.some(m=>m.id===this.playerId) && performance.now() - this.lastSnapshot > 4000)) {
           this.error('Connessione interrotta: il server non risponde.'); this.drop(); return;
@@ -63,6 +64,8 @@ export class PartyClient {
       const message = JSON.parse(text) as ServerMessage; this.lastReply = performance.now();
       switch (message.type) {
         case 'profile': this.profile = message; this.profileChanged?.(message); this.tradeSaving = false;if(!this.connecting&&this.pendingOperation==='Salvataggio…'){this.pendingOperation=null;this.changed();}break;
+        // Nessun personaggio per questo account: si chiude senza segnare un errore e si passa alla creazione.
+        case 'character_required': this.leave(true); break;
         case 'social_party':this.social=message.state;this.changed();break;
         case 'hub_frame':
           try { const previous=this.hub?.players.map(p=>p.id+':'+p.name).join('|');this.hub = this.hubDecoder.decode(message);if(previous!==this.hub.players.map(p=>p.id+':'+p.name).join('|'))this.changed(); }
@@ -73,7 +76,7 @@ export class PartyClient {
           try { this.receiveSnapshot(this.decoder.decode(message)); }
           catch (error) { this.error(error instanceof Error ? error.message : 'Dati di rete non validi.'); this.drop(); }
           break;
-        case 'party': this.state = message.state; this.playerId = message.playerId; this.connecting = false;this.pendingOperation=null; this.lastSnapshot = performance.now(); this.changed(); break;
+        case 'party': this.state = message.state; this.playerId = message.playerId; this.connecting = false;this.characterRequired=false;this.pendingOperation=null; this.lastSnapshot = performance.now(); this.changed(); break;
         case 'snapshot':
           this.receiveSnapshot(message.snapshot); break;
         case 'error': this.tradeSaving = false;this.pendingOperation=null;this.changed(); this.error(message.message); if (!this.state) this.drop(); break;
@@ -117,12 +120,14 @@ export class PartyClient {
   }
   /** Uscita non chiesta dal giocatore: resta il segno, che il menu mostra come disconnessione. */
   private drop(): void {
-    this.leave();
+    // Una creazione non riuscita non riporta all'accesso: si resta sulla creazione e si riprova.
+    this.leave(this.characterRequired);
     this.lost = true;
     this.changed();
   }
-  leave(): void {
-    this.lost = false;
+  /** Chiude la connessione. `characterRequired` resta acceso solo quando il server chiede di creare il personaggio. */
+  leave(characterRequired = false): void {
+    this.lost = false; this.characterRequired = characterRequired;
     const socket = this.socket; const hadConnection = this.state !== null;
     this.socket = null; this.pending = null; window.clearInterval(this.timer); socket?.close();
     this.state = null;this.hub=null;this.profile=null;this.social={members:[],invitations:[],outgoing:[]};this.pendingOperation=null;this.tradeSaving=false; this.playerId = ''; this.connecting = false; this.latency = null; this.changed();

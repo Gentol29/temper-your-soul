@@ -2,6 +2,7 @@
 
 ## Migrazione MMO · 10 novembre 2026
 
+- v0.17.02 sul ramo `feature/login-prima-del-personaggio`: accesso prima del personaggio. Schermata di accesso iniziale, creazione solo dopo l’autenticazione, protocollo applicativo 22. Verifica: 1.085 test, tipi e build; browser con server locale e account fittizi. Da provare con account reali.
 - Release v0.17.00: codice di lobby e storage singolo superato rimosso; archivi locali, migrazioni e copie di sicurezza conservati. Verifica finale: 1.064 test, tipi e build.
 
 - Implementati HUB globale, ingresso con account, repository PostgreSQL, comandi autorevoli per beni e premi, scambi transazionali, ingressi tardivi e uscita senza KO.

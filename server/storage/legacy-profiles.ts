@@ -27,22 +27,28 @@ export class LegacyProfiles implements ProfileStore {
     if (!c.created || !Number.isSafeInteger(profile.gold) || profile.gold < 0) throw new Error('Profilo o saldo non valido.');
     return [profile.accountId, c.name, c.characterClass, levelProgress(c.totalXp).level, c.totalXp, profile.gold, SAVE_VERSION, serializeCharacter(c)];
   }
+  async find(accountId: string): Promise<PersistentProfile | null> {
+    const result = await this.pool.query<{ character: unknown; gold: string | number; revision: string | number; name: string; class: string; xp: number }>(
+      `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision()} AS revision,name,class,xp FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
+    const row = result.rows[0];
+    if (!row) return null;
+    const saved = deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
+    const gold = Number(row.gold), revision = Number(row.revision);
+    if (!saved?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0
+      || row.name !== saved.name || row.class !== saved.characterClass || row.xp !== saved.totalXp) {
+      throw new Error('Profilo legacy sul database non valido o non coerente: dati conservati, accesso sospeso.');
+    }
+    return { accountId, character: saved, gold, revision };
+  }
   async load(accountId: string, seed: ProfileSeed): Promise<PersistentProfile> {
     const character = Character.createStarter(seed.characterClass);
     if (!character.completeCreation(seed.name, seed.body, seed.characterClass)) throw new Error('Nome o classe non validi.');
     await this.pool.query(`INSERT INTO ${this.table} (${this.id},name,class,level,xp,${this.gold},save_version,${this.data},${this.updated})
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,clock_timestamp()) ON CONFLICT (${this.id}) DO NOTHING`,
       this.values({ accountId, character, gold: 0, revision: 0 }));
-    const result = await this.pool.query<{ character: unknown; gold: string | number; revision: string | number; name: string; class: string; xp: number }>(
-      `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision()} AS revision,name,class,xp FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
-    const row = result.rows[0];
-    const saved = row && deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
-    const gold = Number(row?.gold), revision = Number(row?.revision);
-    if (!saved?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0
-      || row.name !== saved.name || row.class !== saved.characterClass || row.xp !== saved.totalXp) {
-      throw new Error('Profilo legacy sul database non valido o non coerente: dati conservati, accesso sospeso.');
-    }
-    return { accountId, character: saved, gold, revision };
+    const profile = await this.find(accountId);
+    if (!profile) throw new Error('Profilo legacy sul database non valido o non coerente: dati conservati, accesso sospeso.');
+    return profile;
   }
   async save(profiles: readonly PersistentProfile[]): Promise<void> {
     if (!profiles.length) return;

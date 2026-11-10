@@ -8,6 +8,9 @@ import type { BattleSnapshot, PartyMode } from '../src/features/network/protocol
 import { applyRunProgress, emptyProgress, type ProgressCursor } from './run-progress';
 import { randomUUID } from 'node:crypto';
 
+/** Esito di un accesso verificato: nel mondo, in attesa della creazione del personaggio, o connessione gia' chiusa. */
+export type LoginOutcome = 'entered' | 'character_required' | 'disconnected';
+
 /** Tutte le mutazioni persistenti condividono una coda. Il tick 60 Hz resta sincrono e indipendente. */
 export class WorldService {
   readonly world: PublicWorld;
@@ -23,15 +26,21 @@ export class WorldService {
     this.queued++;
     const result = this.pending.then(work).finally(() => { this.queued--; }); this.pending = result.catch(() => undefined); return result;
   }
-  async login(id: string, token: unknown, seed: ProfileSeed, stillConnected: () => boolean): Promise<void> {
+  /**
+   * Prima l'identita', poi il personaggio. Senza seme l'accesso non crea nulla: se l'account non ha un personaggio
+   * l'esito e' `character_required` e l'account resta libero. Il seme arriva solo dalla creazione, dopo l'accesso.
+   */
+  async login(id: string, token: unknown, seed: ProfileSeed | null, stillConnected: () => boolean): Promise<LoginOutcome> {
     const identity = await this.auth.verify(token);
-    await this.serial(async () => {
-      if (!stillConnected()) return;
+    return this.serial(async () => {
+      if (!stillConnected()) return 'disconnected';
       if (this.accounts.has(identity.id)) throw new Error('Account già connesso in un’altra scheda.');
       if (this.profiles.has(id)) throw new Error('Sessione già autenticata.');
-      const profile = await this.store.load(identity.id, seed);
-      if (!stillConnected()) return;
+      const profile = seed ? await this.store.load(identity.id, seed) : await this.store.find(identity.id);
+      if (!profile) return 'character_required';
+      if (!stillConnected()) return 'disconnected';
       this.world.enter(id, profile.character); this.profiles.set(id, profile); this.accounts.add(identity.id);
+      return 'entered';
     });
   }
   profileMessage(id: string) {

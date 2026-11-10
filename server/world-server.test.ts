@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { once } from 'node:events';
 import { createWorldServer } from './world-server';
@@ -13,6 +13,7 @@ afterEach(async () => { for (const close of cleanup.splice(0)) await close(); })
 async function runtime(allowedOrigins?: readonly string[]) {
   const rows = new Map<string, PersistentProfile>();
   const store: ProfileStore = {
+    async find(accountId: string) { const p = rows.get(accountId); return p ? copyProfile(p) : null; },
     async load(accountId: string, seed: ProfileSeed) {
       let p = rows.get(accountId);
       if (!p) { const character = Character.createStarter(seed.characterClass); character.completeCreation(seed.name, seed.body, seed.characterClass); p = { accountId, character, gold: 0, revision: 0 }; rows.set(accountId, copyProfile(p)); }
@@ -26,7 +27,8 @@ async function runtime(allowedOrigins?: readonly string[]) {
   const port = address.port;
   const peers: WebSocket[] = [];
   cleanup.push(async () => { for (const peer of peers) peer.terminate(); await server.close(); });
-  async function connect(id: string) {
+  /** Socket aperto senza accesso: i test dell'ordine account → personaggio inviano il login a mano. */
+  async function open() {
     const socket = new WebSocket(`ws://127.0.0.1:${port}/party`), messages: ServerMessage[] = [];
     peers.push(socket); socket.on('message', raw => messages.push(JSON.parse(String(raw)) as ServerMessage));
     await once(socket, 'open');
@@ -39,11 +41,16 @@ async function runtime(allowedOrigins?: readonly string[]) {
         socket.on('message', receive);
       });
     }
-    send({ type: 'login', protocol: NETWORK.protocolVersion, token: `verified-${id}`, name: 'Eroe', characterClass: 'mage', body: 'male' });
-    const entered = await wait(m => m.type === 'party'); if (entered.type !== 'party') throw new Error('login');
-    return { socket, messages, send, wait, id: entered.playerId };
+    return { socket, messages, send, wait };
   }
-  return { server, connect, rows, port, peers };
+  /** Accesso completo di un account nuovo: il personaggio si crea con `creation`, come dopo `character_required`. */
+  async function connect(id: string) {
+    const peer = await open();
+    peer.send({ type: 'login', protocol: NETWORK.protocolVersion, token: `verified-${id}`, creation: { name: 'Eroe', characterClass: 'mage', body: 'male' } });
+    const entered = await peer.wait(m => m.type === 'party'); if (entered.type !== 'party') throw new Error('login');
+    return { ...peer, id: entered.playerId };
+  }
+  return { server, connect, open, rows, port, peers };
 }
 it('32 WebSocket reali entrano nel medesimo HUB; i nuovi client ricevono tuple complete e vedono le disconnessioni', async () => {
   const { server, connect } = await runtime(), peers = await Promise.all(Array.from({ length: 32 }, (_, i) => connect(String(i))));
@@ -55,6 +62,29 @@ it('32 WebSocket reali entrano nel medesimo HUB; i nuovi client ricevono tuple c
   await peer.wait(m => m.type === 'hub_frame' && m.r?.includes(gone) === true);
   expect(server.service.world.characters.has(gone)).toBe(false);
 }, 15_000);
+it('prima l’account e poi il personaggio: senza profilo l’accesso chiede la creazione e non scrive nulla', async () => {
+  const { open, rows, server } = await runtime(), login = { type: 'login', protocol: NETWORK.protocolVersion, token: 'verified-nuovo' };
+  const first = await open(); first.send(login); await first.wait(m => m.type === 'character_required');
+  expect(rows.size).toBe(0); expect(server.service.world.characters.size).toBe(0);
+  expect(first.messages.some(m => m.type === 'profile' || m.type === 'party')).toBe(false);
+  // Finche' il personaggio non esiste i comandi di gioco restano chiusi.
+  first.send({ type: 'portal_start', dungeonId: 'crypt', mode: 'descent' });
+  await first.wait(m => m.type === 'error' && m.message === 'Accedi prima con il tuo account.'); first.socket.close();
+  const second = await open(); second.send({ ...login, creation: { name: 'Vesna', characterClass: 'archer', body: 'female' } });
+  await second.wait(m => m.type === 'party'); expect(rows.get('verified-nuovo')!.character.name).toBe('Vesna');
+  second.socket.close(); await vi.waitFor(() => expect(server.service.profiles.size).toBe(0));
+  // Agli accessi successivi basta il token: si rientra con il personaggio salvato.
+  const third = await open(); third.send(login);
+  const entered = await third.wait(m => m.type === 'party'); if (entered.type !== 'party') throw new Error('login');
+  expect(entered.state.members[0]!.name).toBe('Vesna'); expect(rows.size).toBe(1);
+});
+it('una creazione con dati non previsti viene rifiutata senza creare profili', async () => {
+  const { open, rows } = await runtime(), peer = await open();
+  peer.send({ type: 'login', protocol: NETWORK.protocolVersion, token: 'verified-x', creation: { name: 'Eroe', characterClass: 'necromancer', body: 'male' } });
+  await peer.wait(m => m.type === 'error' && m.message === 'Dati iniziali non validi.'); expect(rows.size).toBe(0);
+  peer.send({ type: 'login', protocol: NETWORK.protocolVersion, token: 'verified-x', creation: 'Eroe' });
+  await peer.wait(m => m.type === 'error' && peer.messages.filter(e => e.type === 'error').length === 2); expect(rows.size).toBe(0);
+});
 it('il trasporto rifiuta inventari completi e non pubblica un profilo prima del commit', async () => {
   const { connect, rows } = await runtime(), peer = await connect('one');
   peer.send({ type: 'character', character: JSON.stringify({ gold: 9999 }) });

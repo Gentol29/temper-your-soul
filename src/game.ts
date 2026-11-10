@@ -1,6 +1,7 @@
 import { setCharacterCommandSink } from './features/ui/character-actions';
-import {accountToken,logoutAccount} from './features/network/account-session';
-import {applicationLoading} from './features/ui/loading-indicator';
+import {accountToken} from './features/network/account-session';
+import { AccountGate } from './features/ui/account-gate';
+import type { AccessStage } from './features/ui/access-model';
 import { BACKPACK_SPRITE } from './features/presentation/item-sprites';
 import { GOLD_COIN_SPRITE } from './features/presentation/currency-sprites';
 import { renderPixelIcon } from './features/ui/pixel-icon';
@@ -18,7 +19,6 @@ import { Vec2 } from './core/vec2';
 import { AudioPlayer } from './features/audio/audio-player';
 import { Character } from './features/character/character';
 import { CharacterRoster } from './features/character/character-roster';
-import { renderCharacterProfiles } from './features/ui/character-profiles';
 import { browserStorage, rosterFromExternalSave, SaveStore, type LoadStatus } from './features/character/save-store';
 import { CRYPT } from './features/dungeons/crypt';
 import type { DungeonDefinition } from './features/dungeons/dungeon-definition';
@@ -91,11 +91,11 @@ const GEAR_SCORE_NOTICE_MS = 2000;
  * Schermata corrente dell'applicazione. Le prime sono fuori dalla partita (mostrano lo sfondo di un dungeon);
  * la partita avanza solo in `playing`.
  */
-type Screen = 'hub' | 'menu' | 'characters' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
+type Screen = 'login' | 'hub' | 'menu' | 'characters' | 'dungeons' | 'inventory' | 'bestiary' | 'playing' | 'paused' | 'ended';
 
-const IDLE_SCREENS: readonly Screen[] = ['hub', 'menu', 'characters', 'dungeons', 'inventory', 'bestiary'];
+const IDLE_SCREENS: readonly Screen[] = ['login', 'hub', 'menu', 'characters', 'dungeons', 'inventory', 'bestiary'];
 /** Le schermate che hanno il rifugio dipinto come sfondo. */
-const REFUGE_SCREENS: readonly Screen[] = ['menu', 'characters'];
+const REFUGE_SCREENS: readonly Screen[] = ['login', 'menu', 'characters'];
 
 /** Come si entra in un dungeon: il Duello di sempre, la Discesa, il Pellegrinaggio. */
 type Mode = 'duel' | RunMode;
@@ -180,6 +180,8 @@ export class Game {
   private updateParty():void {
     this.party.update(this.character);
   }
+  /** Prima l'account, poi il personaggio, poi il rifugio: la porta decide la tappa, `Game` mostra la schermata. */
+  private readonly gate = new AccountGate(this.party.client, stage => this.onAccessStage(stage));
   private readonly loadStatus: LoadStatus;
   private dungeon: DungeonDefinition = CRYPT;
   private match: Match;
@@ -246,9 +248,12 @@ export class Game {
       onBlocked: (reason) => this.showToast(reason, 2600),
       onSceneFocus: (scene) => { this.menuScene.focus = scene; },
     });
-    requireElement('characters-back').addEventListener('click', () => this.showMenu());
-    // Nel menu il riquadro del party non si vede: il motivo di un errore arriva con un avviso.
-    this.party.onProblem = (message) => { if (this.screen === 'menu' || this.screen === 'characters') this.showToast(message); };
+    // La pagina del personaggio si apre solo per crearlo, dopo l'accesso: da li' si puo' soltanto uscire dall'account.
+    requireElement('characters-back').addEventListener('click', () => this.gate.logout());
+    requireElement('login-settings').addEventListener('click', () => this.settingsPanel.open());
+    // Nel menu il riquadro del party non si vede: il motivo di un errore arriva con un avviso; all'accesso lo mostra la porta.
+    this.party.onProblem = (message) => { this.gate.problem(message); if (this.screen === 'menu' || this.screen === 'characters') this.showToast(message); };
+    this.party.onChanged = () => this.gate.sync();
     // Dentro i campi di testo l'Input ignora i tasti: anche li' ESC torna al menu.
     requireElement('screen-characters').addEventListener('keydown', (event) => {
       if (event.code === 'Escape' && event.target instanceof HTMLInputElement) { event.preventDefault(); this.showMenu(); }
@@ -328,7 +333,8 @@ export class Game {
     window.addEventListener('resize', () => this.resize());
     this.resize();
 
-    this.showMenu();
+    // La prima schermata e' l'accesso: il menu e il rifugio arrivano dopo account e personaggio.
+    this.gate.start();
     this.lastTime = performance.now();
     requestAnimationFrame((time) => this.frame(time));
     // Il riquadro di caricamento resta finche' i caratteri sono pronti, ma non blocca mai il gioco.
@@ -338,7 +344,8 @@ export class Game {
 
   // --- Navigazione tra le schermate ------------------------------------------------------------------------------
 
-  private showMenu(): void {
+  /** Chiude finestre, rifugio e incontro in corso: da qui si mostra il menu oppure l'accesso. */
+  private leaveGame(): void {
     this.party.close();this.settingsPanel.close();
     if(this.party.client.state)this.party.client.send({type:'hub_input',move:{x:0,y:0}});
     this.hub.hide();
@@ -350,9 +357,43 @@ export class Game {
     this.networkRunId = '';
     this.abandonRun();
     this.input.releaseAll();
-    this.screen = 'menu';
     this.clearBattleFeedback();
     this.overlay.hide();
+  }
+
+  /** Il mondo si apre da solo al primo stato ricevuto (vedi `frame`); le altre tappe hanno la loro schermata. */
+  private onAccessStage(stage: AccessStage): void {
+    if (stage !== 'world') this.showAccess(stage);
+  }
+
+  /** Accesso all'account, poi creazione del personaggio: le due tappe che precedono il rifugio. */
+  private showAccess(stage: Exclude<AccessStage, 'world'>): void {
+    const screen = stage === 'creation' ? 'characters' : 'login';
+    // Gia' sulla schermata giusta: non si ridisegna, cosi' il testo che si sta scrivendo resta.
+    if (this.screen === screen) return;
+    this.leaveGame();
+    this.screen = screen;
+    this.screens.show(screen);
+    this.preview(this.dungeon);
+    if (stage === 'creation') {
+      // Si crea sempre un personaggio nuovo per l'account: i profili locali del browser non c'entrano.
+      this.newDraft();
+      this.inventoryScreen.reset();
+      this.renderCharacters();
+      requireElement('characters-title').focus();
+    } else {
+      this.draft = null;
+      requireElement('login-title').focus();
+      this.gate.sync();
+    }
+  }
+
+  private showMenu(): void {
+    // Il menu esiste solo con account e personaggio: prima vengono l'accesso e la creazione.
+    const stage = this.gate.stage;
+    if (stage !== 'world') { this.showAccess(stage); return; }
+    this.leaveGame();
+    this.screen = 'menu';
     // Tornando al menu una creazione lasciata a meta' si annulla, se c'e' gia' un personaggio a cui tornare.
     if (this.draft !== null && this.roster.active) this.draft = null;
     this.screens.show('menu');
@@ -368,37 +409,25 @@ export class Game {
   private onMenuAction(id: MenuActionId): void {
     switch (id) {
       case 'continue': if (this.character.created) this.openHub(true); else this.openCharacters(); break;
-      case 'new_character': if(this.party.client.profile){this.showToast('Il personaggio online appartiene al tuo account.');break;}this.newDraft(); this.inventoryScreen.reset(); this.openCharacters(); break;
       case 'settings': this.settingsPanel.open(); break;
       case 'characters': this.openCharacters(); break;
-      case 'logout':void applicationLoading().run('Uscita dall’account…',async()=>{await logoutAccount();this.showMenu();});break;
+      // La sessione chiusa riporta da sola alla schermata di accesso.
+      case 'logout': this.gate.logout(); break;
     }
   }
 
   private openCharacters(): void {
     if(this.party.client.profile){this.showToast('Il personaggio online appartiene al tuo account.');return;}
-    this.screen = 'characters';
-    this.screens.show('characters');
-    this.renderCharacters();
-    this.updateParty();
-    requireElement('characters-title').focus();
+    // Senza personaggio nel mondo si torna alla tappa che manca: accesso o creazione.
+    this.showMenu();
   }
 
   private renderCharacters(): void {
     const character=this.character;
-    requireElement('menu-profiles').replaceChildren(renderCharacterProfiles(this.roster,this.draft!==null,{
-      onNew:()=>{this.newDraft();this.inventoryScreen.reset();this.renderCharacters();this.updateParty();},
-      onCancel:()=>{this.draft=null;this.renderCharacters();this.updateParty();},
-      onSelect:id=>{if(this.roster.select(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.renderCharacters();}},
-      onRemove:id=>{if(this.roster.remove(id)){this.draft=null;this.inventoryScreen.reset();this.persist();this.renderCharacters();}},
-    }));
+    requireElement('menu-profiles').replaceChildren(this.gate.creationNote());
     requireElement('menu-appearance').replaceChildren(renderCharacterCreation(character,{
-      onCreate:(name,body,kind)=>{
-        if(character.completeCreation(name,body,kind)){
-          if(this.draft===character){this.roster.add(character);this.draft=null;}
-          this.persist();this.showMenu();
-        }
-      },
+      // L'account e' gia' verificato: il personaggio nasce sul server, che poi apre il rifugio.
+      onCreate:(name,body,kind)=>this.gate.createCharacter({name,characterClass:kind,body}),
       onContinue:()=>this.openHub(true),
     }));
     this.adminMenu.setAvailable(this.character.created&&!this.party.client.profile);
@@ -411,7 +440,7 @@ export class Game {
   }
 
   private openHub(arrive = false): void {
-    if(!this.party.client.profile){this.updateParty();this.party.login();return;}
+    if(!this.party.client.profile){this.showMenu();return;}
     if(!this.character.created){this.showMenu();return;}
     if(this.networkBattleId){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.returnToHub();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;
@@ -1166,7 +1195,7 @@ export class Game {
     document.body.classList.toggle('initial-menu',inRefuge);
     document.body.classList.toggle('refuge-backdrop',inRefuge);
     const link={connecting:this.party.client.connecting,online:Boolean(this.party.client.state),failed:this.party.failed};
-    if(link.failed&&!this.connectionLost&&this.wasOnline&&inRefuge)this.showToast('Connessione persa: ora giochi in singolo.');
+    if(link.failed&&!this.connectionLost&&this.wasOnline&&inRefuge)this.showToast('Connessione al server persa.');
     this.connectionLost=link.failed;
     this.wasOnline=link.online;
     this.menu.setConnection(connectionLabel({...link,latency:this.party.client.latency}));
@@ -1182,7 +1211,7 @@ export class Game {
     if (this.input.inMatch && views !== null && this.input.isActionPressed('show_map')) this.descentMap.show(views.run);
     else this.descentMap.hide();
     this.audio.setListener(this.match.player.position, this.camera.width / 2);
-    const audioScreen: AudioScreen = this.screen === 'bestiary' || this.screen === 'hub' || this.screen === 'characters' ? 'menu' : this.screen;
+    const audioScreen: AudioScreen = this.screen === 'login' || this.screen === 'bestiary' || this.screen === 'hub' || this.screen === 'characters' ? 'menu' : this.screen;
     this.audio.setScene({ screen: audioScreen, theme: this.match.arena.theme, enraged: this.match.boss?.isEnraged ?? false });
     this.audio.update(delta);
     const mood = views === null

@@ -10,13 +10,6 @@
 #party-panel.online-panel h2 { font: 24px var(--relic-title); line-height: 1.5; }
 #party-panel.online-panel p { font-size: 16px; line-height: 1.6; }
 #party-panel.online-panel button { margin: 8px 8px 0 0; padding: 10px 16px; }
-.account-login-form { display: grid; gap: 10px; }
-.account-login-form label { font-size: 16px; }
-.account-login-form input { box-sizing: border-box; width: 100%; padding: 12px; font: 16px var(--relic-title); color: var(--forge-text); background: var(--forge-ink); border: 1px solid var(--forge-iron-light); }
-.account-login-form input:focus-visible { outline: 2px solid var(--forge-amber); }
-.account-login-status:empty { display: none; }
-.account-login-help:empty { display: none; }
-.account-login-form [hidden] { display: none; }
 .party-invite-select{width:100%;box-sizing:border-box;padding:10px;background:var(--forge-ink);color:var(--forge-text);font:16px var(--relic-title);border:1px solid var(--forge-iron-light)}
 .party-invitation{margin:12px 0;padding:10px;border:1px solid var(--forge-iron-light)}
 #party-panel.online-panel>label{display:block;margin:16px 0 8px;font-size:16px}

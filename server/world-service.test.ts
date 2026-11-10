@@ -11,6 +11,10 @@ const seed: ProfileSeed = { name: 'Viandante', characterClass: 'warrior', body: 
 class MemoryProfiles implements ProfileStore {
   readonly rows = new Map<string, PersistentProfile>();
   fail = false;
+  async find(accountId: string): Promise<PersistentProfile | null> {
+    const profile = this.rows.get(accountId);
+    return profile ? copyProfile(profile) : null;
+  }
   async load(accountId: string, initial: ProfileSeed): Promise<PersistentProfile> {
     let profile = this.rows.get(accountId);
     if (!profile) { const character = Character.createStarter(initial.characterClass); character.completeCreation(initial.name, initial.body, initial.characterClass); profile = { accountId, character, gold: 500, revision: 0 }; this.rows.set(accountId, copyProfile(profile)); }
@@ -35,6 +39,24 @@ describe('account e autorità del server', () => {
     await s.command('a', { kind: 'buy', slot: 0 }); const saved = serializeCharacter(profile.character);
     await s.leave('a'); await login(s, 'b', 'a');
     expect(serializeCharacter(s.profiles.get('b')!.character)).toBe(saved); expect(store.rows.get('valid-a')!.gold).toBe(470);
+  });
+  it('senza personaggio l’accesso verificato non crea nulla: chiede la creazione e lascia libero l’account', async () => {
+    const { service: s, store } = service();
+    expect(await s.login('a', 'valid-a', null, () => true)).toBe('character_required');
+    expect(store.rows.size).toBe(0); expect(s.profiles.size).toBe(0); expect(s.world.characters.size).toBe(0);
+    // La creazione arriva dopo, con una nuova richiesta dello stesso account verificato.
+    expect(await s.login('b', 'valid-a', seed, () => true)).toBe('entered');
+    expect(s.profiles.get('b')!.character.name).toBe('Viandante'); await s.leave('b');
+    // Da qui in poi basta l'accesso: il personaggio e' quello salvato, non uno nuovo.
+    expect(await s.login('c', 'valid-a', null, () => true)).toBe('entered');
+    expect(s.profiles.get('c')!.character.characterClass).toBe('warrior'); expect(store.rows.size).toBe(1);
+  });
+  it('un token falso non arriva a chiedere il personaggio e una creazione non sostituisce quello esistente', async () => {
+    const { service: s, store } = service();
+    await expect(s.login('fake', 'account-id', null, () => true)).rejects.toThrow('Sessione'); expect(store.rows.size).toBe(0);
+    await login(s, 'a'); await s.leave('a');
+    expect(await s.login('b', 'valid-a', { name: 'Altro', characterClass: 'mage', body: 'male' }, () => true)).toBe('entered');
+    expect(s.profiles.get('b')!.character.name).toBe('Viandante'); expect(s.profiles.get('b')!.character.characterClass).toBe('warrior');
   });
   it('rifiuta token falsi e doppio accesso concorrente allo stesso account', async () => {
     const { service: s } = service(); await expect(s.login('fake', 'account-id', seed, () => true)).rejects.toThrow('Sessione');

@@ -1,7 +1,7 @@
 import type { MenuSceneFocus } from '../presentation/menu-scene';
 
 /** I comandi del menu principale. */
-export type MenuActionId = 'continue' | 'new_character' | 'settings' | 'characters' | 'logout';
+export type MenuActionId = 'continue' | 'settings' | 'characters' | 'logout';
 
 export interface MenuEntry {
   readonly id: MenuActionId;
@@ -24,13 +24,12 @@ export interface MenuContext {
 
 const NEEDS_CHARACTER = 'Crea prima un personaggio.';
 
-/** Le tre azioni principali. Senza personaggi resta disponibile solo cio' che serve a crearne uno. */
+/** Le azioni principali. Il personaggio si crea una volta, subito dopo l'accesso: dal menu non se ne creano altri. */
 export function primaryEntries(context: MenuContext): readonly MenuEntry[] {
   const name = context.characterName;
   return [
     context.incomplete === true ? { id: 'continue', label: 'Completa personaggio', hint: 'Scegli nome, sesso e classe: oggetti e progressi restano.', scene: 'hero', unavailable: null } :
     { id: 'continue', label: 'Entra', hint: name === null ? 'Entra nel rifugio.' : `Entra nel rifugio con ${name}.`, scene: 'hero', unavailable: name === null ? NEEDS_CHARACTER : null },
-    { id: 'new_character', label: 'Nuovo personaggio', hint: 'Scegli nome, sesso e classe.', scene: 'hero', unavailable: null },
     { id: 'settings', label: 'Impostazioni', hint: 'Audio, schermo e comandi.', scene: null, unavailable: null },
     ...(context.authenticated ? [{id:'logout' as const,label:'Logout',hint:'Esci dal tuo account e dal mondo condiviso.',scene:null,unavailable:null}] : []),
   ];
