@@ -249,7 +249,7 @@ export class Game {
       onSceneFocus: (scene) => { this.menuScene.focus = scene; },
     });
     // La pagina del personaggio si apre solo per crearlo, dopo l'accesso: da li' si puo' soltanto uscire dall'account.
-    requireElement('characters-back').addEventListener('click', () => this.gate.logout());
+    requireElement('characters-back').addEventListener('click', () => { if (this.gate.isOffline) this.showMenu(); else this.gate.logout(); });
     requireElement('login-settings').addEventListener('click', () => this.settingsPanel.open());
     // Nel menu il riquadro del party non si vede: il motivo di un errore arriva con un avviso; all'accesso lo mostra la porta.
     this.party.onProblem = (message) => { this.gate.problem(message); if (this.screen === 'menu' || this.screen === 'characters') this.showToast(message); };
@@ -364,6 +364,7 @@ export class Game {
   /** Il mondo si apre da solo al primo stato ricevuto (vedi `frame`); le altre tappe hanno la loro schermata. */
   private onAccessStage(stage: AccessStage): void {
     if (stage !== 'world') this.showAccess(stage);
+    else if (this.gate.isOffline) this.showMenu();
   }
 
   /** Accesso all'account, poi creazione del personaggio: le due tappe che precedono il rifugio. */
@@ -408,7 +409,7 @@ export class Game {
     const summary: MenuCharacter | null = character.created
       ? { name: character.name!, className: CLASS_LABELS[character.characterClass!], level: progress.level, gold: this.roster.gold, gearScore: character.gearScore, levelProgress: progress.current / progress.required, figure: pixelSvg(characterPixels(character.appearance(), 'game')) }
       : null;
-    this.menu.render(summary, { characterName: summary?.name ?? null, incomplete: this.draft === null && !character.created,authenticated:Boolean(accountToken()) });
+    this.menu.render(summary, { characterName: summary?.name ?? null, incomplete: this.draft === null && !character.created,authenticated:Boolean(accountToken())||this.gate.isOffline });
   }
 
   private onMenuAction(id: MenuActionId): void {
@@ -417,27 +418,37 @@ export class Game {
       case 'settings': this.settingsPanel.open(); break;
       case 'characters': this.openCharacters(); break;
       // La sessione chiusa riporta da sola alla schermata di accesso.
-      case 'logout': this.gate.logout(); break;
+      case 'logout': if (this.gate.isOffline) this.gate.leaveOffline(); else this.gate.logout(); break;
     }
   }
 
   private openCharacters(): void {
     if(this.networkBattleId){this.showToast('Torna nel rifugio prima di cambiare personaggio.');return;}
-    this.gate.chooseCharacters();
+    if(!this.gate.isOffline){this.gate.chooseCharacters();return;}
+    // Offline: i profili locali del browser, creati e scelti senza server.
+    this.leaveGame();this.screen='characters';this.screens.show('characters');
+    if(!this.roster.profiles.length&&!this.draft)this.newDraft();
+    this.inventoryScreen.reset();this.renderCharacters();requireElement('characters-title').focus();
   }
 
   private renderCharacters(): void {
     const character=this.character;
     requireElement('characters-title').textContent=this.draft?'Crea il tuo personaggio':'Scegli il personaggio';
-    requireElement('menu-profiles').replaceChildren(this.gate.creationNote(this.roster.gold),renderCharacterProfiles(this.roster,this.draft!==null,{
+    const offline=this.gate.isOffline;
+    requireElement('menu-profiles').replaceChildren(...(offline?[]:[this.gate.creationNote(this.roster.gold)]),renderCharacterProfiles(this.roster,this.draft!==null,{
       onNew:()=>{this.newDraft();this.renderCharacters();},
       onCancel:()=>{this.draft=null;this.renderCharacters();},
       onSelect:id=>{if(this.roster.select(id)){this.draft=null;this.renderCharacters();}},
     }));
     requireElement('menu-appearance').replaceChildren(renderCharacterCreation(character,{
       // L'account e' gia' verificato: il personaggio nasce sul server, che poi apre il rifugio.
-      onCreate:(name,body,kind)=>this.gate.createCharacter({name,characterClass:kind,body}),
-      onContinue:()=>{if(this.roster.activeId)this.gate.selectCharacter(this.roster.activeId);},
+      onCreate:(name,body,kind)=>{
+        if(!offline){this.gate.createCharacter({name,characterClass:kind,body});return;}
+        if(!character.completeCreation(name,body,kind))return;
+        if(this.draft===character){this.roster.add(character);this.draft=null;}
+        this.persist();this.showMenu();
+      },
+      onContinue:()=>{if(offline)this.openHub(true);else if(this.roster.activeId)this.gate.selectCharacter(this.roster.activeId);},
     }));
     this.adminMenu.setAvailable(false);
   }
@@ -449,7 +460,7 @@ export class Game {
   }
 
   private openHub(arrive = false): void {
-    if(!this.party.client.profile){this.showMenu();return;}
+    if(!this.party.client.profile&&!this.gate.isOffline){this.showMenu();return;}
     if(!this.character.created){this.showMenu();return;}
     if(this.networkBattleId){this.dismissedNetworkRun=this.networkBattleId.split(':')[0]!;this.party.client.returnToHub();}
     this.abandonRun();this.networkBattleId='';this.networkRun=null;this.networkRoom=null;

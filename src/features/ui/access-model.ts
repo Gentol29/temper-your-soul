@@ -24,13 +24,21 @@ export interface AccessState {
   readonly characterRequired: boolean;
   /** Il personaggio e' nel mondo condiviso. */
   readonly inWorld: boolean;
+  /** Prova locale senza server: personaggi del browser, nessun mondo condiviso. */
+  readonly offline?: boolean;
 }
 
 /** Senza sessione non si arriva mai alla creazione: l'autenticazione precede il personaggio. */
 export function accessStage(state: AccessState): AccessStage {
+  if (state.offline) return 'world';
   if (!state.authenticated) return 'login';
   if (state.inWorld) return 'world';
   return state.characterRequired ? 'creation' : 'login';
+}
+
+/** La modalita' offline serve solo alle prove in locale (Vite su localhost o `dist/index.html` aperto da file). */
+export function offlineAllowed(hostname: string): boolean {
+  return ['', 'localhost', '127.0.0.1', '[::1]'].includes(hostname) || hostname.endsWith('.localhost');
 }
 
 /** Cosa mostra la schermata di accesso. */

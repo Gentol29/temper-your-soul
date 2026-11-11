@@ -1,7 +1,7 @@
 import { accountToken, beginAccountLogin, initializeAccountSession, logoutAccount } from '../network/account-session';
 import type { CharacterSeed } from '../network/account-protocol';
 import type { PartyClient } from '../network/party-client';
-import { accessStage, loginView, parseOnlineConfig, type AccessStage, type ConfigState } from './access-model';
+import { accessStage, loginView, offlineAllowed, parseOnlineConfig, type AccessStage, type ConfigState } from './access-model';
 import { accountLoginForm } from './account-login-form';
 import { applicationLoading } from './loading-indicator';
 import { el, requireElement } from './dom';
@@ -19,11 +19,30 @@ export class AccountGate {
   private note = '';
   private shown = '';
   private reported: AccessStage | null = null;
+  private offline = false;
 
   constructor(private readonly client: PartyClient, private readonly onStage: (stage: AccessStage) => void) {}
 
   get stage(): AccessStage {
-    return accessStage({ authenticated: Boolean(accountToken()), characterRequired: this.client.characterRequired, inWorld: this.client.state !== null });
+    return accessStage({ authenticated: Boolean(accountToken()), characterRequired: this.client.characterRequired, inWorld: this.client.state !== null, offline: this.offline });
+  }
+
+  /** Prova locale senza server: personaggi salvati nel browser, niente rifugio condiviso ne' cooperativa. */
+  get isOffline(): boolean {
+    return this.offline;
+  }
+
+  playOffline(): void {
+    this.note = '';
+    this.offline = true;
+    this.client.leave();
+    this.sync();
+  }
+
+  leaveOffline(): void {
+    this.offline = false;
+    this.shown = '';
+    this.sync();
   }
 
   /** Legge un eventuale ritorno dal provider, chiede la configurazione al server e, se c'e' gia' una sessione, entra. */
@@ -38,6 +57,7 @@ export class AccountGate {
   /** Sessione nuova o chiusa: si riparte sempre dall'accesso con il solo token, mai con un personaggio scelto prima. */
   private enter(): void {
     this.note = '';
+    this.offline = false;
     this.client.leave();
     if (accountToken()) this.client.connect();
     this.sync();
@@ -142,6 +162,9 @@ export class AccountGate {
       const note = el('p', 'login-access-note', this.note);
       note.setAttribute('role', 'alert');
       nodes.push(note);
+    }
+    if (view !== 'entering' && view !== 'reconnect' && offlineAllowed(location.hostname)) {
+      nodes.push(this.button('Gioca offline (prova locale)', () => this.playOffline(), true));
     }
     this.root.replaceChildren(...nodes);
     // La selezione va al primo campo utile solo se la schermata e' visibile.

@@ -159,6 +159,15 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version:'0.18.1',date:'2026-11-11',
+    changes:[
+      'Modalità offline per le prove in locale: sulla schermata di accesso il pulsante «Gioca offline (prova locale)» porta al menu senza account né server. Compare solo con il gioco aperto da localhost o da file (dist/index.html), mai su un sito pubblicato.',
+      'Offline i personaggi si creano, si scelgono e si salvano soltanto nel browser; il rifugio e le discese in singolo funzionano senza server, senza cooperativa né rifugio condiviso. Logout riporta alla schermata di accesso; un accesso con account chiude la modalità offline.',
+      'Nessuna variazione a regole, salvataggi, protocollo o bilanciamento.',
+    ],
+    balanceChanges:[],
+  },
+  {
     version:'0.18.0',date:'2026-11-11',
     changes:[
       'Dopo il login si apre sempre la scelta dei personaggi dell’account: seleziona chi usare o crea un personaggio aggiuntivo. Il comando Personaggi nel menu riapre la raccolta dal rifugio senza ripetere l’accesso.',

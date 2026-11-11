@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessStage, loginView, parseOnlineConfig } from './access-model';
+import { accessStage, loginView, offlineAllowed, parseOnlineConfig } from './access-model';
 
 const password = { passwordLogin: true, loginUrl: '' };
 
@@ -17,6 +17,12 @@ describe('ordine dell\'accesso: account, personaggio, mondo', () => {
 
   it('nel mondo si entra con account e personaggio', () => {
     expect(accessStage({ authenticated: true, characterRequired: false, inWorld: true })).toBe('world');
+  });
+
+  it('la prova offline entra senza account, ma solo su localhost o da file', () => {
+    expect(accessStage({ authenticated: false, characterRequired: false, inWorld: false, offline: true })).toBe('world');
+    for (const host of ['', 'localhost', '127.0.0.1', '[::1]', 'gioco.localhost']) expect(offlineAllowed(host)).toBe(true);
+    for (const host of ['temper.example', '192.168.1.5', 'localhost.example.com']) expect(offlineAllowed(host)).toBe(false);
   });
 });
 

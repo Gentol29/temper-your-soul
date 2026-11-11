@@ -1,6 +1,6 @@
 {
   "name": "temper-your-soul",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "private": true,
   "description": "Temper your soul: gioco d'azione 2D per browser, in TypeScript",
   "type": "module",
