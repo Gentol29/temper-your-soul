@@ -48,7 +48,15 @@ async function handle(ws:WebSocket,c:Connection,m:Record<string,unknown>):Promis
  if(m.type==='login'){
   if(m.protocol!==NETWORK.protocolVersion)throw new Error('Client e server diversi: ricarica il gioco.');
   if(c.loggingIn||service.profiles.has(c.id))throw new Error('Accesso già in corso.');c.loggingIn=true;
-  try{const outcome=await service.login(c.id,m.token,seedOf(m.creation),()=>clients.has(ws)&&ws.readyState===WebSocket.OPEN);if(outcome==='disconnected'||!clients.has(ws))return;if(outcome==='character_required'){send(ws,{type:'character_required'});return;}sendProfile(c.id);publish();publishSocial();}finally{c.loggingIn=false;}return;
+  try{
+   const connected=()=>clients.has(ws)&&ws.readyState===WebSocket.OPEN;
+   if(m.creation===undefined&&m.characterId===undefined){const roster=await service.characterChoices(m.token,connected);if(roster!==null)send(ws,{type:'character_required',roster});return;}
+   if(m.characterId!==undefined&&(typeof m.characterId!=='string'||!/^c[1-9]\d*$/.test(m.characterId)))throw new Error('Personaggio non valido.');
+   const outcome=await service.login(c.id,m.token,seedOf(m.creation),connected,m.characterId as string|undefined);
+   if(outcome==='disconnected'||!clients.has(ws))return;
+   if(outcome==='character_required'){const roster=await service.characterChoices(m.token,connected);if(roster!==null)send(ws,{type:'character_required',roster});return;}
+   sendProfile(c.id);publish();publishSocial();
+  }finally{c.loggingIn=false;}return;
  }
  if(!service.profiles.has(c.id))throw new Error('Accedi prima con il tuo account.');
  const room=world.locations.get(c.id);

@@ -1,5 +1,7 @@
 # Sprite C ed equipaggiamento Hi-bit · 3 novembre 2026
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 L’utente ha scelto **C · Cacciatore d’ombre** per maschile e femminile, autorizzando esplicitamente l’integrazione nel gioco, la correzione del passo e il rifacimento degli sprite di armi/equipaggiamento. La decisione segue la segnalazione dell’area assegnata a simonragaz87-sudo e supera, per questo ambito, la precedente autorizzazione limitata ai prototipi. Il lavoro resta locale sul ramo `codex/vfx-hi-bit`.
 
 ## Corpo e animazioni

@@ -48,9 +48,9 @@ export function characterPixels(appearance: CharacterAppearance, resolution: Res
   const direction=resolution==='game'&&animation.state==='walk'?(animation.walkDirection??1):1;
   const frame = ((Math.floor(animation.frame)*direction % frames) + frames) % frames;
   const slots = ['armor','boots','secondary_hand','primary_hand'] as const;
-  // Tutte le classi hanno cinque viste rese (le altre tre specchiate); il ritratto ne ha una sola.
+  // I corpi precedenti hanno cinque viste; l'Arciere maschio PixelLab ne ha otto autonome.
   const view=resolution==='game'?animation.view:undefined;
-  const key = JSON.stringify([appearance.body,appearance.characterClass,resolution,animation.state,animation.attackSlot,frame,view,slots.map(slot=> {
+  const key = JSON.stringify([appearance.body,appearance.characterClass,resolution,animation.state,animation.attackSlot,frame,view,animation.direction,slots.map(slot=> {
     const item=appearance.equipment[slot];return item ? [item.familyId,item.rarity] : null;
   })]);
   const cached = cache.get(key); if(cached) return cached;

@@ -27,7 +27,7 @@ it('scrive JSON completo e metadati coerenti senza creare colonne o perdere i re
  const query=vi.fn().mockResolvedValue({rowCount:1,rows:[{revision:String(p.revision+17)}]}),release=vi.fn();
  await new LegacyProfiles({connect:async()=>({query,release})} as unknown as Pool,{}).save([p]);
  const args=query.mock.calls[1]![1];expect(args.slice(0,7)).toEqual(['account','Eroe','mage',3,350,125,10]);
- expect(JSON.parse(args[7]).records.crypt.clears).toBe(1);expect(query.mock.calls[1]![0]).toContain('WHERE COALESCE');
+ expect(JSON.parse(args[7]).characters[0].character.records.crypt.clears).toBe(1);expect(query.mock.calls[1]![0]).toContain('WHERE COALESCE');
  expect(p.revision).toBe(1794258000123473);expect(query.mock.calls.at(-1)![0]).toBe('COMMIT');expect(release).toHaveBeenCalled();
 });
 it('un conflitto annulla entrambi i salvataggi e conserva le revisioni originali',async()=>{

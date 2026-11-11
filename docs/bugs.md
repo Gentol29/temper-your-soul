@@ -1,5 +1,23 @@
 # Bug e problemi rilevati
 
+## Risolto · Combat report duplicato · v0.18.00
+
+Al termine degli incontri online un dialogo modale con il rapporto del party copriva il riepilogo finale già completo di statistiche e drop. Rimossi il dialogo, il relativo modulo, gli stili e i callback dedicati. Il riepilogo con le ricompense resta unico; premi, salvataggi e dati del report di rete sono conservati. Prova giocata dell’utente ancora da confermare.
+
+## Risolto localmente · login senza scelta dei personaggi · 11 novembre 2026
+
+Il login entrava direttamente con l’unico personaggio associato all’account, impedendo di sceglierne o crearne altri. Ripristinata la raccolta privata dopo l’autenticazione, con creazioni aggiuntive persistenti e oro comune nell’account; i personaggi esistenti restano conservati. Verifiche automatiche, PostgreSQL temporaneo e browser tecnico; conferma giocata ancora da fare.
+
+## Impugnatura dell’arco coperta in E (correzione locale, 11 novembre 2026)
+
+Segnalato dall’utente dopo il ribaltamento dell’arco a riposo. Nella vista E lo strato mano/polsino ricopriva alcuni pixel della presa. La sola fascia dell’impugnatura viene ora composta in primo piano, dopo quel passaggio; nessuna variazione ai raster sorgente o agli agganci. Test verificato fallire prima della correzione, poi copertura di entrambi gli archi in riposo, camminata e tiro. Conferma visiva finale dell’utente ancora da ricevere.
+
+## Arciere PixelLab: cappuccio SE, corpo incompleto e braccio sulla schiena (correzione locale, 10 novembre 2026)
+
+Segnalati dall’utente e riscontrati nei raster: in SE il cappuccio non era alzato; i ritagli degli arti asportavano parti della tunica in W/E/SE e la separazione delle gambe attraversava l’abito; in NW il braccio anteriore appariva sopra il mantello. Corretto il cappuccio con Pixen e ricostruiti base e rig nel workbench PixelLab. Le viste posteriori ora occludono anche corda e freccia, oltre alle braccia. Test di continuità del busto, permanenza della testa/cappuccio, profondità posteriore e uguaglianza dei raster fra HUB/altare e partita. La conferma estetica e la prova giocata della correzione restano a carico dell’utente.
+
+Ulteriore segnalazione: il profilo W era ancora privo del mantello lungo sul retro; in S il braccio nella sinistra dell’immagine partiva troppo all’interno rispetto alla spalla. Ripristinato il mantello laterale come strato separato e spostato l’innesto del braccio sotto la spalla esterna in tutti i clip. Aggiunti controlli specifici su continuità del mantello W e collegamento spalla/omero S. Conferma manuale della nuova revisione ancora necessaria.
+
 ## Sviluppo con Vite: `/auth` rifiuta l’origine con `ALLOWED_ORIGINS` vuoto (rilevato il 10 novembre 2026, aperto)
 
 Rilevato provando l’accesso dalla pagina servita da Vite, con le richieste inoltrate al server sulla 4173: `/auth/login` e `/auth/signup` rispondono 403 «Origine non consentita.» quando `ALLOWED_ORIGINS` è vuoto, mentre il WebSocket `/party` entra. Causa probabile: il proxy di Vite riscrive l’intestazione Host, quindi l’origine della pagina non coincide più con l’host visto dal server. `.env.example` indica invece di lasciare vuoto per lo sviluppo locale. Finché non si decide la correzione: aggiungere l’origine di Vite a `ALLOWED_ORIGINS`, oppure provare l’accesso dalla build servita da `npm run server`. Non corretto in questo incremento.

@@ -1,5 +1,7 @@
 # PixelLab: personaggi, equipaggiamento e rifugio
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta esplicita del proprietario del 2 novembre 2026: piano iniziale da massimo 39 generazioni, stessa chiave, creazione e integrazione di portale, mercante, fabbro, forgia, basi del personaggio, equipaggiamento e animazioni di movimento. Questa richiesta riapre la revisione degli sprite di gioco, compresa l’area precedentemente assegnata al collaboratore. I ritratti illustrati e il comportamento dell’inventario non sono inclusi.
 
 ## Stato effettivo

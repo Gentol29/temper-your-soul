@@ -1182,12 +1182,6 @@ button:disabled { cursor:var(--cursor-default); opacity:.45; transform:none; }
 
 .party-destination { display:block; margin:14px 0; color:var(--text); }
 .party-destination select { width:100%; margin-top:8px; padding:10px 12px; background:#211a26; color:#eadbc5; border:1px solid #72566a; border-radius:8px 18px 8px 18px; }
-.combat-report-scroll { overflow-x:auto; margin:18px 0; }
-.combat-report-table { width:100%; border-collapse:collapse; text-align:right; color:#eadbc5; }
-.combat-report-table th,.combat-report-table td { padding:12px 10px; border-bottom:1px solid #594452; white-space:nowrap; }
-.combat-report-table th { font-size: 16px; color:#c5a383; font-weight:normal; }
-.combat-report-table th:first-child,.combat-report-table td:first-child { text-align:left; }
-.combat-report-table tbody tr:nth-child(odd) { background:#332532; }
 
 /* Pannello audio (tema Reliquiario): acceso/spento, volumi per canale e crediti delle registrazioni. */
 /* I comandi in alto a destra stanno sopra le schermate dei menu (z-index 9), altrimenti nei menu non si possono premere;

@@ -10,13 +10,14 @@ export type CharacterCommand =
 /** Le scelte della creazione: nome, classe e sesso restano fissi. */
 export interface CharacterSeed { name: string; characterClass: CharacterClass; body: BodyType }
 /**
- * Prima si accede con il solo token. `creation` si aggiunge soltanto dopo che il server ha risposto
- * `character_required`: l'account e' gia' verificato e non ha ancora un personaggio.
+ * Prima si accede con il solo token per leggere la raccolta privata. Poi si invia `characterId`
+ * per scegliere un proprio personaggio, oppure `creation` per aggiungerne uno nuovo.
  */
 export interface LoginMessage {
   type: 'login'; protocol: number; token: string;
   creation?: CharacterSeed;
+  characterId?: string;
 }
-/** L'account e' valido ma non ha un personaggio: il client apre la creazione e accede di nuovo con `creation`. */
-export interface CharacterRequiredMessage { type: 'character_required' }
-export interface ProfileMessage { type: 'profile'; character: string; gold: number; revision: number }
+/** Account verificato: apre sempre la scelta; con raccolta vuota propone la creazione. */
+export interface CharacterRequiredMessage { type: 'character_required'; roster?: string }
+export interface ProfileMessage { type: 'profile'; characterId?: string; character: string; gold: number; revision: number }

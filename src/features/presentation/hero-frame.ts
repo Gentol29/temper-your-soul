@@ -1,4 +1,4 @@
-/** Un fotogramma di un personaggio reso in 3D: righe di simboli compresse (12a = dodici volte a) e agganci nel 64 x 64. */
+/** Un fotogramma raster: righe di simboli compresse (12a = dodici volte a) e agganci nel 64 x 64. */
 export interface HeroFrame {
   readonly y: number;
   readonly rows: string;

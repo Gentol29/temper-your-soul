@@ -1,18 +1,18 @@
 ---
 name: tys-risorse-libere
-description: Cercare, valutare, scaricare (con permesso), convertire e registrare nei crediti audio, musica, grafica o caratteri con licenza libera per Temper your soul. Usare quando servono suoni, musiche, tile, effetti grafici o font, o quando l'utente chiede "dove prendere" una risorsa.
+description: Cercare, valutare, scaricare (con permesso), convertire e registrare nei crediti audio, musica o caratteri con licenza libera per Temper your soul. Per sprite, tile, immagini e grafica UI usare invece tys-grafica-pixellab.
 ---
 
-# Risorse libere per Temper your soul
+# Audio e caratteri liberi per Temper your soul
 
-Regole complete in `docs/prompt-di-progetto.md` (sezione 5); fonti già valutate in `docs/risorse-libere.md`.
+Regole complete in `docs/prompt-di-progetto.md` (sezione 5); fonti già valutate in `docs/risorse-libere.md`. Per grafica, immagini e UI seguire invece `tys-grafica-pixellab` e `docs/canone-grafico.md`: produzione e ritocchi solo PixelLab MCP; gli elenchi grafici storici non sono fonti per nuovi asset.
 
 ## Criteri (rigidi)
 
 - Licenze: **CC0, pubblico dominio, CC BY 3.0/4.0** (crediti obbligatori), **OFL** per i caratteri. Mai NC, ND, "solo uso personale", licenze ambigue.
-- **Audio solo registrato** (strumenti, voci, field recording, foley): niente sintetizzatori come musica principale e niente IA generativa. Nemmeno per la grafica importata.
+- **Audio solo registrato** (strumenti, voci, field recording, foley): niente sintetizzatori come musica principale e niente IA generativa.
 - Verifica la licenza **sulla pagina e nel file/pacchetto**: se non coincidono (capita su OpenGameArt) prevale la più restrittiva, o si scarta.
-- Coerenza: tono gotico caldo, tema UI "C — Reliquiario", direzione personaggi "A — Fantasy compatto". La revisione di sprite e ritratti è sospesa: non sostituirli.
+- Font approvati conservati, incluso Silkscreen; non sostituirli per una semplice richiesta di risorse. La produzione grafica è regolata dal canone PixelLab, senza riattivare le vecchie direzioni artistiche.
 
 ## Procedura
 
@@ -33,10 +33,8 @@ Regole complete in `docs/prompt-di-progetto.md` (sezione 5); fonti già valutate
    - Script di supporto (scaricamento da Freesound, analisi, conversione con ffmpeg): fuori dal repository, vedi README · Strumenti esterni.
 6. **Provare nel browser** (`npm run dev`): volume relativo, assenza di scatti negli anelli, nessun errore in console. Il giudizio finale sul suono spetta all'utente.
 
-## Grafica e caratteri
+## Caratteri e instradamento grafica
 
-Stessa procedura: file in `src/assets/<categoria>/`, niente CDN. I caratteri si servono in locale con `@font-face`.
+I caratteri si servono in locale con `@font-face`, rispettando licenza e crediti; conservare quelli approvati finché il proprietario non richiede un cambio.
 
-- **Crediti della grafica** in `src/features/presentation/art-credits.ts` (titolo, autore, fonte, licenza, data, uso, modifiche): si vedono nel gioco (pannello Audio, «Crediti») e i test rifiutano crediti mancanti o senza uso. Un `LEGGIMI.md` accanto ai file ripete i crediti.
-- **Sprite dei boss:** i boss usano i fogli del generatore locale (`prepara_boss_ia.py`, fuori dal repository → `boss-art/boss-ia-layout.ts`). I fogli di terzi e `prepara_boss.py` sono stati tolti il 5 novembre 2026: per adattarne uno nuovo si recupera lo script dalla storia Git. Scala, verso e velocita' in `boss-art/boss-sheets.ts`; se l'immagine manca resta la grafica a matrici.
-- **Pixel art:** solo ingrandimenti interi, una tavolozza per tema, un contorno coerente; preferire autori affidabili (elenco in `docs/risorse-libere.md`).
+Sprite, tile, equipaggiamenti, immagini, icone, VFX raster e grafica UI si producono esclusivamente con PixelLab MCP tramite `tys-grafica-pixellab`. Non cercare pacchetti di terzi o ricette di generatori locali per queste risorse. Se il collaboratore non ha PixelLab, avvisarlo e consigliargli di collegare l'MCP integrato prima della produzione.

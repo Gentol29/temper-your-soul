@@ -1,0 +1,21 @@
+# Arciere maschio · PixelLab
+
+Tre atlanti trasparenti con celle native **64×64**: riposo 4×8, camminata 6×8, tiro 4×8, **112 fotogrammi**. Una direzione per riga: S, SW, W, NW, N, NE, E, SE. Nessuna vista completa è ottenuta specchiando la figura.
+
+Provenienza: PixelLab MCP, base v3 e revisione fantasy Pixen; palette, braccia articolate, appoggio delle gambe e animazioni rifiniti nel `pixelart_workbench` PixelLab. Non sono otto nuove animazioni generate dal modello: i clip finali sono costruiti nel workbench dalla base a otto viste. Identificativi, misure e contratto nel [manifest](manifest.json). Il servizio non espone un seme per questa produzione. Output soggetto ai [termini PixelLab](https://www.pixellab.ai/termsofservice); non attribuito a una licenza Creative Commons.
+
+Tunica, cappuccio, cuoio e stivali fantasy, senza denim o abiti contemporanei. La base non incorpora arco o faretra. Destra anatomica sull’impugnatura, sinistra sulla corda; arco abbassato/inclinato a riposo, sollevamento/trazione/rilascio/recupero nel tiro. Faretra sul dorso, con frecce sopra la spalla. Gesto studiato sui riferimenti anatomici nel [canone](../../../../docs/canone-grafico.md).
+
+Revisione richiesta dopo il primo controllo dell’utente: cappuccio SE ridisegnato con Pixen (seme 742311), mantenuto alzato in tutti i frame; testa separata dal movimento del mantello. Nel workbench ricostruita la tunica sotto gli arti e spostati i tagli delle gambe sotto l’abito, eliminando le interruzioni di busto e cintura nelle viste laterali. In NW/N/NE entrambe le braccia, arco, corda e freccia passano dietro il mantello. La faretra rimane sopra il dorso. Nel tiro N l’arco del cacciatore è completamente occluso dal corpo, non cancellato dall’asset.
+
+Secondo controllo dell’utente: in W ripristinato il lembo posteriore del mantello, dalla spalla fino all’orlo, come strato distinto dai ritagli delle braccia. In S la radice del braccio nella sinistra dell’immagine (destra anatomica) passa da (21,21) a (17,22), sotto la spalla esterna; mano e impugnatura restano registrate. Entrambi i ritocchi sono eseguiti nel workbench PixelLab e applicati ai tre clip, senza consumare generazioni AI.
+
+11 novembre 2026: orientamento a riposo corretto su richiesta del proprietario, con corda sopra e legno/impugnatura sotto. I metadati `BOW_MIRRORS` fissano il ribaltamento del solo arco per posa e direzione; la sinistra è riallineata alla corda nel workbench PixelLab. Inclinazione e aggancio della destra conservati. Riposo, cammino e recupero usano questa presa, mentre trazione/rilascio conservano il verso del tiro. Nessuna nuova generazione AI consumata.
+
+Ulteriore correzione della composizione E: la sola fascia dell’impugnatura viene portata davanti allo strato mano/polsino, che ne copriva alcuni pixel. Si riusano i pixel dell’arco esistente, senza produrre o ritoccare immagini. Presa, forma e orientamento rimangono quelli registrati. Test su entrambi gli archi, tutti i fotogrammi e i tre stati, con vestiario equipaggiato.
+
+Il gioco legge la codifica senza perdita per materiale in `src/features/presentation/pixellab-archer-data.ts`, derivata dai PNG; preserva ogni pixel della base. Mani, schiena e angolo dell’arco sono metadati espliciti del rig PixelLab. Il renderer compone gli equipaggiamenti esistenti separatamente: due archi, faretra, mantello e stivali dell’Arciere. Armatura e stivali sostituiscono le rampe delle rispettive parti; la sagoma dell’abito resta quella di questo corpo. Le altre classi e il corpo femminile restano in migrazione.
+
+Riposo e camminata seguono il ciclo visivo esistente; il tiro segue la posa di 300 ms, abbreviata per le primarie più rapide. Nessuna modifica a danni, cadenze, collisioni, salvataggi o protocollo. I quattro attacchi secondari conservano il riposo di questo corpo e gli effetti già presenti: questo lotto include il solo tiro con l’arco richiesto.
+
+Produzione e integrazione richieste dal proprietario il 10 novembre 2026. Verifiche automatiche su frame, direzioni, agganci e combinazioni; controllo tecnico nel browser. **Conferma estetica e prova giocata ancora da fare**, comprese leggibilità, camminata, ritmo del tiro e scene affollate. Prompt, script di produzione e candidati restano nella cartella di lavoro esterna.

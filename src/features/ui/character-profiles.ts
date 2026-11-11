@@ -5,7 +5,7 @@ import { characterPixels } from '../presentation/character-art';
 import { pixelSvg } from './character-portrait';
 import { el } from './dom';
 
-export function renderCharacterProfiles(roster:CharacterRoster,creating:boolean,handlers:{onNew:()=>void;onCancel:()=>void;onSelect:(id:string)=>void;onRemove:(id:string)=>void}):HTMLElement {
+export function renderCharacterProfiles(roster:CharacterRoster,creating:boolean,handlers:{onNew:()=>void;onCancel:()=>void;onSelect:(id:string)=>void;onRemove?:(id:string)=>void}):HTMLElement {
   const root=el('section','character-profiles');root.setAttribute('aria-label','I tuoi personaggi');
   const head=el('div','profiles-heading'),add=el('button','secondary profile-new','＋ Nuovo personaggio');add.type='button';add.disabled=creating;
   add.addEventListener('click',handlers.onNew);head.append(el('h2','','Personaggi'),add);root.append(head);
@@ -20,11 +20,11 @@ export function renderCharacterProfiles(roster:CharacterRoster,creating:boolean,
       const dialog=el('dialog','profile-delete-dialog');
       dialog.append(el('h2','','Rimuovere '+(character.name??'questo personaggio')+'?'),el('p','','Verranno rimossi il personaggio, il suo inventario e i suoi progressi locali.'));
       const actions=el('div','profile-delete-actions'),cancel=el('button','secondary','Annulla'),confirm=el('button','danger','Elimina personaggio');
-      cancel.type=confirm.type='button';cancel.addEventListener('click',()=>dialog.close());confirm.addEventListener('click',()=>{dialog.close();handlers.onRemove(profile.id);});
+      cancel.type=confirm.type='button';cancel.addEventListener('click',()=>dialog.close());confirm.addEventListener('click',()=>{dialog.close();handlers.onRemove?.(profile.id);});
       actions.append(cancel,confirm);dialog.append(actions);dialog.addEventListener('close',()=>dialog.remove());
       dialog.addEventListener('keydown',event=>{if(event.code==='Escape')event.stopPropagation();});document.body.append(dialog);dialog.showModal();cancel.focus();
     });
-    row.append(select,remove);root.append(row);
+    row.append(select);if(handlers.onRemove)row.append(remove);root.append(row);
   }
   if(creating){
     const draft=el('div','profile-row is-draft');draft.append(el('strong','','Nuovo personaggio'));

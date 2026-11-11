@@ -1,15 +1,16 @@
 import { AUDIO_LICENSES } from '../audio/audio-credits';
 /*
  * Crediti della grafica di terzi usata dal gioco. Regole (docs/risorse-libere.md): licenze CC0, pubblico dominio o CC BY,
- * eccezione autorizzata il 2026-11-01 per effetti e icone generati con l'IA (allora PixelLab; ora il generatore locale, vedi docs/vfx-pixellab.md).
+ * Gli asset storici conservano la propria provenienza; le nuove produzioni seguono il canone PixelLab del 2026-11-10.
  * Le licenze CC BY chiedono di citare autore e licenza e di dire che l'opera e' stata modificata: il pannello dei
  * crediti mostra autore e licenza, qui sotto ci sono le modifiche.
  */
 
 /** Licenze ammesse per la grafica (stessi nomi di quelle dell'audio, per mostrarle allo stesso modo). */
-export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'Generato-locale' | 'Modello-IA-da-verificare';
+export type ArtLicense = 'CC0-1.0' | 'CC-BY-3.0' | 'CC-BY-4.0' | 'Generato-locale' | 'Modello-IA-da-verificare' | 'PixelLab-output';
+export const CHARACTER_CREDIT_IDS = ['pixellab-archer-male'] as const;
 export const VFX_CREDIT_IDS = ['menu-rifugio-ia', 'local-zimage-vfx', 'local-sdxl-meteor'] as const;
-export const ART_LICENSES = { ...AUDIO_LICENSES, 'Generato-locale': { name: 'Generato con IA in locale · da approvare', url: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', requiresAttribution: false }, 'Modello-IA-da-verificare': { name: 'Modello 3D generato con IA su Meshy · licenza del piano da verificare', url: 'https://www.meshy.ai/', requiresAttribution: false } };
+export const ART_LICENSES = { ...AUDIO_LICENSES, 'PixelLab-output': { name: 'Generato con PixelLab', url: 'https://www.pixellab.ai/termsofservice', requiresAttribution: false }, 'Generato-locale': { name: 'Generato con IA in locale · da approvare', url: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', requiresAttribution: false }, 'Modello-IA-da-verificare': { name: 'Modello 3D generato con IA su Meshy · licenza del piano da verificare', url: 'https://www.meshy.ai/', requiresAttribution: false } };
 
 export interface ArtCredit {
   /** Titolo come sulla pagina della fonte. */
@@ -28,6 +29,12 @@ export interface ArtCredit {
 
 /** Crediti per id (`<fonte>-<opera>`), consultati e scaricati il 1 novembre 2026. */
 export const ART_CREDITS: Readonly<Record<string, ArtCredit>> = {
+  'pixellab-archer-male': {
+    title: 'Arciere maschio in otto direzioni', author: 'Temper your soul · PixelLab',
+    source: 'https://www.pixellab.ai/', license: 'PixelLab-output', retrieved: '2026-11-10',
+    use: 'corpo maschile dell’Arciere in partita, HUB e anteprime dello sprite',
+    changes: 'base v3 e revisione fantasy Pixen; palette e rig di riposo, camminata e tiro nel workbench PixelLab, celle 64×64 e otto viste autonome. Equipaggiamenti separati con arco a destra e faretra sul dorso; vedi src/assets/characters/archer-male-pixellab/LEGGIMI.md',
+  },
   'menu-rifugio-ia': {
     title: 'Rifugio del menu principale', author: 'Temper your soul · generato in locale con SDXL e Pixel Art XL',
     source: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0', license: 'Generato-locale', retrieved: '2026-11-03',

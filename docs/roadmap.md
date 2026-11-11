@@ -1,5 +1,33 @@
 # Roadmap
 
+## Riepilogo finale unico · v0.18.00
+
+Rimosso il Combat report modale duplicato dagli incontri online: resta la schermata finale con statistiche, esperienza e drop, senza cambiare premi, salvataggi o bilanciamento. Integrati nello stesso incremento il canone PixelLab, l’Arciere maschio e i personaggi multipli dell’account. Prova giocata ancora da confermare.
+
+## Incremento locale · personaggi dell’account · 11 novembre 2026
+
+Implementate scelta dopo ogni login, creazione aggiuntiva e riapertura della raccolta dal menu; persistenza PostgreSQL compatibile con il personaggio singolo, oro comune nell’account e progressi separati. Protocollo 23. Controlli automatici, PostgreSQL in tabelle temporanee e browser isolato; prova giocata con account reale ancora da confermare.
+
+## Canone grafico PixelLab · 10 novembre 2026
+
+- [x] Definito il [canone unico](canone-grafico.md) e la skill `tys-grafica-pixellab`: top-down 2D, sprite/layer e tile 64×64, otto direzioni, equipaggiamento modulare e mani anatomiche fisse.
+- [x] Sostituiti i riferimenti grafici operativi precedenti; immagini e UI passano da PixelLab MCP. Nessun asset generato in questo incremento.
+- [ ] Produrre e approvare il primo campione canonico con palette, vista, proporzioni, luce, pivot e agganci comuni.
+- [ ] Verificare equipaggiamenti separati sui corpi compatibili, tutte le pose e otto direzioni, primaria destra/secondaria sinistra.
+- [ ] Produrre attacco e morte in otto direzioni per i nemici e tile seamless 64×64 con transizioni; verificare una stanza composta e i moduli UI.
+- [ ] Integrare per lotti approvati, con verifica automatica, controllo nel browser e prova giocata. La conformità degli asset attuali non è già verificata.
+
+Le sezioni precedenti datate conservano lo storico; per nuove produzioni grafiche vale soltanto il canone PixelLab.
+
+### Arciere maschio · primo lotto richiesto
+
+- [x] Corpo fantasy medievale PixelLab, otto viste autonome, frame nativi 64×64; 4 pose di riposo, 6 di camminata e 4 di tiro per direzione.
+- [x] Agganci anatomici espliciti: destra sull’impugnatura, sinistra sulla corda; arco abbassato a riposo e faretra sul dorso. Gesto studiato su riferimenti reali registrati nel canone.
+- [x] Integrazione in partita, HUB e anteprima dello sprite; equipaggiamenti esistenti separati. Mantello e stivali cambiano rampa, conservando la sagoma del corpo.
+- [x] Provenienza e contratto in `src/assets/characters/archer-male-pixellab/`; candidati e produzione fuori dal repository.
+- [x] Revisione dei difetti segnalati: cappuccio sempre alzato, busto e cintura completi in W/E/SE, braccia e corda sotto il mantello nelle viste posteriori. Test di confronto degli stessi raster fra HUB/anteprima e partita.
+- [ ] Conferma estetica e prova giocata del proprietario: otto direzioni, ritmo del tiro, cammino e leggibilità in gruppo. Gli altri corpi, mob e tileset restano da produrre in lotti successivi.
+
 ## Migrazione MMO · 10 novembre 2026
 
 - v0.17.02 sul ramo `feature/login-prima-del-personaggio`: accesso prima del personaggio. Schermata di accesso iniziale, creazione solo dopo l’autenticazione, protocollo applicativo 22. Verifica: 1.085 test, tipi e build; browser con server locale e account fittizi. Da provare con account reali.
@@ -36,7 +64,7 @@
 - [x] Versione nel menu e changelog dell’ultimo aggiornamento, con storico nel codice e procedura obbligatoria per gli agenti su PR/commit main. Valori di bilanciamento prima → dopo.
 - [ ] Conferma utente di posizione, leggibilità e apertura del changelog nel menu, anche su finestre strette. Nessuna prova visiva automatizzata eseguita.
 
-- [ ] **Sprite e ritratti: lavoro sospeso su richiesta dell’utente.** Alla ripresa rivedere manualmente vestibilità delle armature, scale delle armi, prese, giunzioni delle gambe e profondità degli strati. Evitare rigenerazioni successive per ogni incremento di gioco; prima fissare basi, misure e criteri di accettazione. Le revisioni precedenti sotto restano storico, non approvazione finale.
+- [ ] **Migrazione grafica PixelLab:** seguire esclusivamente il nuovo canone in apertura. La vecchia sospensione e i precedenti piani di revisione non definiscono più il metodo; ogni lotto di produzione resta da richiedere e approvare.
 - [x] Creazione con nome, sesso e classe, conferma unica e identità non modificabile dallo zaino.
 - [x] Set bianco novizio per ciascuna classe, escluso dai drop; GS per pezzo e totale equipaggiato.
 - [x] Drop non garantito, primo boss al massimo Raro, bottino senza filtro di classe; probabilità nelle schede dungeon.
@@ -503,3 +531,7 @@ Sviluppo nella worktree `codex/vfx-attacchi-hi-bit`, riallineata alle PR #12 e #
 ## Dungeon in vista ortogonale · 9 novembre 2026
 
 Tutte le stanze e le arene dei quattro dungeon usano la griglia del mondo. WASD, cursore, pericoli a terra, basamenti e strati PixiJS condividono gli assi X/Y. Il raggio di ogni impronta viene dai dati di collisione. Da confermare giocando in singolo e in cooperativa la leggibilità degli ostacoli, delle porte e dei colpi con la camera in movimento.
+
+## Arciere PixelLab integrato nel gioco · 11 novembre 2026
+
+Sostituito lo sprite maschile dell’Arciere in HUB, partita e anteprima dell’altare: 112 fotogrammi nativi 64×64, otto direzioni autonome, riposo, camminata e tiro con l’arco. Arco a destra, faretra sul dorso, cappuccio sempre alzato; impugnatura E in primo piano e corda sopra a riposo. I pezzi equipaggiati rimangono separati. [Provenienza, contratto e limiti](../src/assets/characters/archer-male-pixellab/LEGGIMI.md). Ritratti illustrati e altri corpi invariati. Conferma estetica/prova giocata finale ancora da ricevere; nessun commit o push.

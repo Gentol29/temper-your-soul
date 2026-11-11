@@ -1,5 +1,7 @@
 # Il nostro compito: grafica e chiarezza
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Accordo con Jabbaz del 1° novembre 2026:
 
 - la discesa a stanze è accettata;

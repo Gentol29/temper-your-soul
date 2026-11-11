@@ -49,12 +49,21 @@ export class AccountGate {
     this.client.connect(seed);
   }
 
+  selectCharacter(id: string): void {
+    this.note = '';
+    this.client.connect(undefined, id);
+  }
+
+  chooseCharacters(): void {
+    this.enter();
+  }
+
   /** Il riquadro accanto alla creazione: ricorda che l'accesso e' fatto e a cosa resta legato il personaggio. */
-  creationNote(): HTMLElement {
+  creationNote(gold: number): HTMLElement {
     const note = el('section', 'account-creation-note');
     note.setAttribute('aria-label', 'Account');
-    note.append(el('span', 'eyebrow', 'ACCOUNT'), el('p', '', 'Accesso effettuato.'),
-      el('p', '', 'Crea il personaggio per entrare nel rifugio: resta legato a questo account.'));
+    note.append(el('span', 'eyebrow', 'ACCOUNT'), el('p', '', 'Personaggi e progressi salvati nell’account.'),
+      el('p', '', `Oro condiviso: ${gold.toLocaleString('it-IT')}`));
     return note;
   }
 
@@ -120,7 +129,7 @@ export class AccountGate {
         say('Accedi con il tuo account per entrare nel rifugio.');
         nodes.push(this.button('Accedi', () => this.openProvider()));
         break;
-      case 'entering': say('Ingresso nel rifugio…'); break;
+      case 'entering': say('Caricamento personaggi…'); break;
       case 'reconnect': {
         say(this.note || 'Connessione al server interrotta.');
         const actions = el('div', 'login-access-actions');

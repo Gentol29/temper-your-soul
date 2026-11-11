@@ -10,7 +10,21 @@ Il pannello party non gestisce il logout. Esc chiude le finestre aperte e poi to
 
 La simulazione avanza a 60 Hz; istantanee e input a 30 Hz. Identità/aspetto alla comparsa o modifica, movimento in tuple, rimozioni esplicite e controllo della sequenza. Un nuovo client riceve tutte le definizioni necessarie. I delta non vengono saltati per mascherare un ritardo; un client troppo lento viene disconnesso. L’uscita rimuove avatar ed evocazioni senza KO e non termina l’incontro degli altri.
 
+## Scelta dei personaggi dell’account · 11 novembre 2026
+
+Dopo ogni login verificato si apre la raccolta privata dell’account: si sceglie con quale personaggio entrare oppure si usa **Nuovo personaggio**. Il menu espone **Personaggi** per tornare alla scelta dal rifugio senza rifare il login. La creazione aggiunge un personaggio; non sostituisce quelli esistenti. Nome, classe, sesso, XP, inventario, equipaggiamento, deposito e record restano propri di ciascun personaggio. **L’oro è condiviso solo tra i personaggi dello stesso account**, mai con account diversi.
+
+Il server rilegge la raccolta alla scelta, verifica token e appartenenza dell’id e salva la nuova creazione prima dell’ingresso nell’HUB. Una sola sessione per account resta ammessa nel processo; le revisioni PostgreSQL proteggono le scritture concorrenti e gli scambi. I profili locali non vengono importati né sovrascritti.
+
+Si riutilizza il formato `character-roster` v10 già validato dal gioco nella colonna JSON esistente (`character` oppure `inventory` nel layout legacy). Un vecchio personaggio singolo viene adottato come `c1` con tutti i suoi dati. Non servono nuove tabelle, colonne o modifiche RLS: la colonna `gold` dell’account resta autorevole; nel layout legacy nome, classe, livello e XP descrivono il personaggio selezionato. Un solo personaggio invalido blocca l’intera raccolta senza scartare gli altri. Il formato dei salvataggi locali resta v10.
+
+**Protocollo 23:** riavviare server e ricaricare i client. Il login con il solo token risponde con `character_required` e la raccolta privata, anche se non è vuota. L’ingresso successivo invia soltanto `characterId` oppure le scelte `creation`; non accetta oro o inventari dal browser. La rimozione di personaggi online non è prevista in questo incremento.
+
+Verifiche automatiche e tecniche: adozione dei vecchi dati, raccolta multipla, scelta dopo il login, saldo comune, conservazione dei personaggi inattivi, conflitti di revisione, fallimenti del salvataggio e isolamento degli account. Verifica PostgreSQL reale in sole tabelle temporanee per entrambi gli adattatori; browser locale isolato con dati di prova. La prova giocata con l’account dell’utente resta da fare.
+
 ## Ordine dell’accesso · v0.17.02
+
+Questa sezione conserva lo storico; il protocollo 23 descritto sopra ripristina la scelta dei personaggi.
 
 Richiesta del 10 novembre 2026: l’autenticazione va fatta prima della creazione del personaggio. Fino alla v0.17.01 il messaggio di accesso portava già nome, classe e sesso, quindi il personaggio andava creato in locale prima di poter accedere.
 
@@ -37,7 +51,7 @@ Il repository originario non conteneva autenticazione o schema di `profiles`. Il
    }));
    ```
 
-3. La configurazione `PROFILES_*` mappa schema, tabella e colonne. `PROFILES_LAYOUT=json` usa chiave account univoca `id`, JSONB `character`, intero `gold`, intero `revision`. `PROFILES_LAYOUT=legacy-v9` supporta invece la tabella Supabase esistente con `account_id`, `name`, `class`, `level`, `xp`, `gold`, `save_version`, `inventory` e `updated_at`, senza aggiungere colonne. Gli identificatori vengono validati. Il JSON completo del personaggio si conserva in `inventory`; nome, classe, livello, XP e versione vengono aggiornati anche nelle rispettive colonne. `updated_at` fornisce la revisione a microsecondi, controllata prima di ogni aggiornamento. Un JSON o metadati incoerenti bloccano il caricamento senza sovrascrivere il record. Il formato v9 viene letto; le scritture usano la versione corrente del gioco. L’oro dell’account è separato dal JSON, come nel precedente roster. Un account corrisponde a un personaggio online in questo incremento. I profili locali multipli restano conservati e separati; non sono importati automaticamente nel mondo autorevole.
+3. La configurazione `PROFILES_*` mappa schema, tabella e colonne. `PROFILES_LAYOUT=json` usa chiave account univoca `id`, JSONB `character`, intero `gold`, intero `revision`. `PROFILES_LAYOUT=legacy-v9` supporta invece la tabella Supabase esistente con `account_id`, `name`, `class`, `level`, `xp`, `gold`, `save_version`, `inventory` e `updated_at`, senza aggiungere colonne. Gli identificatori vengono validati. La raccolta completa dei personaggi si conserva in `inventory`; nome, classe, livello, XP e versione vengono aggiornati anche nelle rispettive colonne. `updated_at` fornisce la revisione a microsecondi, controllata prima di ogni aggiornamento. Un JSON o metadati incoerenti bloccano il caricamento senza sovrascrivere il record. Il formato v9 viene letto; le scritture usano la versione corrente del gioco. L’oro dell’account è separato dal JSON, come nel precedente roster. Un account conserva più personaggi e ne sceglie uno online per sessione; l’oro è condiviso nell’account. I profili locali multipli restano conservati e separati; non sono importati automaticamente nel mondo autorevole.
 4. `server/storage/schema.sql` è uno schema di riferimento per un database nuovo. Per una tabella esistente adattare la migrazione dopo averne controllato colonne, vincoli, eventuali trigger e tipo della chiave account. Dare accesso al ruolo PostgreSQL del server; con Supabase mantenere vietate le scritture dal browser tramite RLS.
 5. Eseguire `npm run build` e `npm run server`. Il comando server carica `.env`. In sviluppo avviare anche Vite; il proxy inoltra WebSocket, configurazione online e `/auth`. In produzione configurare HTTPS/WSS e `ALLOWED_ORIGINS`.
 

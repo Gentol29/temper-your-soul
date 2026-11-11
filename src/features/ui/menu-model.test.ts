@@ -21,8 +21,8 @@ describe('comandi del menu principale', () => {
     expect(primaryEntries(withCharacter)[0]!.hint).toContain('Vesna');
   });
 
-  it('il personaggio si crea dopo l\'accesso, non dal menu: nessun comando ne crea un altro', () => {
-    expect(primaryEntries({ ...withCharacter, authenticated: true }).map((entry) => entry.id)).toEqual(['continue', 'settings', 'logout']);
+  it('l’account autenticato può tornare alla scelta o creare un altro personaggio', () => {
+    expect(primaryEntries({ ...withCharacter, authenticated: true }).map((entry) => entry.id)).toEqual(['continue', 'characters', 'settings', 'logout']);
   });
 
   it('senza personaggio restano solo le impostazioni, e chi e\' bloccato dice perche\'', () => {

@@ -1,8 +1,9 @@
 import type { Pool, PoolClient } from 'pg';
 import { Character } from '../../src/features/character/character';
-import { deserializeCharacter, serializeCharacter, SAVE_VERSION } from '../../src/features/character/save-format';
+import { SAVE_VERSION } from '../../src/features/character/save-format';
 import { levelProgress } from '../../src/features/character/progression';
 import { profileIdentifier, type PersistentProfile, type ProfileSeed, type ProfileStore } from './profiles';
+import { readProfileRoster, serializeProfileRoster } from './profile-roster';
 
 /** Schema Supabase esistente: metadati separati e salvataggio completo nel JSON inventory. */
 export class LegacyProfiles implements ProfileStore {
@@ -25,20 +26,20 @@ export class LegacyProfiles implements ProfileStore {
   private values(profile: PersistentProfile): unknown[] {
     const c = profile.character;
     if (!c.created || !Number.isSafeInteger(profile.gold) || profile.gold < 0) throw new Error('Profilo o saldo non valido.');
-    return [profile.accountId, c.name, c.characterClass, levelProgress(c.totalXp).level, c.totalXp, profile.gold, SAVE_VERSION, serializeCharacter(c)];
+    return [profile.accountId, c.name, c.characterClass, levelProgress(c.totalXp).level, c.totalXp, profile.gold, SAVE_VERSION, serializeProfileRoster(profile)];
   }
   async find(accountId: string): Promise<PersistentProfile | null> {
     const result = await this.pool.query<{ character: unknown; gold: string | number; revision: string | number; name: string; class: string; xp: number }>(
       `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision()} AS revision,name,class,xp FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
     const row = result.rows[0];
     if (!row) return null;
-    const saved = deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
     const gold = Number(row.gold), revision = Number(row.revision);
+    const roster = readProfileRoster(row.character, gold), saved = roster.active!.character;
     if (!saved?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0
       || row.name !== saved.name || row.class !== saved.characterClass || row.xp !== saved.totalXp) {
       throw new Error('Profilo legacy sul database non valido o non coerente: dati conservati, accesso sospeso.');
     }
-    return { accountId, character: saved, gold, revision };
+    return { accountId, character: saved, gold, revision, roster };
   }
   async load(accountId: string, seed: ProfileSeed): Promise<PersistentProfile> {
     const character = Character.createStarter(seed.characterClass);

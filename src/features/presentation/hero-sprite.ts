@@ -8,7 +8,7 @@ import { SHADOW_ANIMATION, shadowMotionForSlot } from './shadow-motion';
 import type { SpriteView } from './sprite-view';
 
 /*
- * Compositore dei personaggi resi in 3D con Blender (Guerriero e Arciere; il Mago ha il suo, `mage-sprite.ts`).
+ * Compositore dei corpi raster modulari (incluso l'Arciere PixelLab; il Mago ha il suo, `mage-sprite.ts`).
  * Ogni pixel ricorda materiale e tono: armatura e stivali sono rampe di colore e non cambiano la sagoma; armi e
  * oggetti in mano sono i disegni canonici di `shadow-equipment.ts` agganciati alle mani del modello. Solo aspetto.
  */
@@ -40,6 +40,18 @@ export interface HeroWorn {
 
 export interface HeroSpec<M extends string> {
   readonly kind: 'warrior' | 'archer';
+  readonly headRows?: number;
+  readonly outlineColor?: string;
+  readonly clampHeld?: boolean;
+  readonly secondaryOnBack?: boolean;
+  readonly weaponAngle?: (animation: CharacterMotion) => number;
+  readonly shotHeading?: (animation: CharacterMotion) => number;
+  readonly primaryGrip?: readonly [number, number];
+  readonly primaryMirror?: (animation: CharacterMotion) => boolean;
+  /** La fascia della presa rimane davanti al polsino nelle viste che lo richiedono. */
+  readonly gripInFront?: (animation: CharacterMotion) => boolean;
+  readonly quiverAngle?: number;
+  readonly quiverScale?: number;
   readonly frames: Readonly<Record<string, HeroFrame>>;
   readonly symbols: Readonly<Record<string, readonly [M, number]>>;
   readonly outline: string;
@@ -65,7 +77,8 @@ const SKIN = '#ae7d69', SKIN_SHADOW = '#63483f';
 const STRING = '#8f7f77', ARROW = '#8f7a68', ARROW_TIP = '#a69a8c';
 
 const decoded = new Map<string, readonly string[]>();
-function rowsOf(key: string, encoded: string): readonly string[] {
+function rowsOf(encoded: string): readonly string[] {
+  const key = encoded;
   let rows = decoded.get(key);
   if (rows === undefined) {
     rows = encoded.split(',').map((row) => row.replace(/(\d+)(.)/g, (_, count: string, symbol: string) => symbol.repeat(Number(count))));
@@ -107,12 +120,13 @@ export function heroFrameKey(appearance: CharacterAppearance, animation: Charact
   return `${appearance.body === 'female' ? 'female' : 'male'}_${clip}_${animation.view ?? DEFAULT_VIEW}_${index}`;
 }
 
-export function heroPixels<M extends string>(spec: HeroSpec<M>, appearance: CharacterAppearance, animation: CharacterMotion & { readonly view?: SpriteView }): CharacterPixels {
+export function heroPixels<M extends string>(spec: HeroSpec<M>, appearance: CharacterAppearance, animation: CharacterMotion & { readonly view?: SpriteView }, sourceFrame?: HeroFrame): CharacterPixels {
   const f = animation.frame, pose = animation.state === 'cast' ? 'attack' : animation.state;
   const slot = animation.attackSlot ?? 'primary_hand';
   const key = heroFrameKey(appearance, animation);
-  const frame = spec.frames[key]!;
-  const motion = shadowMotionForSlot(spec.kind, f, pose, animation.attackSlot);
+  const frame = sourceFrame ?? spec.frames[key]!;
+  const originalMotion = shadowMotionForSlot(spec.kind, f, pose, animation.attackSlot);
+  const motion = spec.weaponAngle ? { ...originalMotion, weaponAngle: spec.weaponAngle(animation) } : originalMotion;
 
   const lookup = (wanted: keyof CharacterAppearance['equipment']): ShadowMaterial | undefined => {
     const item = appearance.equipment[wanted];
@@ -128,43 +142,56 @@ export function heroPixels<M extends string>(spec: HeroSpec<M>, appearance: Char
   const output = new PixelPainter(SHADOW_ANIMATION.frameSize, SHADOW_ANIMATION.frameSize);
   const bow = primaryArt !== undefined && (primaryArt.shape === 'bow' || primaryArt.shape === 'thorn-bow');
   const shooting = bow && pose === 'attack' && slot === 'primary_hand';
-  const pulling = shooting && f >= 2 && f <= 5;
+  const pulling = shooting && (spec.primaryGrip ? f >= 3 && f <= 5 : f >= 2 && f <= 5);
   let primaryAt: readonly [number, number] | undefined;
   const grip = (hand: readonly [number, number, boolean]): readonly [number, number] =>
+    spec.clampHeld === false ? [hand[0], hand[1]] :
     [Math.max(HERO_HELD_X[0], Math.min(HERO_HELD_X[1], hand[0])), Math.max(hand[1], HERO_HELD_MIN_Y)];
-  const held = (art: ShadowMaterial | undefined, hand: readonly [number, number, boolean], itemSlot: 'primary_hand' | 'secondary_hand', angle: number, minY?: number): void => {
+  const held = (art: ShadowMaterial | undefined, hand: readonly [number, number, boolean], itemSlot: 'primary_hand' | 'secondary_hand', angle: number, minY?: number, maxY?: number): void => {
     if (art === undefined) return;
     const layer = new PixelPainter(SHADOW_ANIMATION.bodySize, SHADOW_ANIMATION.bodySize);
     drawShadowHeld(layer, art, shadowTrim(appearance.equipment[itemSlot]!), itemSlot === 'primary_hand' && pulling);
+    if (itemSlot === 'primary_hand' && spec.primaryMirror?.(animation)) {
+      const pivot = spec.primaryGrip![0];
+      for (const row of layer.pixels) {
+        const original = [...row];
+        for (let x = 0; x < row.length; x++) row[x] = original[2*pivot-x] ?? '';
+      }
+    }
     // Quando la mano sale molto, la presa scorre lungo l'oggetto: resta dentro il fotogramma, che non si allarga.
-    const [x, y] = inFrame(layer, ...grip(hand), angle, minY);
+    const [x, y] = spec.clampHeld === false ? grip(hand) : inFrame(layer, ...grip(hand), angle, minY);
+    const sourceGrip = itemSlot === 'primary_hand' && spec.primaryGrip ? spec.primaryGrip : [SHADOW_GRIP.x, SHADOW_GRIP.y];
     if (itemSlot === 'primary_hand' && minY === undefined) primaryAt = [x, y];
-    output.stamp(layer, SHADOW_GRIP.x, SHADOW_GRIP.y, x, y, angle, minY === undefined ? {} : { minY });
+    output.stamp(layer, sourceGrip[0]!, sourceGrip[1]!, x, y, angle, {
+      ...(minY === undefined ? {} : { minY }), ...(maxY === undefined ? {} : { maxY }),
+    });
   };
-  const quiver = secondaryArt?.shape === 'quiver';
+  const quiver = secondaryArt?.shape === 'quiver' && spec.secondaryOnBack !== false;
   const onBack = (): void => {
     const layer = new PixelPainter(SHADOW_ANIMATION.bodySize, SHADOW_ANIMATION.bodySize);
     drawShadowHeld(layer, secondaryArt!, shadowTrim(appearance.equipment.secondary_hand!));
-    output.stamp(layer, SHADOW_GRIP.x, SHADOW_GRIP.y, Math.round(frame.back[0]), Math.round(frame.back[1]), motion.tilt + QUIVER_ANGLE, { scale: QUIVER_SCALE });
+    output.stamp(layer, SHADOW_GRIP.x, SHADOW_GRIP.y, Math.round(frame.back[0]), Math.round(frame.back[1]), spec.quiverAngle ?? (motion.tilt + QUIVER_ANGLE), { scale: spec.quiverScale ?? QUIVER_SCALE });
   };
 
   // L'arma sta davanti quando la mano e' davanti al petto; nel caricamento del fendente passa dietro, come nel corpo C.
   const striking = pose === 'attack' && slot === 'primary_hand';
   const primaryBehind = !frame.hand[2] || (striking && motion.weaponBehind);
   const secondaryBehind = !frame.far[2];
+  const shotBehind = spec.primaryGrip !== undefined && !frame.hand[2] && !frame.far[2];
   if (quiver && !frame.back[2]) onBack();
   if (!quiver && secondaryBehind) held(secondaryArt, frame.far, 'secondary_hand', motion.secondaryAngle ?? 0);
   if (primaryBehind) held(primaryArt, frame.hand, 'primary_hand', motion.weaponAngle);
+  if (shotBehind) drawShot();
 
   const head: Array<readonly [number, number, string]> = [];
-  rowsOf(`${spec.kind}_${key}`, frame.rows).forEach((row, dy) => {
+  rowsOf(frame.rows).forEach((row, dy) => {
     for (let x = 0; x < row.length; x++) {
       const symbol = row[x]!;
       if (symbol === '.') continue;
       const material = spec.symbols[symbol];
-      const color = symbol === spec.outline ? OUTLINE_COLOR : symbol === spec.voidSymbol ? VOID_COLOR : ramps[material![0]][material![1]]!;
+      const color = symbol === spec.outline ? (spec.outlineColor ?? OUTLINE_COLOR) : symbol === spec.voidSymbol ? VOID_COLOR : ramps[material![0]][material![1]]!;
       output.pixels[frame.y + dy]![x] = color;
-      if (frame.y + dy < HERO_HEAD_ROWS && (symbol === spec.voidSymbol || material?.[0] === 'pelle' || material?.[0] === 'capelli')) head.push([x, frame.y + dy, color]);
+      if (frame.y + dy < (spec.headRows ?? HERO_HEAD_ROWS) && (symbol === spec.voidSymbol || material?.[0] === 'pelle' || material?.[0] === 'capelli')) head.push([x, frame.y + dy, color]);
     }
   });
 
@@ -174,17 +201,23 @@ export function heroPixels<M extends string>(spec: HeroSpec<M>, appearance: Char
   // Dietro la testa resta la lama, ma l'impugnatura passa davanti quando la mano e' davanti: l'arma si vede sempre.
   else if (frame.hand[2]) held(primaryArt, frame.hand, 'primary_hand', motion.weaponAngle, SHADOW_GRIP.y - HERO_SHAFT_ABOVE_GRIP);
   // Corda tesa e freccia fra l'arco e la mano che tira, come nel corpo C.
-  if (shooting && f >= 2 && f <= 6) {
+  function drawShot(): void {
+    if (!(shooting && (spec.primaryGrip ? pulling : f >= 2 && f <= 6))) return;
     const [hx, hy] = primaryAt ?? grip(frame.hand);
     // La punta e' un rettangolo 2 x 3: due pixel di margine perche' resti dentro il bordo libero.
     const last = SHADOW_ANIMATION.frameSize - 3;
     const inside = (x: number, y: number): readonly [number, number] => [Math.max(2, Math.min(last, x)), Math.max(2, Math.min(last, y))];
     const rotate = (x: number, y: number): readonly [number, number] =>
       inside(hx + x * Math.cos(motion.weaponAngle) - y * Math.sin(motion.weaponAngle), hy + x * Math.sin(motion.weaponAngle) + y * Math.cos(motion.weaponAngle));
-    const top = rotate(-1, -13), bottom = rotate(-1, 14), tip = rotate(9, 0), [fx, fy] = inside(frame.far[0], frame.far[1]);
+    const stringX = spec.primaryGrip ? (spec.primaryMirror?.(animation) ? 2 : -2) : -1;
+    const top = rotate(stringX, -13), bottom = rotate(stringX, 14);
+    const heading = spec.shotHeading?.(animation);
+    const tip = heading === undefined ? rotate(9, 0) : inside(hx + Math.cos(heading)*9, hy + Math.sin(heading)*9);
+    const [fx, fy] = inside(frame.far[0], frame.far[1]);
     if (pulling) { output.line(top[0], top[1], fx, fy, STRING); output.line(fx, fy, bottom[0], bottom[1], STRING); }
     output.line(fx, fy, tip[0], tip[1], ARROW); output.rect(tip[0], tip[1] - 1, 2, 3, ARROW_TIP);
   }
+  if (!shotBehind) drawShot();
   // Il viso resta libero: cio' che e' passato sopra la testa torna dietro, salvo accanto alla mano che lo impugna.
   // Solo nei colpi la mano alzata puo' portare l'oggetto davanti alla testa; a riposo e in marcia la testa vince sempre.
   const near = (hand: readonly [number, number, boolean], x: number, y: number): boolean => pose === 'attack' && Math.hypot(x - hand[0], y - hand[1]) < HERO_HAND_CLEARANCE;
@@ -196,6 +229,12 @@ export function heroPixels<M extends string>(spec: HeroSpec<M>, appearance: Char
     output.rect(x, y, 2, 1, SKIN);
   };
   if (primaryArt && frame.hand[2]) fingers(frame.hand);
+  if (bow && spec.primaryGrip && frame.far[2]) fingers(frame.far);
   if (secondaryArt && !quiver && !secondaryBehind) fingers(frame.far);
+  if (primaryArt && spec.gripInFront?.(animation)) {
+    const gripY=spec.primaryGrip?.[1] ?? SHADOW_GRIP.y;
+    // Riporta davanti solo i pixel esistenti dell'impugnatura, senza ridisegnare il resto dell'arma.
+    held(primaryArt,frame.hand,'primary_hand',motion.weaponAngle,gripY-1,gripY+2);
+  }
   return { width: output.width, height: output.height, pixels: output.pixels };
 }

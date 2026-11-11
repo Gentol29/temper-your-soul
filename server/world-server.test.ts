@@ -73,8 +73,13 @@ it('prima l’account e poi il personaggio: senza profilo l’accesso chiede la 
   const second = await open(); second.send({ ...login, creation: { name: 'Vesna', characterClass: 'archer', body: 'female' } });
   await second.wait(m => m.type === 'party'); expect(rows.get('verified-nuovo')!.character.name).toBe('Vesna');
   second.socket.close(); await vi.waitFor(() => expect(server.service.profiles.size).toBe(0));
-  // Agli accessi successivi basta il token: si rientra con il personaggio salvato.
+  // Agli accessi successivi il token apre comunque la selezione.
   const third = await open(); third.send(login);
+  const choices = await third.wait(m => m.type === 'character_required');
+  if(choices.type!=='character_required')throw new Error('selezione');
+  expect(JSON.parse(choices.roster!).characters).toHaveLength(1);
+  expect(third.messages.some(m=>m.type==='party')).toBe(false);
+  third.send({...login,characterId:'c1'});
   const entered = await third.wait(m => m.type === 'party'); if (entered.type !== 'party') throw new Error('login');
   expect(entered.state.members[0]!.name).toBe('Vesna'); expect(rows.size).toBe(1);
 });

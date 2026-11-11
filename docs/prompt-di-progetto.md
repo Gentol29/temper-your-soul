@@ -6,6 +6,8 @@ Documento d'ingresso per chi lavora sul ramo `feature/lavoro-personale` (fork `h
 
 ---
 
+**Grafica vigente · 10 novembre 2026:** il [canone PixelLab](canone-grafico.md) sostituisce i precedenti riferimenti artistici. Il contesto del ramo e le proposte storiche sotto non cambiano questa direttiva.
+
 ## 1. Prompt da dare a un agente
 
 Copiare il blocco seguente all'inizio di una sessione con un agente (Claude, Codex o altro):
@@ -29,9 +31,11 @@ Regole:
 - Simulazione deterministica: niente DOM, tempo reale o Math.random in `Match` e nelle regole; dati, comportamento e
   rappresentazione separati; gli effetti e l'audio ascoltano i `GameEvent`.
 - Valori di gioco sempre provvisori, in tabelle con nome; non inventare decisioni sui punti aperti: proponile.
-- Revisione grafica di sprite e ritratti SOSPESA: non rigenerare ne' rifare quegli asset senza richiesta esplicita.
-- Audio e grafica esterni: solo risorse con licenza CC0, pubblico dominio o CC BY (con crediti), mai NC/ND, mai
-  contenuti generati da IA; per l'audio solo registrazioni vere. Ogni file va registrato nei crediti (vedi sezione 6).
+- Grafica: leggi docs/canone-grafico.md e usa tys-grafica-pixellab. Solo PixelLab MCP per sprite, tile, immagini e UI;
+  top-down 2D, frame/tile 64x64, otto direzioni, primaria destra e secondaria sinistra anatomiche, equipaggiamento modulare.
+  Se PixelLab manca, consiglia al collaboratore di collegare l'MCP integrato prima di produrre asset. Questa direttiva non avvia generazioni.
+- Audio esterno: solo registrazioni vere CC0, pubblico dominio o CC BY, con crediti. Grafica solo PixelLab secondo il canone;
+  font approvati conservati, provenienza e termini degli output nei crediti.
 - Chiedi all'utente prima di scaricare file (nome, fonte, dimensione), prima di commit, push e pull request.
 - Aggiorna design, roadmap e bug quando cambia qualcosa; distingui sempre verifiche automatiche, prove nel browser
   fatte da te e prove manuali dell'utente (queste ultime solo se l'utente le dichiara).
@@ -53,7 +57,7 @@ Pilastri proposti, da usare come filtro per ogni nuova idea:
 1. **Ogni scontro è un esame onesto.** Attacchi annunciati, schivabili e imparabili; la sconfitta deve sembrare colpa propria, mai del gioco.
 2. **L'equipaggiamento è il personaggio.** Quattro slot, quattro abilità: le scelte di build devono cambiare davvero il modo di combattere.
 3. **La tempra.** Progressione che premia la perseveranza: anche una vittoria senza bottino deve lasciare qualcosa.
-4. **Un reliquiario vivo.** Atmosfera gotica calda (rame, prugna, pergamena), suoni veri, dettagli che premiano lo sguardo.
+4. **Atmosfera coerente.** Grafica e palette del canone PixelLab, suoni veri e dettagli leggibili nel mondo top-down.
 
 ---
 
@@ -94,13 +98,7 @@ Gravità: **A** = manca un pezzo del ciclo di gioco; **M** = qualità percepita;
 
 ### 3.4 Grafica
 
-La revisione di sprite e ritratti è **sospesa** per scelta del proprietario: qui restano solo proposte che non toccano quegli asset. Ognuna richiede un piano approvato.
-
-- **Luce e atmosfera:** strato di luce in `globalCompositeOperation` (alone attorno al giocatore, ai proiettili e alla lava; vignetta per tema). Il colpo d'occhio cambia molto con poco codice.
-- **Particelle d'ambiente** per tema (polvere nella cripta, spore nella palude, braci nella fucina, neve sul ghiacciaio) e **decalcomanie** a terra dopo le esplosioni (bruciature, brina, melma) che svaniscono.
-- **Morte del boss** con una sequenza: rallentamento, frantumazione, luce.
-- **Tipografia:** un carattere gotico o lapidario per i titoli e uno leggibile per i testi, entrambi con licenza OFL, serviti in locale (niente CDN, perché il gioco deve funzionare anche da `file://`).
-- **Tile e decorazioni** CC0 per i pavimenti dei dungeon, solo se coerenti con la direzione "A — Fantasy compatto". Fonti in [risorse-libere.md](risorse-libere.md).
+Usare esclusivamente [canone-grafico.md](canone-grafico.md) e la skill `tys-grafica-pixellab`. Le vecchie tavole, ricette e proposte grafiche sono superate. Lotti di sprite modulari 64×64 e nemici in otto direzioni, tile seamless 64×64 e moduli UI passano tutti da PixelLab MCP. Nessuna generazione è avviata da questo prompt. Font approvati conservati.
 
 ### 3.5 Audio (primo incremento di questo ramo)
 
@@ -139,15 +137,15 @@ Ordine pensato per non pestare i piedi al lavoro di Jabbaz: prima le parti nuove
 | 5 | **Tempra e pietà del bottino** | Regole approvate in `game-design.md`, formato di salvataggio migrato, test | **Sì** |
 | 6 | **Morte e permadeath** | Regole approvate, migrazione, test | **Sì** (già in agenda) |
 | 7 | **Nuovi tipi di skill e quinto dungeon** | Passano i test generici dei dungeon e degli oggetti | Sì per i valori |
-| 8 | **Grafica: luce, particelle, tipografia** | Piano approvato; revisione di sprite e ritratti ancora esclusa | **Sì** |
+| 8 | **Grafica: luce, particelle, tipografia** | Lotto richiesto e approvato secondo il canone PixelLab | **Sì** |
 | 9 | **Pubblicazione**: anteprima su GitHub Pages, eventuale PWA | Link stabile di prova | Sì |
 
 ---
 
 ## 5. Regole su risorse e licenze
 
-1. **Licenze ammesse:** CC0, pubblico dominio, CC BY 3.0/4.0 (crediti obbligatori), OFL per i caratteri. **Escluse:** NC, ND, "solo uso personale", licenze poco chiare, pagine che contraddicono il file scaricato. Nel dubbio si scarta.
-2. **Niente IA generativa** per audio, musica o grafica importata. L'audio deve essere **registrato** (strumenti veri, orchestra, coro, field recording, foley).
+1. **Audio e font:** CC0, pubblico dominio, CC BY 3.0/4.0 (crediti obbligatori), OFL per i caratteri. Per la grafica valgono provenienza e termini PixelLab secondo il canone. **Escluse:** NC, ND, "solo uso personale", licenze poco chiare, pagine che contraddicono il file scaricato. Nel dubbio si scarta.
+2. **Niente IA generativa per audio e musica.** La grafica nuova e i ritocchi usano esclusivamente PixelLab MCP. L'audio deve essere **registrato** (strumenti veri, orchestra, coro, field recording, foley).
 3. **Ogni file ha i crediti** nel catalogo: titolo, autore, fonte, licenza, data di consultazione. Un test fallisce se un file non ha crediti. I crediti CC BY sono visibili nel gioco (pannello Audio).
 4. **Peso:** effetti in mp3 mono 96–128 kbps (pochi KB l'uno); musiche in mp3 stereo 128 kbps, preferibilmente sotto i 3 MB. Le musiche partono solo quando servono.
 5. **Funzionamento da `file://`:** niente CDN né richieste di rete in gioco; i file stanno in `src/assets/` e Vite li copia nella build.
@@ -175,7 +173,8 @@ lavoro qui ──► ramo feature/… sul fork ──► pull request verso Jabb
 | Skill | Quando |
 | --- | --- |
 | `tys-collabora` | Operazioni Git richieste: sincronizzazione, commit/push autorizzati e PR; remoti ricavati dalla copia corrente |
-| `tys-risorse-libere` | Cercare, valutare, scaricare (con permesso), convertire e registrare audio, grafica o caratteri |
+| `tys-risorse-libere` | Cercare, valutare, scaricare (con permesso), convertire e registrare audio o caratteri |
+| `tys-grafica-pixellab` | Produrre grafica con PixelLab MCP secondo il canone top-down 64×64, modularità, otto direzioni e palette condivisa |
 | `tys-nuovo-dungeon` | Aggiungere un dungeon con mappa, boss, tema, bottino e test |
 | `tys-nuova-famiglia` | Aggiungere una famiglia di oggetti (skill, classe, icona, suono, bottino, test) |
 

@@ -1,5 +1,7 @@
 # Risorse libere: fonti valutate
 
+**Grafica · 10 novembre 2026:** fonti, candidati e ricette grafiche sotto sono un archivio di provenienza, non riferimenti per nuovi asset. La grafica si produce esclusivamente con PixelLab MCP secondo [canone-grafico.md](canone-grafico.md). Le regole di audio e font restano separate; conservare i font approvati.
+
 Ricerca del 31 ottobre 2026, solo pagine web, nessun download. **V** = verificato aprendo la pagina; **D** = dedotto (tag, descrizione, fonti terze). Regole in [prompt-di-progetto.md](prompt-di-progetto.md), sezione 5. Il primo lotto è nel progetto (vedi sotto). Ogni nuovo scaricamento va proposto all'utente (nome, fonte, dimensione) e registrato in `src/features/audio/audio-credits.ts`.
 
 Che una registrazione sia "vera" lo si ricava dalla descrizione dell'autore, non dall'ascolto: va confermato ascoltando, prima di inserirla.
@@ -72,7 +74,7 @@ Il carattere "registrazione vera" è stato ricavato da titoli e descrizioni; **l
 
 ## Grafica e caratteri (per quando la grafica riprenderà)
 
-La revisione di sprite e ritratti è sospesa: queste fonti servono a pianificare, non a sostituire gli asset approvati.
+Le fonti grafiche di questa sezione sono archiviate: non usarle per nuove produzioni, che seguono il canone PixelLab.
 
 | Nome | Licenza | Uso | Avvertenze |
 | --- | --- | --- | --- |
@@ -88,7 +90,7 @@ La revisione di sprite e ritratti è sospesa: queste fonti servono a pianificare
 | Font: Jacquard 24, Jacquarda Bastarda 9, Grenze Gotisch, Cinzel Decorative, Silkscreen, Pixelify Sans | OFL (V) | Titoli gotici e testi | Servire in locale (`@font-face`), niente CDN |
 | Palette Resurrect 64 / Endesga 32 (Lospec) | Nessuna licenza; uso in giochi confermato dall'autrice di Resurrect 64 (V) | Palette unica per i ricolori | — |
 
-Boss grandi top-down CC0 di qualità: nessuno verificato. La via realistica resta la grafica dei boss disegnata nel codice.
+Ricerca storica: nessun boss top-down CC0 di qualità verificato. Per nuovi boss usare PixelLab secondo il canone attuale.
 
 ## Connettori e API
 

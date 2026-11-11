@@ -1,5 +1,7 @@
 # Piano per la revisione di ritratti e sprite
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 **Stato:** proposta di `simonragaz87-sudo`, 1 novembre 2026, in attesa della decisione di Jabbaz. Nessuna parte è stata implementata. La revisione resta sospesa finché questo piano non viene approvato, come richiesto dal [README](../README.md) e dalla [roadmap](roadmap.md).
 
 ## In sintesi
@@ -9,7 +11,7 @@ Correggere layer, agganci e vestibilità dei personaggi **partendo dagli strumen
 ## Decisioni richieste a Jabbaz
 
 1. **Ripresa:** la revisione può riprendere secondo questo piano?
-2. **Referente:** `simonragaz87-sudo` può prendere in carico l'area in [ripartizione-compiti.md](ripartizione-compiti.md)?
+2. **Referente:** `simonragaz87-sudo` può prendere in carico l'area?
 3. **Criteri:** i criteri di accettazione qui sotto vanno bene? Chi dà l'approvazione visiva finale?
 4. **Ambito:** partiamo da ritratti e sprite di combattimento insieme, o prima solo dai ritratti?
 5. **Ritocchi manuali:** se si arriva alla fase 5, si possono modificare i PNG approvati? Con quali limiti di stile?
@@ -66,7 +68,7 @@ Da confermare. Il valore in pixel è provvisorio.
 
 | Fase | Lavoro | Risultato | Cambia l'aspetto del gioco? |
 | --- | --- | --- | --- |
-| 0 | Decisioni di Jabbaz, criteri, voce in `ripartizione-compiti.md` | Accordo scritto | No |
+| 0 | Decisioni di Jabbaz, criteri | Accordo scritto | No |
 | 1 | Tavola di controllo con tutte le prove elencate sopra | Elenco dei difetti reali in `bugs.md` | No, solo pagina di sviluppo |
 | 2 | Tabella unica dei layer dei ritratti, PNG e SVG | Ordine in un solo punto, senza pari merito | Solo dove l'ordine era sbagliato |
 | 3 | Test di riferimento sugli sprite, poi correzione dell'ordine se la tavola lo richiede | Le regressioni diventano visibili | Solo dove la tavola mostra difetti |
@@ -112,10 +114,10 @@ Si separano braccio dietro, busto, gambe, testa e braccio davanti con un ritocco
 
 ## Rischi
 
-- **Lavori in parallelo:** altre aree di `presentation/` cambiano spesso (l'ultima integrazione di stanze e bestiario ha toccato molti file, compreso `draw-actors.ts`, ma non `character-art.ts`, `wearable-draw.ts` o i file dei ritratti). Prima di ogni fase va controllata la [ripartizione dei compiti](ripartizione-compiti.md) e riallineato il ramo.
+- **Lavori in parallelo:** altre aree di `presentation/` cambiano spesso (l'ultima integrazione di stanze e bestiario ha toccato molti file, compreso `draw-actors.ts`, ma non `character-art.ts`, `wearable-draw.ts` o i file dei ritratti). Prima di ogni fase va riallineato il ramo.
 - **Tempo:** se la tavola mostra pochi difetti, ci si ferma prima della fase 5. Se ne mostra molti, si decide di nuovo invece di allargare il lavoro.
 - **Giudizio visivo:** i criteri lasciano margine di interpretazione. Per questo ogni fase si ferma per la prova manuale.
 
 ## Se il piano viene approvato
 
-Si aggiornano `ripartizione-compiti.md`, la voce sospesa in `roadmap.md` e la nota sulla sospensione nel README, poi si apre la fase 1 su un ramo dedicato.
+Si aggiornano la voce sospesa in `roadmap.md` e la nota sulla sospensione nel README, poi si apre la fase 1 su un ramo dedicato.

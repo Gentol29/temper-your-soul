@@ -1,5 +1,7 @@
 # VFX PixelLab e particelle
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta e autorizzazione del proprietario: 1 novembre 2026. Budget di questa sessione: **39 generazioni**, prima VFX di tutte le skill, poi icone degli oggetti. Mob, boss e personaggi sono rimandati. Questa è un’eccezione esplicita alla precedente regola contro la grafica generata da IA; non cambia le regole dell’audio o degli asset di terzi.
 
 ## Risultato della sessione

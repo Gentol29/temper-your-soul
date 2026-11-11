@@ -4,6 +4,7 @@ import {Character} from '../character/character';
 import {serializeCharacter} from '../character/save-format';
 import {HubEncoder} from './hub-codec';
 import {PublicWorld} from './public-world';
+import {CharacterRoster,serializeRoster} from '../character/character-roster';
 class FakeSocket {
  static OPEN=1;static instances:FakeSocket[]=[];readyState=1;
  listeners=new Map<string,((event:{data?:unknown})=>void)[]>();
@@ -43,6 +44,15 @@ it('una creazione rifiutata lascia sulla creazione; uscire dall’account ripart
  expect(client.characterRequired).toBe(true);expect(client.lost).toBe(true);expect(client.state).toBeNull();
  client.leave();expect(client.characterRequired).toBe(false);expect(client.lost).toBe(false);
 });
+it('la raccolta ricevuta apre la selezione; si invia soltanto l’id scelto e un errore conserva la lista',()=>{
+ const {client,c,socket}=setup(),roster=new CharacterRoster();roster.add(c);const text=serializeRoster(roster);
+ socket.emit('open');socket.emit('message',JSON.stringify({type:'character_required',roster:text}));
+ expect(client.characterRoster).toBe(text);expect(client.state).toBeNull();
+ client.connect(undefined,'c1');const selected=FakeSocket.instances.at(-1)!;selected.emit('open');
+ const login=JSON.parse(selected.sent[0]!);expect(login.characterId).toBe('c1');expect(login.creation).toBeUndefined();expect(login.character).toBeUndefined();
+ selected.emit('message',JSON.stringify({type:'error',message:'Riprova'}));expect(client.characterRoster).toBe(text);
+ client.leave();expect(client.characterRoster).toBeNull();
+});
 it('Torna al rifugio invia solo il comando, senza inventario e senza chiudere il socket',()=>{
  const {client,socket}=setup();socket.emit('open');const count=socket.sent.length;client.returnToHub();expect(JSON.parse(socket.sent.at(-1)!)).toEqual({type:'return_hub'});client.leave();client.send({type:'return_hub'});expect(socket.sent).toHaveLength(count+1);
 });
@@ -60,7 +70,7 @@ it('lo stato sociale resta separato dall’istanza e Lascia party non chiude il 
  expect(client.connecting).toBe(true);expect(client.social.members).toHaveLength(1);client.leave();expect(client.social.members).toHaveLength(0);
 });
 it('i caricamenti attendono la risposta e terminano anche su errore senza disconnettere il mondo',()=>{
- const {client,c,socket}=setup();socket.emit('open');expect(client.pendingOperation).toBe('Ingresso nel rifugio…');
+ const {client,c,socket}=setup();socket.emit('open');expect(client.pendingOperation).toBe('Caricamento personaggi…');
  socket.emit('message',JSON.stringify({type:'party',playerId:'a',state:{code:'HUB',dungeonId:'crypt',mode:'descent',grade:0,members:[],playing:false}}));
  expect(client.pendingOperation).toBeNull();
  client.send({type:'character_command',command:{kind:'unequip',slot:'primary_hand'}});expect(client.pendingOperation).toBe('Salvataggio…');

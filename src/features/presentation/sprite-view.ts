@@ -27,3 +27,11 @@ export function spriteFacing(heading: ScreenHeading, previous = 1): 1 | -1 {
   if (heading.x > 0) return 1;
   return previous < 0 ? -1 : 1;
 }
+
+/** Otto viste autonome: il personaggio non viene specchiato, così le mani restano anatomiche. */
+export const NATIVE_SPRITE_VIEWS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'] as const;
+export type NativeSpriteView = (typeof NATIVE_SPRITE_VIEWS)[number];
+export function nativeSpriteViewFromAim(dx: number, dy: number): NativeSpriteView {
+  const sector = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+  return NATIVE_SPRITE_VIEWS[(sector + 8) % 8]!;
+}

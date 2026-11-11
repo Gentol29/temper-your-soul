@@ -6,6 +6,7 @@ import { serializeCharacter } from '../src/features/character/save-format';
 import { applyCharacterCommand } from './character-commands';
 import { Vec2 } from '../src/core/vec2';
 import { applyRunProgress, emptyProgress } from './run-progress';
+import { deserializeRoster } from '../src/features/character/character-roster';
 
 const seed: ProfileSeed = { name: 'Viandante', characterClass: 'warrior', body: 'female' };
 class MemoryProfiles implements ProfileStore {
@@ -28,9 +29,40 @@ class MemoryProfiles implements ProfileStore {
 }
 const auth = { verify: async (token: unknown) => { if (typeof token !== 'string' || !token.startsWith('valid-')) throw new Error('Sessione non valida'); return { id: token }; } };
 function service() { const store = new MemoryProfiles(); return { store, service: new WorldService(store, auth) }; }
-async function login(s: WorldService, id: string, account = id) { await s.login(id, `valid-${account}`, seed, () => true); }
+async function login(s: WorldService, id: string, account = id) {
+  const roster = deserializeRoster((await s.characterChoices(`valid-${account}`, () => true))!)!;
+  await s.login(id, `valid-${account}`, roster.activeId ? null : seed, () => true, roster.activeId ?? undefined);
+}
 
 describe('account e autorità del server', () => {
+  it('due personaggi persistono al riavvio, con oro comune e inventari e progressi separati', async () => {
+    const { service:s,store }=service();await login(s,'first','owner');
+    await s.command('first',{kind:'buy',slot:0});
+    const before=serializeCharacter(s.profiles.get('first')!.character);
+    await s.leave('first');
+    await s.login('second','valid-owner',{name:'Arciere',characterClass:'archer',body:'male'},()=>true);
+    expect(s.profiles.get('second')!.gold).toBe(470);
+    await s.command('second',{kind:'buy',slot:0});
+    const second=serializeCharacter(s.profiles.get('second')!.character);
+    await s.leave('second');
+    const restarted=new WorldService(store,auth);
+    const choices=deserializeRoster((await restarted.characterChoices('valid-owner',()=>true))!)!;
+    expect(choices.profiles.map(p=>p.character.name)).toEqual(['Viandante','Arciere']);expect(choices.gold).toBe(440);
+    expect(restarted.world.characters.size).toBe(0);
+    await restarted.login('back','valid-owner',null,()=>true,'c1');
+    expect(serializeCharacter(restarted.profiles.get('back')!.character)).toBe(before);
+    expect(restarted.profiles.get('back')!.gold).toBe(440);
+    expect(serializeCharacter(restarted.profiles.get('back')!.roster!.profiles[1]!.character)).toBe(second);
+    await restarted.leave('back');
+    await expect(restarted.login('foreign','valid-other',null,()=>true,'c2')).rejects.toThrow('non appartenente');
+    expect(store.rows.has('valid-other')).toBe(false);
+  });
+  it('una creazione fallita non perde personaggi né oro e il login non accetta due scelte insieme',async()=>{
+    const {service:s,store}=service();await login(s,'one');await s.leave('one');store.fail=true;
+    await expect(s.login('new','valid-one',seed,()=>true)).rejects.toThrow('offline');
+    expect(store.rows.get('valid-one')!.roster!.profiles).toHaveLength(1);expect(store.rows.get('valid-one')!.gold).toBe(500);
+    await expect(s.login('both','valid-one',seed,()=>true,'c1')).rejects.toThrow('oppure');
+  });
   it('identità verificata, set di classe iniziale bianco e inventario ripristinato a ogni login', async () => {
     const { service: s, store } = service(); await login(s, 'a');
     const profile = s.profiles.get('a')!;
@@ -47,16 +79,18 @@ describe('account e autorità del server', () => {
     // La creazione arriva dopo, con una nuova richiesta dello stesso account verificato.
     expect(await s.login('b', 'valid-a', seed, () => true)).toBe('entered');
     expect(s.profiles.get('b')!.character.name).toBe('Viandante'); await s.leave('b');
-    // Da qui in poi basta l'accesso: il personaggio e' quello salvato, non uno nuovo.
-    expect(await s.login('c', 'valid-a', null, () => true)).toBe('entered');
+    // Anche con un personaggio si attende la scelta esplicita.
+    expect(await s.login('c', 'valid-a', null, () => true)).toBe('character_required');
+    expect(await s.login('c', 'valid-a', null, () => true, 'c1')).toBe('entered');
     expect(s.profiles.get('c')!.character.characterClass).toBe('warrior'); expect(store.rows.size).toBe(1);
   });
-  it('un token falso non arriva a chiedere il personaggio e una creazione non sostituisce quello esistente', async () => {
+  it('un token falso non legge la raccolta; una nuova creazione conserva il personaggio esistente', async () => {
     const { service: s, store } = service();
     await expect(s.login('fake', 'account-id', null, () => true)).rejects.toThrow('Sessione'); expect(store.rows.size).toBe(0);
     await login(s, 'a'); await s.leave('a');
     expect(await s.login('b', 'valid-a', { name: 'Altro', characterClass: 'mage', body: 'male' }, () => true)).toBe('entered');
-    expect(s.profiles.get('b')!.character.name).toBe('Viandante'); expect(s.profiles.get('b')!.character.characterClass).toBe('warrior');
+    expect(s.profiles.get('b')!.character.name).toBe('Altro'); expect(s.profiles.get('b')!.character.characterClass).toBe('mage');
+    expect(s.profiles.get('b')!.roster!.profiles.map(p=>p.character.name)).toEqual(['Viandante','Altro']);
   });
   it('rifiuta token falsi e doppio accesso concorrente allo stesso account', async () => {
     const { service: s } = service(); await expect(s.login('fake', 'account-id', seed, () => true)).rejects.toThrow('Sessione');

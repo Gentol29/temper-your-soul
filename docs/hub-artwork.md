@@ -1,5 +1,7 @@
 # Artwork del menu come HUB · revisione locale della PR #14
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta del proprietario del 4 novembre 2026. Incremento v0.11.03 per il ramo `feature/menu-rifugio` della PR #14, preparato sul ramo locale `codex/hub-artwork`. Pubblicazione dell’intero incremento autorizzata dal proprietario dopo le revisioni descritte sotto.
 
 - Rimosso il menu di accessi in basso a destra. Il riquadro del personaggio apre i profili; il Party resta nell’HUB.

@@ -20,7 +20,7 @@ export type AccessStage = 'login' | 'creation' | 'world';
 export interface AccessState {
   /** C'e' una sessione dell'account. */
   readonly authenticated: boolean;
-  /** Il server ha verificato l'account e non gli ha trovato un personaggio. */
+  /** Il server ha verificato l'account e attende la scelta o la creazione del personaggio. */
   readonly characterRequired: boolean;
   /** Il personaggio e' nel mondo condiviso. */
   readonly inWorld: boolean;

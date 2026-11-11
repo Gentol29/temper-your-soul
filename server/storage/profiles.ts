@@ -1,10 +1,12 @@
 import type { Pool, PoolClient } from 'pg';
 import { Character } from '../../src/features/character/character';
-import { deserializeCharacter, serializeCharacter } from '../../src/features/character/save-format';
+import { serializeCharacter } from '../../src/features/character/save-format';
 import type { CharacterClass } from '../../src/features/character/character-class';
 import type { BodyType } from '../../src/features/character/appearance';
+import type { CharacterRoster } from '../../src/features/character/character-roster';
+import { readProfileRoster, serializeProfileRoster } from './profile-roster';
 
-export interface PersistentProfile { accountId: string; character: Character; gold: number; revision: number }
+export interface PersistentProfile { accountId: string; character: Character; gold: number; revision: number; roster?: CharacterRoster }
 export interface ProfileSeed { name: string; characterClass: CharacterClass; body: BodyType }
 export interface ProfileStore {
   /** Il profilo dell'account, oppure `null` se non ha ancora un personaggio. Non scrive nulla. */
@@ -18,7 +20,8 @@ export function profileIdentifier(value: string): string {
   return `"${value}"`;
 }
 export function copyProfile(profile: PersistentProfile): PersistentProfile {
-  return { ...profile, character: deserializeCharacter(serializeCharacter(profile.character))! };
+  const roster = readProfileRoster(serializeProfileRoster(profile), profile.gold);
+  return { ...profile, character: roster.active!.character, roster };
 }
 
 /** Adattabile ai nomi delle colonne esistenti. Nessun DDL automatico su una tabella del proprietario. */
@@ -40,10 +43,10 @@ export class PostgresProfiles implements ProfileStore {
       `SELECT ${this.data} AS character,${this.gold} AS gold,${this.revision} AS revision FROM ${this.table} WHERE ${this.id}=$1`, [accountId]);
     const row = result.rows[0];
     if (!row) return null;
-    const loaded = deserializeCharacter(typeof row.character === 'string' ? row.character : JSON.stringify(row.character));
     const gold = Number(row.gold), revision = Number(row.revision);
-    if (!loaded?.created || !Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0) throw new Error('Profilo sul database non valido: dati conservati, accesso sospeso.');
-    return { accountId, character: loaded, gold, revision };
+    if (!Number.isSafeInteger(gold) || gold < 0 || !Number.isSafeInteger(revision) || revision < 0) throw new Error('Profilo sul database non valido: dati conservati, accesso sospeso.');
+    const roster = readProfileRoster(row.character, gold);
+    return { accountId, character: roster.active!.character, gold, revision, roster };
   }
   async load(accountId: string, seed: ProfileSeed): Promise<PersistentProfile> {
     const character = Character.createStarter(seed.characterClass);
@@ -71,7 +74,7 @@ export class PostgresProfiles implements ProfileStore {
     const result = await client.query(`INSERT INTO ${this.table} AS saved (${this.id},${this.data},${this.gold},${this.revision})
       VALUES ($1,$2::jsonb,$3,$4+1) ON CONFLICT (${this.id}) DO UPDATE SET
       ${this.data}=EXCLUDED.${this.data},${this.gold}=EXCLUDED.${this.gold},${this.revision}=EXCLUDED.${this.revision}
-      WHERE saved.${this.revision}=$4 RETURNING ${this.id}`, [profile.accountId, serializeCharacter(profile.character), profile.gold, profile.revision]);
+      WHERE saved.${this.revision}=$4 RETURNING ${this.id}`, [profile.accountId, serializeProfileRoster(profile), profile.gold, profile.revision]);
     if (result.rowCount !== 1) throw new Error('Il profilo è stato modificato da un’altra sessione. Rientra nel mondo.');
   }
 }

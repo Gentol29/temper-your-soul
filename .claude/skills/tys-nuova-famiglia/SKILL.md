@@ -13,8 +13,8 @@ Riferimenti: `CLAUDE.md` (sezione Oggetti), `README.md` (paragrafo "Per un nuovo
 2. **Famiglia**: voce in `items/item-families.ts` (slot, nome, skill, origine `exclusiveTo` se di set).
 3. **Classe richiesta**: `items/item-classes.ts`.
 4. **Mana**: costo in `SPELL_MANA` (`skills/mana.ts`).
-5. **Icone**: oggetto (`presentation/item-sprites.ts`) e spell (`presentation/skill-icons.ts`).
-6. **Aspetto**: proiettili, zone e scatti in `presentation/looks/`; strati indossabili per entrambi i corpi. La revisione grafica di sprite e ritratti è sospesa: chiedi prima di creare nuovi strati illustrati.
+5. **Icone**: oggetto (`presentation/item-sprites.ts`) e spell (`presentation/skill-icons.ts`), prodotte con PixelLab MCP secondo `tys-grafica-pixellab` e `docs/canone-grafico.md`, collegate ai registri esistenti.
+6. **Aspetto**: seguire `tys-grafica-pixellab` prima della produzione. Frame e layer 64×64, otto direzioni, pose/agganci comuni sui corpi compatibili; ogni pezzo cambia lo sprite in gioco. Primaria destra e secondaria sinistra anatomiche, senza specchiare l'intera composizione. Proiettili, zone e scatti restano nei registri `presentation/looks/`. Anche immagini e grafica UI passano da PixelLab; nessuna produzione con altri strumenti.
 7. **Suono**: associa il `visual` a un suono per materiale in `SKILL_SOUNDS` (e in `ZONE_SOUNDS` se crea zone) di `audio/audio-catalog.ts`; il test del catalogo fallisce se manca.
 8. **Bottino**: voce esplicita nei pool di `loot/loot-tables.ts` (non derivarla da `exclusiveTo`).
 9. **Salvataggi**: nessuna migrazione serve per una famiglia nuova; servono per rarità o slot nuovi (`SAVE_VERSION`).

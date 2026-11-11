@@ -1,6 +1,7 @@
 ---
 name: tys-collabora
 description: Gestire sincronizzazione Git, commit/push autorizzati e PR di Temper your soul. Usare per queste operazioni, non per ogni modifica al gioco.
+model: sonnet
 ---
 
 # Collaborazione Git

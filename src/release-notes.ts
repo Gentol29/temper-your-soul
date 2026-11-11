@@ -159,6 +159,18 @@ const INTEGER_DAMAGE_PREVIEW: ReleaseNotes = {
 
 export const RELEASES: readonly ReleaseNotes[] = [
   {
+    version:'0.18.0',date:'2026-11-11',
+    changes:[
+      'Dopo il login si apre sempre la scelta dei personaggi dell’account: seleziona chi usare o crea un personaggio aggiuntivo. Il comando Personaggi nel menu riapre la raccolta dal rifugio senza ripetere l’accesso.',
+      'Raccolta persistente sul database: ogni personaggio conserva inventario, equipaggiamento, deposito, XP e record; l’oro è comune soltanto ai personaggi dello stesso account. I vecchi salvataggi singoli vengono adottati senza ricreare il personaggio. Revisioni e transazioni proteggono tutte le scritture; nessuna importazione automatica dei profili locali.',
+      'Arciere maschio fantasy PixelLab integrato in partita, HUB e anteprime: 112 fotogrammi 64×64, con riposo, camminata e tiro nelle otto direzioni autonome. Cappuccio sempre alzato, faretra sulla schiena, arco nella destra anatomica e sinistra sulla corda; arco abbassato a riposo e impugnatura davanti al vestiario nella vista E. Equipaggiamenti separati e intercambiabili conservati.',
+      'Canone grafico unico e skill condivisa per persone e agenti: fantasy medievale top-down, sprite/layer e tile 64×64, otto direzioni, palette coerente e ambienti seamless. PixelLab MCP è lo strumento di produzione grafica previsto; i vecchi riferimenti sono superati. Le altre classi, i mob e i tileset conservano gli asset correnti in attesa dei prossimi lotti.',
+      'Eliminato il dialogo Combat report che copriva la schermata di fine incontro: resta un solo riepilogo con statistiche, XP e drop, anche negli incontri online. Assegnazione e salvataggio delle ricompense, tempi di fine incontro e regole di combattimento invariati.',
+      'Protocollo applicativo 22 → 23: riavviare server e ricaricare i client. La raccolta usa il formato character-roster v10 già supportato e le colonne del database esistenti; nessuna migrazione dello schema. Nessuna variazione di bilanciamento. Controlli automatici e tecnici del browser separati dalla prova giocata dell’utente, ancora da confermare.',
+    ],
+    balanceChanges:[],
+  },
+  {
     version:'0.17.2',date:'2026-11-10',
     changes:[
       'Accesso prima del personaggio: la prima schermata chiede subito email e password (oppure porta al provider configurato). Solo dopo l’autenticazione, se l’account non ha ancora un personaggio, si apre la creazione; poi si entra nel rifugio collegato al server. Chi ha già un personaggio entra direttamente dopo l’accesso.',

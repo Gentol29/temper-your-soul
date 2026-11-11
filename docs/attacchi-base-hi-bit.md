@@ -1,5 +1,7 @@
 # Attacchi base Hi-bit e premi leggibili · 3 novembre 2026
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta dell’utente: togliere soltanto le particelle durante le primarie delle tre classi, conservando le altre aggiunte; animazioni locali Hi-bit per fendente, freccia/onda del tiro e proiettili elementali del Mago; testi oro/XP più grandi senza sostituire il font. Il checkout originale contiene un lavoro in corso sulla camera: incremento isolato nella worktree e nel ramo `codex/vfx-attacchi-hi-bit`, base iniziale `319950a` di main. Versione locale di avvio del feature **v0.10.01**, senza commit/push.
 
 ## Particelle e animazioni

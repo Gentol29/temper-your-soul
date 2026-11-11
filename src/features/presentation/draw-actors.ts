@@ -8,7 +8,8 @@ import type { Boss } from '../boss/boss';
 import type { Minion } from '../minions/minion';
 import { bossFx } from './boss-fx';
 import { minionArt } from './minion-art';
-import { spriteViewFromAim } from './sprite-view';
+import { nativeSpriteViewFromAim, spriteViewFromAim } from './sprite-view';
+import { characterFeetY, characterRenderFacing } from './native-character';
 import type { Player } from '../player/player';
 import { bossArt, bossSheet, sheetFrame, type BossSheet } from './boss-art';
 import { sheetImage, sheetSilhouette, sheetVariant } from './boss-art/sheet-images';
@@ -71,10 +72,10 @@ export function drawPlayer(
     : {state:'idle' as const,frame:Math.floor(time*SHADOW_ANIMATION.fps.idle)%count, view: aimView};
   ctx.save();
   ctx.translate(Math.round(player.position.x), Math.round(player.position.y));
-  ctx.scale(facing, 1);
-  const art=characterPixels(appearance,'game',0,false,motion);
+  ctx.scale(characterRenderFacing(appearance, facing), 1);
+  const art=characterPixels(appearance,'game',0,false,{...motion,direction:nativeSpriteViewFromAim(aimOnScreen.x,aimOnScreen.y)});
   ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(rasterOf(art), -CHARACTER_ART.feetX, 14-CHARACTER_ART.feetY);
+  ctx.drawImage(rasterOf(art), -CHARACTER_ART.feetX, 14-characterFeetY(appearance));
   ctx.restore();
 }
 

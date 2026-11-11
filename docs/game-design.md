@@ -1,5 +1,9 @@
 # Temper your soul: design del gioco
 
+## Personaggi multipli nell’account · 11 novembre 2026
+
+Dopo il login si sceglie un personaggio o se ne crea uno nuovo. Tutti restano persistenti nell’account; XP, equipaggiamento, inventario e record sono separati. L’oro è condiviso tra i personaggi del medesimo account, come confermato dal proprietario; account differenti restano isolati. **Personaggi** nel menu riapre la scelta dal rifugio. Dettagli in [mmo-persistente.md](mmo-persistente.md).
+
 ## Decisione MMO · 10 novembre 2026
 
 Ordine dell’accesso (v0.17.02): prima l’account, poi il personaggio, poi il rifugio. Il gioco si apre chiedendo email e password; la creazione del personaggio avviene solo dopo l’autenticazione e una volta per account; il menu principale esiste solo con account e personaggio. [Dettagli](mmo-persistente.md#ordine-dellaccesso--v01702).
@@ -13,23 +17,19 @@ Su richiesta del proprietario la cooperativa a inviti diventa un mondo pubblico:
 
 La versione del gioco è letta da `package.json` e mostrata solo nel menu principale, in piccolo al centro in basso (`v0.02.00`). Il pulsante Changelog in basso a sinistra apre le note dell’ultimo aggiornamento, incluse nella build. Le note precedenti restano in `src/release-notes.ts`; i cambiamenti numerici riportano etichetta, valori prima/dopo e unità. La [procedura di versioning](versioning.md) è obbligatoria per gli agenti a ogni PR o commit diretto a main autorizzato. Nessuna modifica a danni o progressione in questo incremento; versioni di rete e salvataggi indipendenti. Prova visiva a carico dell’utente.
 
-## Aspetto del personaggio e oggetti indossati
+## Canone grafico e oggetti indossati · 10 novembre 2026
 
-Direzione artistica scelta dall'utente: **A — Fantasy compatto** (distinta dal tema UI C — Reliquiario). La tavola generata e un riferimento artistico, non un atlante utilizzabile direttamente. Prima traduzione modulare: basi a tre quarti in lino e cuoio, colori caldi, materiali ombreggiati, capelli a ciocche, mantelli aperti e spallacci con sagome differenti. L'approvazione della tavola non costituisce approvazione della resa del prototipo nel gioco.
+Decisione del proprietario: [canone grafico PixelLab](canone-grafico.md), fonte unica per persone e agenti. Gioco 2D top-down ortogonale; sprite/layer e tile nativi 64×64, ambiente su griglia seamless e palette esistente. Grafica di immagini e UI prodotta esclusivamente con PixelLab MCP; testi e font approvati conservati.
 
-Sviluppo grafico dei ritratti del personaggio **sospeso su richiesta dell’utente**: restano difetti di vestibilità e registrazione da rivedere in un incremento dedicato. Nessuna rigenerazione per le modifiche di gioco correnti. Sesso e classe ora si scelgono con il nome alla creazione e non si modificano dallo zaino; il formato v6 conserva più personaggi, identità e livello degli oggetti.
+Personaggi e nemici hanno otto direzioni; ogni nemico ha attacco e morte animati nelle otto direzioni. Equipaggiamenti intercambiabili per tutti i pezzi compatibili con corpo e classe, senza incorporare definitivamente armi e armature nella base. Ogni pezzo cambia l'aspetto in gioco. Primaria nella destra anatomica, secondaria nella sinistra, anche cambiando direzione; non specchiare tutta la figura scambiando le mani.
 
-Le 17 famiglie hanno tre rappresentazioni: icona inventario, strato illustrato per la scheda personaggio e strato compatto da combattimento (48×48, inclusi margini per il movimento delle armi). Su richiesta dell'utente, il ritratto usa ora asset PNG dettagliati derivati dalla proposta A (`src/assets/portraits/`), con due basi e armature distinte per sesso, oggetti secondari, armi e stivali. `portrait-atlas.ts` collega ogni famiglia al suo asset; `portrait-layout.ts` ne registra posizione, scala e ritaglio. È possibile ingrandire il ritratto con Zoom. Gli elementi vengono ricomposti quando cambia l'equipaggiamento, non si sceglie un'illustrazione fissa di classe.
+Pose, pivot, agganci, frame e profondità sono condivisi fra corpo e strati. Nessuna nuova regola di equipaggiamento, hitbox o formato di salvataggio deriva dalle misure delle immagini. La direttiva sostituisce i precedenti riferimenti artistici; non avvia generazioni o sostituzioni degli asset correnti. Produzione e approvazione dei primi campioni, verifica della modularità e tileset restano da eseguire.
 
-Il combattimento continua a usare `WEARABLES` e `characterPixels`, separati dal ritratto. `adventurer-body.ts` definisce articolazioni, fisionomie e proporzioni; `wearable-draw.ts` aggancia gli oggetti alle stesse pose. Riposo, camminata e lancio hanno cicli di 8 fotogrammi campionati. La base femminile è più esile anche sotto il collo, con proporzioni proprie di viso, spalle, vita e gambe; tutti gli oggetti vengono adattati a questi punti di attacco. Le parti sotto la presa di arco, martello, scettro, bastone e lancia passano dietro il corpo; la spada e gli oggetti secondari restano davanti. Un futuro scudo userà il livello davanti al torso, senza che questo incremento aggiunga uno scudo al catalogo.
+Le sezioni datate sotto descrivono lo storico delle implementazioni; le loro vecchie indicazioni grafiche non si applicano alle nuove richieste.
 
-L'arco ha flettenti curvi e corda separata di profilo; la posa di attacco mostra anche freccia e tensione. Queste sono pose visive, non modificano tempi, danno o geometria della skill. Il ritratto illustrato è statico; le animazioni sono del personaggio in gioco. La pagina di sviluppo `/character-animation.html` permette di confrontare il ritratto illustrato con lo sprite piccolo, entrambi i corpi, tutti gli oggetti e le animazioni, senza leggere o modificare il salvataggio; non fa parte della build di produzione.
+Primo lotto richiesto dopo il canone: Arciere maschio fantasy PixelLab, con riposo/camminata/tiro nelle otto direzioni e frame 64×64. La destra impugna l’arco; la sinistra tende la corda e la faretra equipaggiata resta sulla schiena. L’arco è abbassato e inclinato durante il riposo e la marcia. Le direzioni mancanti non si ottengono specchiando il personaggio. Equipaggiamenti esistenti separati, mantello e stivali tramite rampe di materiale; nuova sagoma degli indossabili da sviluppare nei lotti successivi. [Contratto, provenienza e limiti](../src/assets/characters/archer-male-pixellab/LEGGIMI.md). Nessuna variazione delle regole; conferma estetica e prova giocata ancora da eseguire.
 
-Una nuova famiglia deve avere icona, skill con statistiche e icona spell. La revisione di `WEARABLES` e degli asset illustrati in `PORTRAIT_LAYERS` con entrambi i corpi è rinviata alla ripresa del lavoro grafico. Gli asset attuali vengono distribuiti localmente, senza nuove dipendenze o generazione remota durante il gioco.
-
-Direzione UI scelta dall'utente: **C — Reliquiario**. Comandi principali in rame e prugna, bordi lavorati con angoli asimmetrici, rilievo e pannello del menu coordinato. Implementazione CSS senza nuove dipendenze.
-
-Distingue le **decisioni prese** dai **valori provvisori** e dai **punti aperti**. Nessun valore numerico è definitivo, salvo dove indicato.
+Distinguere decisioni prese, valori provvisori e punti aperti.
 
 ## Decisioni prese
 
@@ -158,7 +158,7 @@ Il porting della Fase 0 conservava regole e valori; restano queste differenze (t
 - Ambientazione e lore: nomi dei dungeon e dei boss, "Ordine della Brace", "Emberfall".
 - Raggi di collisione (oggi incoerenti di 1 tra proiettili e zone), perforazione e rimbalzo dei proiettili, pilastri distruttibili o che fermano anche le zone.
 - Camera: taratura giocata di offset massimo e smorzamento (ora 100 unità / 8 s⁻¹), limiti ai bordi e interpolazione del disegno in singolo (su schermi a più di 60 Hz il movimento può sembrare lievemente a scatti).
-- Direzione artistica e audio definitivi; controlli (rimappatura, controller, touch/mobile); piattaforme e pubblicazione.
+- Grafica: campioni PixelLab da approvare, pivot/agganci, frame e tempi da fissare sui primi lotti secondo il canone; nessun nuovo asset già approvato con questa direttiva. Audio definitivo, controlli (controller, touch/mobile), piattaforme e pubblicazione restano aperti.
 
 ### Inventario a slot (2026-10-31)
 
@@ -774,3 +774,7 @@ Punti aperti: se tenere le fughe a 64 o cambiarle; zoom della vista (in orizzont
 
 Era stato proposto l'HUB come piazza isometrica con edifici generati in locale; dopo tre revisioni l'utente ha deciso di annullarlo. Decisione: l'HUB resta la schermata principale con l'artwork modulare del cortile (vista frontale, WASD come prima, mappa e collisioni di `hub-map.ts`). L'isometria vale solo per i dungeon. Protocollo 19 per la geometria dell'HUB tornata quella precedente.
 
+
+## Arciere PixelLab integrato nel gioco · 11 novembre 2026
+
+Sostituito lo sprite maschile dell’Arciere in HUB, partita e anteprima dell’altare: 112 fotogrammi nativi 64×64, otto direzioni autonome, riposo, camminata e tiro con l’arco. Arco a destra, faretra sul dorso, cappuccio sempre alzato; impugnatura E in primo piano e corda sopra a riposo. I pezzi equipaggiati rimangono separati. [Provenienza, contratto e limiti](../src/assets/characters/archer-male-pixellab/LEGGIMI.md). Ritratti illustrati e altri corpi invariati. Conferma estetica/prova giocata finale ancora da ricevere; nessun commit o push.

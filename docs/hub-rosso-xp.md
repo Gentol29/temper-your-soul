@@ -1,5 +1,7 @@
 # HUB rosso e testi XP · incremento locale 3 novembre 2026
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta del proprietario: indicare gli XP guadagnati uccidendo un mostro con il font Hi-bit già in uso; rifare il portale, più definito e animato in rosso; portare gli elementi dell’HUB verso un dark fantasy cupo, nero/grigio/rosso fuoco. L’immagine allegata «Immagine ChatGPT 3 nov 2026, 00_37_17.png» è un riferimento d’atmosfera e architettura, non una risorsa importata. Tutto il nuovo disegno è raster nel codice; nessun download o credito di generazione.
 
 ## XP dopo l’uccisione

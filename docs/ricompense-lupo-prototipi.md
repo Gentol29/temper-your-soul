@@ -1,5 +1,7 @@
 # Ricompense, lupo e prototipi · 3 novembre 2026
 
+> **Archivio grafico · superato il 10 novembre 2026.** Le direzioni artistiche, i formati, le pipeline e le proposte grafiche di questo documento non sono riferimenti per nuovi asset. Usare esclusivamente il [canone PixelLab](canone-grafico.md) e la skill `tys-grafica-pixellab`. Il contenuto sotto conserva lo storico delle implementazioni e delle prove, senza autorizzare nuove produzioni.
+
 Richiesta del proprietario: XP sopra il giocatore, correzione del lupo inattivo, oro che esce dal mostro e vola al personaggio dopo mezzo secondo; tre coppie di prototipi Hi-bit più scuri, maschile e femminile. Il proprietario ha confermato esplicitamente la preparazione dei prototipi separati dal gioco, dopo la segnalazione dell’area assegnata a simonragaz87-sudo. Nessuna sostituzione degli sprite/ritratti o modifica ai file del compositore assegnati al referente.
 
 ## XP e oro

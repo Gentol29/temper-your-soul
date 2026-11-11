@@ -360,7 +360,7 @@
 
 /* --- Tutto cio che viene prima della partita parla lo stesso linguaggio ---------------------------------------------
  * Barra in alto, rifugio, servizi, party, scambi e bestiario. Restano fuori l'inventario e le schede degli oggetti,
- * in carico a un altro referente (docs/ripartizione-compiti.md).
+ * in carico a un altro referente.
  */
 .hub-screen, .hub-dialog-card, .profile-modal, #party-panel, #global-controls, .global-wallet, .trade-confirm, #screen-bestiary {
   --relic-copper: var(--forge-copper);

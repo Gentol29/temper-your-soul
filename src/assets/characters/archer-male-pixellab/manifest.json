@@ -1,0 +1,113 @@
+{
+  "generated": "Contratto generato dagli output PixelLab; non modificare i dati dei fotogrammi a mano.",
+  "id": "pixellab-archer-male",
+  "canon": "2026-11-10",
+  "cell": [
+    64,
+    64
+  ],
+  "pivot": [
+    32,
+    61
+  ],
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "sourceDirections": [
+    "south",
+    "south-west",
+    "west",
+    "north-west",
+    "north",
+    "north-east",
+    "east",
+    "south-east"
+  ],
+  "clips": {
+    "idle": {
+      "frames": 4,
+      "loop": true,
+      "atlas": "idle.png",
+      "drawing": "f077a273-8cf4-4500-93dd-4ebaa5207582",
+      "atlasId": "4c13f906-9ffd-4ab2-a3e9-3d80b6c19179",
+      "editorDurationsMs": [
+        350,
+        250,
+        350,
+        250
+      ]
+    },
+    "walk": {
+      "frames": 6,
+      "loop": true,
+      "atlas": "walk.png",
+      "drawing": "9926b9e0-99f9-4d00-95af-28f76263a009",
+      "atlasId": "aeba7797-6019-4df4-bf66-e03e74ea1df7",
+      "editorDurationsMs": [
+        140,
+        140,
+        140,
+        140,
+        140,
+        140
+      ]
+    },
+    "attack": {
+      "frames": 4,
+      "loop": false,
+      "atlas": "attack.png",
+      "drawing": "f467d9ac-f756-45ec-b500-675892d5f782",
+      "atlasId": "95412d79-c4a7-40b1-8880-8e6961cdc56f",
+      "editorDurationsMs": [
+        80,
+        90,
+        60,
+        90
+      ]
+    }
+  },
+  "layout": "Una direzione per riga, fotogrammi da sinistra a destra; celle native 64x64 RGBA.",
+  "runtime": "I clip sono campionati sui 12 passi visivi esistenti: riposo 8 passi/s, camminata 14 passi/s; attacco entro 300 ms o la cadenza della skill, se minore. I tempi editor non governano la simulazione.",
+  "frameData": "src/features/presentation/pixellab-archer-data.ts",
+  "frameDataFields": "rows: matrice compressa per materiale; hand: destra anatomica; far: sinistra anatomica; back: schiena. Ogni aggancio ha x,y,visibile davanti. BOW_ANGLES registra la posa dell'arco per ogni frame.",
+  "equipment": {
+    "primaryGrip": [
+      25,
+      26
+    ],
+    "quiverAngle": 0.35,
+    "quiverScale": 0.8,
+    "primary": "destra",
+    "string": "sinistra",
+    "secondary": "schiena",
+    "layers": [
+      "oggetti posteriori",
+      "corpo",
+      "oggetti anteriori",
+      "corda e freccia",
+      "dita"
+    ]
+  },
+  "source": {
+    "service": "PixelLab MCP",
+    "character": "1221983c-5f4e-4acc-be0b-056d0497d51a",
+    "fantasyEdit": "0495b1d0-a4e2-4910-ae4e-c4e31623cf77",
+    "baseDrawing": "a13d4687-eec1-4fe8-8100-b2fdc12a6603",
+    "method": "base v3, abiti fantasy con Pixen, palette e articolazione deterministica nel pixelart_workbench",
+    "seed": "non esposto dal servizio",
+    "terms": "https://www.pixellab.ai/termsofservice",
+    "hoodEdit": "fa1a7763-39f6-4790-b67a-2cd275f1df30",
+    "hoodEditSeed": 742311
+  },
+  "review": "Produzione e integrazione richieste dal proprietario. Controllo tecnico delle pose; conferma estetica e prova giocata ancora da fare. Gli equipaggiamenti esistenti sono riutilizzati durante la migrazione.",
+  "hood": "Sempre alzato in ogni vista e frame; sagoma della testa fissa. Rig corretto con busto completo e arti/corda dietro il mantello in NW/N/NE.",
+  "profileRepair": "W: mantello laterale posteriore continuo dalla spalla all’orlo. S: radice del braccio nella sinistra dell’immagine riallineata sotto la spalla (17,22), prima (21,21).",
+  "bowRest": "Arco ribaltato a riposo: corda sul lato superiore, legno sul lato inferiore. Specchio del solo arco per frame, sinistra riallineata alla corda; orientamento del tiro conservato."
+}

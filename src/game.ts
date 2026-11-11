@@ -18,7 +18,9 @@ import { SeededRng } from './core/rng';
 import { Vec2 } from './core/vec2';
 import { AudioPlayer } from './features/audio/audio-player';
 import { Character } from './features/character/character';
-import { CharacterRoster } from './features/character/character-roster';
+import { CharacterRoster, deserializeRoster } from './features/character/character-roster';
+import { applyAccountProfile } from './features/network/account-roster';
+import { renderCharacterProfiles } from './features/ui/character-profiles';
 import { browserStorage, rosterFromExternalSave, SaveStore, type LoadStatus } from './features/character/save-store';
 import { CRYPT } from './features/dungeons/crypt';
 import type { DungeonDefinition } from './features/dungeons/dungeon-definition';
@@ -63,7 +65,6 @@ import { applySnapshot, replicaMatch, type BattleSnapshot, type PartyMember } fr
 import { deserializeCharacter } from './features/character/save-format';
 import { DUNGEONS, dungeonById } from './features/dungeons/dungeons';
 import type { Item, ItemRoll } from './features/items/item';
-import { showCombatReport } from './features/ui/combat-report';
 import { DescentRun, type RunMode, type RunView } from './features/run/descent';
 import { showsVeins, veinName, veinUnlocks } from './features/run/veins';
 import type { RoomView } from './features/run/encounter';
@@ -232,9 +233,8 @@ export class Game {
     this.roster=loaded.roster;
     this.loadStatus = loaded.status;
     this.party.client.profileChanged=profile=>{
-      const character=deserializeCharacter(profile.character);if(!character)return;
-      if(!this.offlineRoster){this.offlineRoster=this.roster;this.roster=new CharacterRoster();this.roster.add(character);}
-      else Object.assign(this.character,character);
+      if(!this.offlineRoster){this.offlineRoster=this.roster;this.roster=new CharacterRoster();}
+      if(!applyAccountProfile(this.roster,profile))return;
       this.draft=null;this.roster.gold=profile.gold;this.renderAppearance=undefined;
       setCharacterCommandSink(command=>{if(!this.party.client.tradeSaving)this.party.client.send({type:'character_command',command});});
       this.hub?.refreshProfile();
@@ -376,13 +376,18 @@ export class Game {
     this.screens.show(screen);
     this.preview(this.dungeon);
     if (stage === 'creation') {
-      // Si crea sempre un personaggio nuovo per l'account: i profili locali del browser non c'entrano.
-      this.newDraft();
+      // Soltanto la raccolta dell'account verificato, mai i profili locali del browser.
+      const roster=deserializeRoster(this.party.client.characterRoster??'');
+      if(!roster){this.showToast('Raccolta dei personaggi non valida. Riprova l’accesso.');this.gate.logout();return;}
+      if(!this.offlineRoster)this.offlineRoster=this.roster;
+      this.roster=roster;this.draft=null;
+      if(!roster.profiles.length)this.newDraft();
       this.inventoryScreen.reset();
       this.renderCharacters();
       requireElement('characters-title').focus();
     } else {
       this.draft = null;
+      if(!accountToken()&&this.offlineRoster){this.roster=this.offlineRoster;this.offlineRoster=null;}
       requireElement('login-title').focus();
       this.gate.sync();
     }
@@ -417,20 +422,24 @@ export class Game {
   }
 
   private openCharacters(): void {
-    if(this.party.client.profile){this.showToast('Il personaggio online appartiene al tuo account.');return;}
-    // Senza personaggio nel mondo si torna alla tappa che manca: accesso o creazione.
-    this.showMenu();
+    if(this.networkBattleId){this.showToast('Torna nel rifugio prima di cambiare personaggio.');return;}
+    this.gate.chooseCharacters();
   }
 
   private renderCharacters(): void {
     const character=this.character;
-    requireElement('menu-profiles').replaceChildren(this.gate.creationNote());
+    requireElement('characters-title').textContent=this.draft?'Crea il tuo personaggio':'Scegli il personaggio';
+    requireElement('menu-profiles').replaceChildren(this.gate.creationNote(this.roster.gold),renderCharacterProfiles(this.roster,this.draft!==null,{
+      onNew:()=>{this.newDraft();this.renderCharacters();},
+      onCancel:()=>{this.draft=null;this.renderCharacters();},
+      onSelect:id=>{if(this.roster.select(id)){this.draft=null;this.renderCharacters();}},
+    }));
     requireElement('menu-appearance').replaceChildren(renderCharacterCreation(character,{
       // L'account e' gia' verificato: il personaggio nasce sul server, che poi apre il rifugio.
       onCreate:(name,body,kind)=>this.gate.createCharacter({name,characterClass:kind,body}),
-      onContinue:()=>this.openHub(true),
+      onContinue:()=>{if(this.roster.activeId)this.gate.selectCharacter(this.roster.activeId);},
     }));
-    this.adminMenu.setAvailable(this.character.created&&!this.party.client.profile);
+    this.adminMenu.setAvailable(false);
   }
 
   /** Chiude dungeon o inventario tornando da dove si era partiti. */
@@ -758,10 +767,9 @@ export class Game {
 
   /**
    * Fine dell'incontro. Bottino, esperienza e record si assegnano e si salvano SUBITO (se la pagina si chiude ora non
-   * si perde nulla); la schermata arriva dopo `END_DELAY`, il tempo di vedere il colpo finale. `after` (cooperativa)
-   * parte insieme alla schermata.
+   * si perde nulla); la schermata arriva dopo `END_DELAY`, il tempo di vedere il colpo finale.
    */
-  private onMatchEnded(match: Match, won: boolean, networkRolls?: readonly ItemRoll[], after?: () => void): void {
+  private onMatchEnded(match: Match, won: boolean, networkRolls?: readonly ItemRoll[]): void {
     this.screen = 'ended';
     this.input.releaseAll();
     this.interlude = 0;
@@ -816,7 +824,6 @@ export class Game {
         this.overlay.showEnded({ won, dungeonName: match.dungeon.name, extra });
         for (const sound of sounds) this.audio.play(sound);
         sounds = [];
-        after?.();
       },
     };
     this.updateParty();
@@ -899,10 +906,8 @@ export class Game {
     if (snapshot.run !== null) this.saveNetworkRunProgress(snapshot.run);
     if (snapshot.status !== 'playing') {
       this.completedBattles.add(snapshot.id);
-      const members = this.battleMembers;
-      const report = () => showCombatReport(snapshot.report, members, snapshot.time, snapshot.status === 'won');
-      if (snapshot.run !== null) this.finishNetworkRun(snapshot.run, report);
-      else this.onMatchEnded(this.match, snapshot.status === 'won', snapshot.rewards[me] ?? [], report);
+      if (snapshot.run !== null) this.finishNetworkRun(snapshot.run);
+      else this.onMatchEnded(this.match, snapshot.status === 'won', snapshot.rewards[me] ?? []);
     }
   }
 
@@ -934,7 +939,7 @@ export class Game {
   }
 
   /** Cooperativa: la discesa e' finita sul server. Record, salvataggio e schermata, come in partita singola. */
-  private finishNetworkRun(run: RunView, after: () => void): void {
+  private finishNetworkRun(run: RunView): void {
     this.saveNetworkRunProgress(run);
     const me = this.party.client.playerId;
     const won = run.status === 'won';
@@ -988,7 +993,6 @@ export class Game {
       show: () => {
         this.overlay.showEnded({ won, dungeonName: run.mode === 'pilgrimage' ? 'Pellegrinaggio' : dungeon.name, extra });
         this.descentHud.hide();
-        after();
       },
     };
     this.updateParty();
@@ -1000,7 +1004,7 @@ export class Game {
    * aggiornato. Il personaggio in creazione (`draft`) non e' nella raccolta e resta com'e'.
    */
   private adoptExternalSave(key: string | null, newValue: string | null): void {
-    if(this.party.client.profile)return;
+    if(this.offlineRoster)return;
     const roster = rosterFromExternalSave(key, newValue, this.roster.activeId);
     if (roster === null) return;
     this.roster = roster;
@@ -1022,7 +1026,7 @@ export class Game {
 
   /** Salva il personaggio; se non riesce avvisa una volta sola. Restituisce se il salvataggio e' riuscito. */
   private persist(): boolean {
-    if(this.party.client.profile){this.renderAppearance=undefined;return true;}
+    if(this.offlineRoster){this.renderAppearance=undefined;return true;}
     this.renderAppearance = undefined;
     const saved = this.saveStore.saveRoster(this.roster);
     this.menu.setSave(saved
